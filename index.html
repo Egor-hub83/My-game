@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Змейка — пауза в левом углу</title>
+<title>Змейка — кнопка паузы высоко</title>
 <style>
 * {
     user-select: none;
@@ -16,16 +16,18 @@ body {
     align-items: center;
     min-height: 100vh;
     margin: 0;
-    padding: 15px;
+    padding: 20px;
     font-family: monospace;
 }
 .container {
     background: #0f0f1a;
-    padding: 12px;
-    border-radius: 20px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    padding: 20px 16px 16px 16px;
+    border-radius: 28px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.6);
     position: relative;
+    display: inline-block;
 }
+/* обёртка для канваса, чтобы позиционировать кнопку относительно неё */
 .canvas-wrapper {
     position: relative;
     display: inline-block;
@@ -34,33 +36,34 @@ body {
 }
 canvas {
     background: #111;
-    border: 3px solid #e94560;
-    border-radius: 10px;
+    border: 4px solid #e94560;
+    border-radius: 16px;
     display: block;
     margin: 0 auto;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
 }
-/* Кнопка паузы в верхнем левом углу (поверх канваса) */
+/* Кнопка паузы высоко в левом углу — ПОДНЯТА ЕЩЁ ВЫШЕ (top: -8px, чтобы торчала над канвасом) */
 .pause-corner {
     position: absolute;
-    top: 12px;
-    left: 12px;
+    top: -12px;
+    left: -8px;
     background: #1a1a2e;
     border: 2px solid #e94560;
     color: white;
-    width: 44px;
-    height: 44px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 22px;
+    font-size: 28px;
     font-weight: bold;
     cursor: pointer;
-    z-index: 25;
-    backdrop-filter: blur(4px);
-    background: rgba(26, 26, 46, 0.85);
+    z-index: 35;
+    backdrop-filter: blur(5px);
+    background: rgba(26, 26, 46, 0.95);
     transition: 0.07s linear;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
 }
 .pause-corner:active {
     transform: scale(0.94);
@@ -68,28 +71,31 @@ canvas {
 }
 .info {
     text-align: center;
-    margin-top: 10px;
+    margin-top: 20px;
 }
 .score-box {
     display: flex;
     justify-content: center;
-    gap: 12px;
-    margin-bottom: 5px;
+    gap: 18px;
+    margin-bottom: 10px;
     flex-wrap: wrap;
     align-items: center;
 }
 .score, .best {
     color: white;
-    font-size: 15px;
+    font-size: 20px;
     background: #1a1a2e;
-    padding: 4px 12px;
-    border-radius: 30px;
+    padding: 8px 18px;
+    border-radius: 40px;
     display: inline-block;
+    font-weight: bold;
+    letter-spacing: 1px;
 }
 .score span, .best span {
     color: #e94560;
     font-weight: bold;
-    font-size: 19px;
+    font-size: 28px;
+    margin-left: 6px;
 }
 .best span {
     color: #f9ca24;
@@ -98,50 +104,51 @@ button {
     background: #e94560;
     border: none;
     color: white;
-    padding: 6px 16px;
-    margin: 4px;
-    border-radius: 30px;
-    font-size: 14px;
+    padding: 10px 26px;
+    margin: 6px;
+    border-radius: 40px;
+    font-size: 18px;
     font-weight: bold;
     cursor: pointer;
     font-family: monospace;
     transition: 0.07s;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
 }
 button:active {
     transform: scale(0.96);
 }
 
-/* КРЕСТОВИДНЫЙ ГЕЙМПАД */
+/* КРЕСТОВИДНЫЙ ГЕЙМПАД (увеличенный, удобный) */
 .dpad {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 15px;
+    margin-top: 24px;
 }
 .dpad-row {
     display: flex;
     justify-content: center;
-    gap: 10px;
-    margin: 0;
+    gap: 15px;
+    margin: 4px 0;
 }
 .ctrl-btn {
     background: #1a2a4a;
-    width: 60px;
-    height: 60px;
-    border-radius: 15px;
+    width: 80px;
+    height: 80px;
+    border-radius: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 32px;
+    font-size: 48px;
     font-weight: bold;
     color: white;
     cursor: pointer;
-    box-shadow: 0 5px 0 #0a1220;
+    box-shadow: 0 6px 0 #0a1220;
     transition: 0.03s linear;
     touch-action: manipulation;
 }
 .ctrl-btn:active {
-    transform: translateY(3px);
+    transform: translateY(4px);
     box-shadow: 0 2px 0 #0a1220;
 }
 .empty {
@@ -155,21 +162,22 @@ button:active {
 }
 .hint {
     text-align: center;
-    margin-top: 10px;
-    color: #777;
-    font-size: 11px;
+    margin-top: 18px;
+    color: #aaa;
+    font-size: 13px;
     background: #151520;
-    padding: 4px 10px;
-    border-radius: 30px;
+    padding: 8px 18px;
+    border-radius: 40px;
     display: inline-block;
     width: auto;
+    letter-spacing: 0.5px;
 }
 .new-record {
     animation: pulse 0.5s ease-in-out 3;
 }
 @keyframes pulse {
     0% { transform: scale(1); background: #e94560; }
-    50% { transform: scale(1.05); background: #f39c12; box-shadow: 0 0 8px gold; }
+    50% { transform: scale(1.05); background: #f39c12; box-shadow: 0 0 12px gold; }
     100% { transform: scale(1); background: #e94560; }
 }
 
@@ -180,58 +188,58 @@ button:active {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(10, 10, 26, 0.94);
-    backdrop-filter: blur(4px);
-    border-radius: 20px;
+    background: rgba(10, 10, 26, 0.96);
+    backdrop-filter: blur(6px);
+    border-radius: 28px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 30;
+    z-index: 40;
     transition: all 0.2s ease;
 }
 .start-card {
     background: #1a1a2e;
-    padding: 28px 20px;
-    border-radius: 40px;
+    padding: 36px 28px;
+    border-radius: 56px;
     text-align: center;
-    border: 2px solid #e94560;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    width: 220px;
+    border: 3px solid #e94560;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+    width: 280px;
 }
 .start-card h2 {
     color: #f9ca24;
-    font-size: 28px;
-    margin: 0 0 8px 0;
-    letter-spacing: 2px;
+    font-size: 38px;
+    margin: 0 0 12px 0;
+    letter-spacing: 3px;
 }
 .start-card p {
-    color: #ddd;
-    font-size: 18px;
-    margin: 12px 0;
+    color: #eee;
+    font-size: 22px;
+    margin: 16px 0;
     font-weight: bold;
 }
 .start-btn {
     background: #e94560;
     border: none;
     color: white;
-    font-size: 22px;
+    font-size: 28px;
     font-weight: bold;
-    padding: 10px 28px;
-    border-radius: 60px;
-    margin-top: 16px;
+    padding: 14px 32px;
+    border-radius: 70px;
+    margin-top: 20px;
     cursor: pointer;
     transition: 0.1s linear;
     font-family: monospace;
-    box-shadow: 0 5px 0 #8b2c3f;
+    box-shadow: 0 6px 0 #8b2c3f;
 }
 .start-btn:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #8b2c3f;
+    transform: translateY(3px);
+    box-shadow: 0 3px 0 #8b2c3f;
 }
 .snake-icon {
-    font-size: 42px;
-    margin: 5px 0;
+    font-size: 58px;
+    margin: 8px 0;
 }
 .hide-overlay {
     display: none;
@@ -243,32 +251,70 @@ button:active {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.85);
     color: #f9ca24;
-    font-size: 28px;
+    font-size: 38px;
     font-weight: bold;
-    padding: 12px 24px;
-    border-radius: 60px;
+    padding: 18px 32px;
+    border-radius: 80px;
     font-family: monospace;
     pointer-events: none;
-    z-index: 20;
-    backdrop-filter: blur(6px);
-    border: 1px solid #e94560;
+    z-index: 25;
+    backdrop-filter: blur(8px);
+    border: 2px solid #e94560;
     white-space: nowrap;
-    letter-spacing: 3px;
+    letter-spacing: 4px;
 }
 .hide-pause {
     display: none;
+}
+
+/* адаптация для небольших экранов, но кнопка остаётся высоко */
+@media (max-width: 550px) {
+    .ctrl-btn {
+        width: 70px;
+        height: 70px;
+        font-size: 42px;
+    }
+    .start-card {
+        width: 240px;
+        padding: 28px 20px;
+    }
+    .start-card h2 {
+        font-size: 32px;
+    }
+    .pause-corner {
+        width: 48px;
+        height: 48px;
+        font-size: 24px;
+        top: -8px;
+        left: -6px;
+    }
+    .score, .best {
+        font-size: 16px;
+        padding: 6px 14px;
+    }
+    .score span, .best span {
+        font-size: 24px;
+    }
+    button {
+        font-size: 16px;
+        padding: 8px 20px;
+    }
+    .pause-marker {
+        font-size: 28px;
+        padding: 12px 24px;
+    }
 }
 </style>
 </head>
 <body>
 <div class="container" style="position: relative;">
 <div class="canvas-wrapper">
-    <canvas id="game" width="300" height="300"></canvas>
-    <!-- Кнопка паузы в верхнем левом углу -->
+    <canvas id="game" width="450" height="450"></canvas>
+    <!-- Кнопка паузы в левом верхнем углу, поднята выше (top: -12px) -->
     <div id="pauseCornerBtn" class="pause-corner" title="Пауза">⏸</div>
-    <!-- Индикатор паузы поверх канваса -->
+    <!-- Индикатор паузы -->
     <div id="pauseIndicator" class="pause-marker hide-pause">⏸ ПАУЗА</div>
 </div>
 <div class="info">
@@ -301,16 +347,16 @@ button:active {
         <h2>Ты готов?</h2>
         <p>🎮 Змейка ждёт</p>
         <button id="startGameBtn" class="start-btn">▶ СТАРТ</button>
-        <div style="margin-top: 12px; font-size: 10px; color: #aaa;">клавиши ↑ ↓ ← →</div>
+        <div style="margin-top: 14px; font-size: 12px; color: #aaa;">клавиши ↑ ↓ ← →</div>
     </div>
 </div>
 </div>
 
 <script>
-const canvas=document.getElementById('game');
-const ctx=canvas.getContext('2d');
-const scoreSpan=document.getElementById('score');
-const bestScoreSpan=document.getElementById('bestScore');
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const scoreSpan = document.getElementById('score');
+const bestScoreSpan = document.getElementById('bestScore');
 const startOverlay = document.getElementById('startOverlay');
 const startBtn = document.getElementById('startGameBtn');
 const pauseCornerBtn = document.getElementById('pauseCornerBtn');
@@ -319,15 +365,15 @@ const pauseIndicator = document.getElementById('pauseIndicator');
 const GRID_SIZE = 20;
 const CELL_SIZE = canvas.width / GRID_SIZE;
 
-let snake=[[10,10],[9,10],[8,10],[7,10]];
-let dir='right';
-let nextDir='right';
-let food=[15,10];
-let score=0;
-let gameOver=false;
-let interval=null;
-let isGameActive = false;      // активен ли игровой цикл (движение)
-let isPaused = false;          // ручная пауза
+let snake = [[10,10],[9,10],[8,10],[7,10]];
+let dir = 'right';
+let nextDir = 'right';
+let food = [15,10];
+let score = 0;
+let gameOver = false;
+let interval = null;
+let isGameActive = false;
+let isPaused = false;
 
 const GAME_SPEED_MS = 210;
 
@@ -360,28 +406,28 @@ function checkAndUpdateRecord(currentScore) {
 }
 
 // Генерация еды
-function randomFood(){
-    let free=[];
-    for(let i=0;i<GRID_SIZE;i++){
-        for(let j=0;j<GRID_SIZE;j++){
-            let ok=true;
-            for(let s of snake)if(s[0]==i&&s[1]==j){ok=false;break;}
-            if(ok)free.push([i,j]);
+function randomFood() {
+    let free = [];
+    for (let i = 0; i < GRID_SIZE; i++) {
+        for (let j = 0; j < GRID_SIZE; j++) {
+            let ok = true;
+            for (let s of snake) if (s[0] == i && s[1] == j) { ok = false; break; }
+            if (ok) free.push([i, j]);
         }
     }
-    if(free.length==0)return true;
-    food=free[Math.floor(Math.random()*free.length)];
+    if (free.length == 0) return true;
+    food = free[Math.floor(Math.random() * free.length)];
     return false;
 }
 
 // Отрисовка
-function draw(){
-    ctx.fillStyle='#111';
-    ctx.fillRect(0,0,canvas.width,canvas.height);
+function draw() {
+    ctx.fillStyle = '#111';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     ctx.strokeStyle = '#202030';
-    ctx.lineWidth = 0.5;
-    for(let i = 0; i <= GRID_SIZE; i++) {
+    ctx.lineWidth = 0.8;
+    for (let i = 0; i <= GRID_SIZE; i++) {
         ctx.beginPath();
         ctx.moveTo(i * CELL_SIZE, 0);
         ctx.lineTo(i * CELL_SIZE, canvas.height);
@@ -391,66 +437,63 @@ function draw(){
         ctx.stroke();
     }
     
-    for(let i=0;i<snake.length;i++){
-        let x=snake[i][0]*CELL_SIZE,y=snake[i][1]*CELL_SIZE;
-        if(i===0) ctx.fillStyle='#3cff7a';
-        else ctx.fillStyle='#2ecc71';
-        ctx.fillRect(x+1,y+1,CELL_SIZE-2,CELL_SIZE-2);
+    for (let i = 0; i < snake.length; i++) {
+        let x = snake[i][0] * CELL_SIZE, y = snake[i][1] * CELL_SIZE;
+        if (i === 0) ctx.fillStyle = '#3cff7a';
+        else ctx.fillStyle = '#2ecc71';
+        ctx.fillRect(x + 1, y + 1, CELL_SIZE - 2, CELL_SIZE - 2);
     }
     
-    if(snake.length>0 && !gameOver){
-        let x=snake[0][0]*CELL_SIZE,y=snake[0][1]*CELL_SIZE;
+    if (snake.length > 0 && !gameOver) {
+        let x = snake[0][0] * CELL_SIZE, y = snake[0][1] * CELL_SIZE;
         ctx.fillStyle = '#ffffff';
-        let eyeSize = 3;
-        if(dir === 'right') {
-            ctx.fillRect(x+CELL_SIZE-7, y+5, eyeSize, eyeSize);
-            ctx.fillRect(x+CELL_SIZE-7, y+CELL_SIZE-9, eyeSize, eyeSize);
-        } else if(dir === 'left') {
-            ctx.fillRect(x+2, y+5, eyeSize, eyeSize);
-            ctx.fillRect(x+2, y+CELL_SIZE-9, eyeSize, eyeSize);
-        } else if(dir === 'up') {
-            ctx.fillRect(x+5, y+2, eyeSize, eyeSize);
-            ctx.fillRect(x+CELL_SIZE-9, y+2, eyeSize, eyeSize);
-        } else if(dir === 'down') {
-            ctx.fillRect(x+5, y+CELL_SIZE-7, eyeSize, eyeSize);
-            ctx.fillRect(x+CELL_SIZE-9, y+CELL_SIZE-7, eyeSize, eyeSize);
-        } else {
-            ctx.fillRect(x+5, y+5, eyeSize, eyeSize);
-            ctx.fillRect(x+CELL_SIZE-9, y+5, eyeSize, eyeSize);
+        let eyeSize = 4;
+        if (dir === 'right') {
+            ctx.fillRect(x + CELL_SIZE - 8, y + 6, eyeSize, eyeSize);
+            ctx.fillRect(x + CELL_SIZE - 8, y + CELL_SIZE - 12, eyeSize, eyeSize);
+        } else if (dir === 'left') {
+            ctx.fillRect(x + 4, y + 6, eyeSize, eyeSize);
+            ctx.fillRect(x + 4, y + CELL_SIZE - 12, eyeSize, eyeSize);
+        } else if (dir === 'up') {
+            ctx.fillRect(x + 6, y + 4, eyeSize, eyeSize);
+            ctx.fillRect(x + CELL_SIZE - 12, y + 4, eyeSize, eyeSize);
+        } else if (dir === 'down') {
+            ctx.fillRect(x + 6, y + CELL_SIZE - 10, eyeSize, eyeSize);
+            ctx.fillRect(x + CELL_SIZE - 12, y + CELL_SIZE - 10, eyeSize, eyeSize);
         }
     }
     
-    let fx=food[0]*CELL_SIZE,fy=food[1]*CELL_SIZE;
-    ctx.fillStyle='#e74c3c';
+    let fx = food[0] * CELL_SIZE, fy = food[1] * CELL_SIZE;
+    ctx.fillStyle = '#e74c3c';
     ctx.beginPath();
-    ctx.ellipse(fx+CELL_SIZE/2, fy+CELL_SIZE/2, CELL_SIZE*0.4, CELL_SIZE*0.4, 0, 0, Math.PI*2);
+    ctx.ellipse(fx + CELL_SIZE / 2, fy + CELL_SIZE / 2, CELL_SIZE * 0.4, CELL_SIZE * 0.4, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle='#f1c40f';
+    ctx.fillStyle = '#f1c40f';
     ctx.beginPath();
-    ctx.moveTo(fx+CELL_SIZE-6, fy+3);
-    ctx.lineTo(fx+CELL_SIZE-2, fy+8);
-    ctx.lineTo(fx+CELL_SIZE-8, fy+8);
+    ctx.moveTo(fx + CELL_SIZE - 7, fy + 4);
+    ctx.lineTo(fx + CELL_SIZE - 2, fy + 10);
+    ctx.lineTo(fx + CELL_SIZE - 10, fy + 10);
     ctx.fill();
-    ctx.fillStyle='#27ae60';
-    ctx.fillRect(fx+CELL_SIZE-4, fy+1, 2, 5);
+    ctx.fillStyle = '#27ae60';
+    ctx.fillRect(fx + CELL_SIZE - 5, fy + 2, 3, 6);
     
-    if(gameOver){
-        ctx.fillStyle='rgba(0,0,0,0.8)';
-        ctx.fillRect(0,0,canvas.width,canvas.height);
-        ctx.fillStyle='#e94560';
-        ctx.font='bold 18px monospace';
-        ctx.fillText('GAME OVER',85,135);
-        ctx.font='11px monospace';
-        ctx.fillStyle='#dddddd';
-        ctx.fillText('нажми "НОВАЯ ИГРА"',95,170);
-        ctx.fillStyle='#f9ca24';
-        ctx.font='bold 10px monospace';
+    if (gameOver) {
+        ctx.fillStyle = 'rgba(0,0,0,0.85)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#e94560';
+        ctx.font = 'bold 26px monospace';
+        ctx.fillText('GAME OVER', canvas.width/2-100, canvas.height/2-20);
+        ctx.font = '16px monospace';
+        ctx.fillStyle = '#dddddd';
+        ctx.fillText('нажми "НОВАЯ ИГРА"', canvas.width/2-95, canvas.height/2+30);
+        ctx.fillStyle = '#f9ca24';
+        ctx.font = 'bold 14px monospace';
         let best = loadBestScore();
-        ctx.fillText(`🏆 ЛУЧШИЙ: ${best}`, 108, 195);
+        ctx.fillText(`🏆 ЛУЧШИЙ: ${best}`, canvas.width/2-70, canvas.height/2+80);
     }
 }
 
-// --- Управление паузой ---
+// Управление паузой
 function setPause(state) {
     if (gameOver) return;
     if (!isGameActive) return;
@@ -459,7 +502,6 @@ function setPause(state) {
         pauseIndicator.classList.remove('hide-pause');
         if (interval) clearInterval(interval);
         interval = null;
-        // меняем иконку на ▶ (Play)
         pauseCornerBtn.innerHTML = '▶';
         pauseCornerBtn.title = 'Продолжить';
     } else {
@@ -476,27 +518,27 @@ function togglePause() {
     setPause(!isPaused);
 }
 
-// --- Логика движения ---
-function update(){
-    if(gameOver) return;
-    if(!isGameActive || isPaused) return;
+// Логика движения
+function update() {
+    if (gameOver) return;
+    if (!isGameActive || isPaused) return;
     
-    dir=nextDir;
-    let head=[snake[0][0],snake[0][1]];
-    if(dir=='right')head[0]++;
-    if(dir=='left')head[0]--;
-    if(dir=='up')head[1]--;
-    if(dir=='down')head[1]++;
+    dir = nextDir;
+    let head = [snake[0][0], snake[0][1]];
+    if (dir == 'right') head[0]++;
+    if (dir == 'left') head[0]--;
+    if (dir == 'up') head[1]--;
+    if (dir == 'down') head[1]++;
     
-    let eat=(head[0]==food[0]&&head[1]==food[1]);
-    snake.unshift([head[0],head[1]]);
-    if(!eat)snake.pop();
-    else{
+    let eat = (head[0] == food[0] && head[1] == food[1]);
+    snake.unshift([head[0], head[1]]);
+    if (!eat) snake.pop();
+    else {
         score++;
-        scoreSpan.innerText=score;
-        let win=randomFood();
-        if(win){
-            gameOver=true;
+        scoreSpan.innerText = score;
+        let win = randomFood();
+        if (win) {
+            gameOver = true;
             stopGameLoop();
             checkAndUpdateRecord(score);
             draw();
@@ -504,16 +546,16 @@ function update(){
         }
     }
     
-    if(head[0]<0||head[0]>=GRID_SIZE||head[1]<0||head[1]>=GRID_SIZE){
-        gameOver=true;
+    if (head[0] < 0 || head[0] >= GRID_SIZE || head[1] < 0 || head[1] >= GRID_SIZE) {
+        gameOver = true;
         stopGameLoop();
         checkAndUpdateRecord(score);
         draw();
         return;
     }
-    for(let i=1;i<snake.length;i++){
-        if(snake[i][0]==head[0]&&snake[i][1]==head[1]){
-            gameOver=true;
+    for (let i = 1; i < snake.length; i++) {
+        if (snake[i][0] == head[0] && snake[i][1] == head[1]) {
+            gameOver = true;
             stopGameLoop();
             checkAndUpdateRecord(score);
             draw();
@@ -524,7 +566,7 @@ function update(){
 }
 
 function stopGameLoop() {
-    if(interval) {
+    if (interval) {
         clearInterval(interval);
         interval = null;
     }
@@ -536,7 +578,7 @@ function stopGameLoop() {
 }
 
 function startGameLoop() {
-    if(interval) clearInterval(interval);
+    if (interval) clearInterval(interval);
     isGameActive = true;
     gameOver = false;
     isPaused = false;
@@ -546,9 +588,8 @@ function startGameLoop() {
     pauseCornerBtn.title = 'Пауза';
 }
 
-// Полный сброс (без запуска)
 function fullReset() {
-    if(interval) clearInterval(interval);
+    if (interval) clearInterval(interval);
     isGameActive = false;
     gameOver = false;
     isPaused = false;
@@ -565,16 +606,14 @@ function fullReset() {
     draw();
 }
 
-// Старт игры (из меню или перезапуск)
 function launchGame() {
     fullReset();
     startGameLoop();
     startOverlay.classList.add('hide-overlay');
 }
 
-// Перезапуск через кнопку "НОВАЯ ИГРА" — показываем меню
 function restartWithMenu() {
-    if(interval) clearInterval(interval);
+    if (interval) clearInterval(interval);
     isGameActive = false;
     gameOver = false;
     isPaused = false;
@@ -585,33 +624,30 @@ function restartWithMenu() {
     startOverlay.classList.remove('hide-overlay');
 }
 
-// Инициализация UI и обработчиков
+// Инициализация
 updateBestScoreUI();
 fullReset();
 draw();
 startOverlay.classList.remove('hide-overlay');
 
-// Кнопка СТАРТ
+// Обработчики
 startBtn.addEventListener('click', (e) => {
     e.preventDefault();
     launchGame();
 });
 
-// Кнопка паузы в левом верхнем углу
 pauseCornerBtn.addEventListener('click', () => {
     if (startOverlay.classList.contains('hide-overlay') && isGameActive && !gameOver) {
         togglePause();
     }
 });
 
-// Кнопка НОВАЯ ИГРА
 document.getElementById('restart').onclick = () => {
     restartWithMenu();
 };
 
 // Клавиатура
 document.addEventListener('keydown', (e) => {
-    // Если меню открыто — реагируем только на пробел / Enter для старта
     if (!startOverlay.classList.contains('hide-overlay')) {
         if (e.code === 'Space' || e.code === 'Enter') {
             e.preventDefault();
@@ -620,7 +656,6 @@ document.addEventListener('keydown', (e) => {
         return;
     }
     
-    // Пауза по пробелу (если игра активна и не game over)
     if (e.code === 'Space') {
         e.preventDefault();
         if (isGameActive && !gameOver) {
@@ -631,7 +666,6 @@ document.addEventListener('keydown', (e) => {
         return;
     }
     
-    // Управление движением (только если игра активна, не на паузе, не game over)
     if (!isGameActive || gameOver || isPaused) return;
     
     let k = e.key;
@@ -641,7 +675,7 @@ document.addEventListener('keydown', (e) => {
     else if (k === 'ArrowRight' && dir !== 'left') { nextDir = 'right'; e.preventDefault(); }
 });
 
-// Сенсорный геймпад (движение только при активной игре, без паузы, без меню)
+// Сенсорный геймпад
 const ctrlBtns = document.querySelectorAll('.ctrl-btn');
 ctrlBtns.forEach(btn => {
     const handler = (e) => {
@@ -659,7 +693,6 @@ ctrlBtns.forEach(btn => {
     btn.addEventListener('touchstart', handler, { passive: false });
 });
 
-// Защита от случайного клика по оверлею
 startOverlay.addEventListener('click', (e) => e.stopPropagation());
 </script>
 </body>
