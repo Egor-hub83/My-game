@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Змейка — Стартовое меню</title>
+<title>Змейка — пауза в левом углу</title>
 <style>
 * {
     user-select: none;
@@ -26,12 +26,45 @@ body {
     box-shadow: 0 8px 20px rgba(0,0,0,0.5);
     position: relative;
 }
+.canvas-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+}
 canvas {
     background: #111;
     border: 3px solid #e94560;
     border-radius: 10px;
     display: block;
     margin: 0 auto;
+}
+/* Кнопка паузы в верхнем левом углу (поверх канваса) */
+.pause-corner {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: #1a1a2e;
+    border: 2px solid #e94560;
+    color: white;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 25;
+    backdrop-filter: blur(4px);
+    background: rgba(26, 26, 46, 0.85);
+    transition: 0.07s linear;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.pause-corner:active {
+    transform: scale(0.94);
+    background: #e94560;
 }
 .info {
     text-align: center;
@@ -42,10 +75,12 @@ canvas {
     justify-content: center;
     gap: 12px;
     margin-bottom: 5px;
+    flex-wrap: wrap;
+    align-items: center;
 }
 .score, .best {
     color: white;
-    font-size: 16px;
+    font-size: 15px;
     background: #1a1a2e;
     padding: 4px 12px;
     border-radius: 30px;
@@ -54,7 +89,7 @@ canvas {
 .score span, .best span {
     color: #e94560;
     font-weight: bold;
-    font-size: 20px;
+    font-size: 19px;
 }
 .best span {
     color: #f9ca24;
@@ -138,22 +173,21 @@ button:active {
     100% { transform: scale(1); background: #e94560; }
 }
 
-/* СТАРТОВОЕ МЕНЮ (оверлей) */
+/* СТАРТОВОЕ МЕНЮ */
 .start-overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(10, 10, 26, 0.92);
+    background: rgba(10, 10, 26, 0.94);
     backdrop-filter: blur(4px);
     border-radius: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 20;
-    font-family: monospace;
+    z-index: 30;
     transition: all 0.2s ease;
 }
 .start-card {
@@ -202,15 +236,45 @@ button:active {
 .hide-overlay {
     display: none;
 }
+
+/* Индикатор паузы по центру */
+.pause-marker {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.8);
+    color: #f9ca24;
+    font-size: 28px;
+    font-weight: bold;
+    padding: 12px 24px;
+    border-radius: 60px;
+    font-family: monospace;
+    pointer-events: none;
+    z-index: 20;
+    backdrop-filter: blur(6px);
+    border: 1px solid #e94560;
+    white-space: nowrap;
+    letter-spacing: 3px;
+}
+.hide-pause {
+    display: none;
+}
 </style>
 </head>
 <body>
 <div class="container" style="position: relative;">
-<canvas id="game" width="300" height="300"></canvas>
+<div class="canvas-wrapper">
+    <canvas id="game" width="300" height="300"></canvas>
+    <!-- Кнопка паузы в верхнем левом углу -->
+    <div id="pauseCornerBtn" class="pause-corner" title="Пауза">⏸</div>
+    <!-- Индикатор паузы поверх канваса -->
+    <div id="pauseIndicator" class="pause-marker hide-pause">⏸ ПАУЗА</div>
+</div>
 <div class="info">
 <div class="score-box">
-    <div class="score">🍎 ТЕКУЩИЙ <span id="score">0</span></div>
-    <div class="best">🏆 РЕКОРД <span id="bestScore">0</span></div>
+    <div class="score">🍎 <span id="score">0</span></div>
+    <div class="best">🏆 <span id="bestScore">0</span></div>
 </div>
 <button id="restart">🔄 НОВАЯ ИГРА</button>
 </div>
@@ -228,9 +292,9 @@ button:active {
         <div class="ctrl-btn" data-dir="right">▶</div>
     </div>
 </div>
-<div class="hint">▲ ▼ ◀ ▶ &nbsp;&nbsp;| &nbsp;старт из меню • личный рекорд</div>
+<div class="hint">▲ ▼ ◀ ▶ &nbsp;&nbsp;| &nbsp;⏸ пауза (кнопка сверху слева / пробел) • личный рекорд</div>
 
-<!-- СТАРТОВОЕ МЕНЮ "Ты готов?" -->
+<!-- СТАРТОВОЕ МЕНЮ -->
 <div id="startOverlay" class="start-overlay">
     <div class="start-card">
         <div class="snake-icon">🐍</div>
@@ -249,6 +313,8 @@ const scoreSpan=document.getElementById('score');
 const bestScoreSpan=document.getElementById('bestScore');
 const startOverlay = document.getElementById('startOverlay');
 const startBtn = document.getElementById('startGameBtn');
+const pauseCornerBtn = document.getElementById('pauseCornerBtn');
+const pauseIndicator = document.getElementById('pauseIndicator');
 
 const GRID_SIZE = 20;
 const CELL_SIZE = canvas.width / GRID_SIZE;
@@ -260,12 +326,12 @@ let food=[15,10];
 let score=0;
 let gameOver=false;
 let interval=null;
-let isGameActive = false;      // активно ли игровое обновление (бежит змейка)
-let gameLoopPaused = true;     // стартовое меню блокирует движение
+let isGameActive = false;      // активен ли игровой цикл (движение)
+let isPaused = false;          // ручная пауза
 
 const GAME_SPEED_MS = 210;
 
-// ----- РАБОТА С РЕКОРДОМ (LocalStorage) -----
+// ----- РЕКОРД -----
 function loadBestScore() {
     let best = localStorage.getItem('snakeBestScore');
     if (best === null) {
@@ -274,12 +340,10 @@ function loadBestScore() {
     }
     return parseInt(best, 10);
 }
-
 function updateBestScoreUI() {
     let best = loadBestScore();
     bestScoreSpan.innerText = best;
 }
-
 function checkAndUpdateRecord(currentScore) {
     let best = loadBestScore();
     if (currentScore > best) {
@@ -295,7 +359,7 @@ function checkAndUpdateRecord(currentScore) {
     return false;
 }
 
-// Генерация еды (без столкновения)
+// Генерация еды
 function randomFood(){
     let free=[];
     for(let i=0;i<GRID_SIZE;i++){
@@ -310,12 +374,11 @@ function randomFood(){
     return false;
 }
 
-// Отрисовка всего (змейка, еда, сетка, GAME OVER)
+// Отрисовка
 function draw(){
     ctx.fillStyle='#111';
     ctx.fillRect(0,0,canvas.width,canvas.height);
     
-    // сетка
     ctx.strokeStyle = '#202030';
     ctx.lineWidth = 0.5;
     for(let i = 0; i <= GRID_SIZE; i++) {
@@ -328,7 +391,6 @@ function draw(){
         ctx.stroke();
     }
     
-    // тело змейки
     for(let i=0;i<snake.length;i++){
         let x=snake[i][0]*CELL_SIZE,y=snake[i][1]*CELL_SIZE;
         if(i===0) ctx.fillStyle='#3cff7a';
@@ -336,7 +398,6 @@ function draw(){
         ctx.fillRect(x+1,y+1,CELL_SIZE-2,CELL_SIZE-2);
     }
     
-    // глаза головы, если игра не окончена (и даже на паузе в меню рисуем глаза)
     if(snake.length>0 && !gameOver){
         let x=snake[0][0]*CELL_SIZE,y=snake[0][1]*CELL_SIZE;
         ctx.fillStyle = '#ffffff';
@@ -359,7 +420,6 @@ function draw(){
         }
     }
     
-    // еда
     let fx=food[0]*CELL_SIZE,fy=food[1]*CELL_SIZE;
     ctx.fillStyle='#e74c3c';
     ctx.beginPath();
@@ -390,9 +450,36 @@ function draw(){
     }
 }
 
-// Основной игровой цикл (move)
+// --- Управление паузой ---
+function setPause(state) {
+    if (gameOver) return;
+    if (!isGameActive) return;
+    isPaused = state;
+    if (isPaused) {
+        pauseIndicator.classList.remove('hide-pause');
+        if (interval) clearInterval(interval);
+        interval = null;
+        // меняем иконку на ▶ (Play)
+        pauseCornerBtn.innerHTML = '▶';
+        pauseCornerBtn.title = 'Продолжить';
+    } else {
+        pauseIndicator.classList.add('hide-pause');
+        if (interval) clearInterval(interval);
+        interval = setInterval(update, GAME_SPEED_MS);
+        pauseCornerBtn.innerHTML = '⏸';
+        pauseCornerBtn.title = 'Пауза';
+    }
+}
+
+function togglePause() {
+    if (!isGameActive || gameOver) return;
+    setPause(!isPaused);
+}
+
+// --- Логика движения ---
 function update(){
-    if(gameOver || !isGameActive) return; // если игра окончена или не активна — не двигаем
+    if(gameOver) return;
+    if(!isGameActive || isPaused) return;
     
     dir=nextDir;
     let head=[snake[0][0],snake[0][1]];
@@ -417,7 +504,6 @@ function update(){
         }
     }
     
-    // столкновения
     if(head[0]<0||head[0]>=GRID_SIZE||head[1]<0||head[1]>=GRID_SIZE){
         gameOver=true;
         stopGameLoop();
@@ -443,96 +529,90 @@ function stopGameLoop() {
         interval = null;
     }
     isGameActive = false;
+    isPaused = false;
+    pauseIndicator.classList.add('hide-pause');
+    pauseCornerBtn.innerHTML = '⏸';
+    pauseCornerBtn.title = 'Пауза';
 }
 
 function startGameLoop() {
     if(interval) clearInterval(interval);
     isGameActive = true;
     gameOver = false;
+    isPaused = false;
+    pauseIndicator.classList.add('hide-pause');
     interval = setInterval(update, GAME_SPEED_MS);
+    pauseCornerBtn.innerHTML = '⏸';
+    pauseCornerBtn.title = 'Пауза';
 }
 
-// Полностью сбросить состояние игры (но без автостарта)
-function fullReset(keepMenu = true) {
-    // останавливаем всё
-    if(interval) {
-        clearInterval(interval);
-        interval = null;
-    }
+// Полный сброс (без запуска)
+function fullReset() {
+    if(interval) clearInterval(interval);
     isGameActive = false;
     gameOver = false;
-    // сброс параметров
+    isPaused = false;
+    pauseIndicator.classList.add('hide-pause');
+    pauseCornerBtn.innerHTML = '⏸';
+    pauseCornerBtn.title = 'Пауза';
     snake = [[10,10],[9,10],[8,10],[7,10]];
     dir = 'right';
     nextDir = 'right';
     score = 0;
     scoreSpan.innerText = '0';
     food = [15,10];
-    // гарантия, что еда не на змейке
     randomFood();
     draw();
 }
 
-// Функция СТАРТ (вызывается из меню или после перезапуска с активной игрой)
-function startGame() {
-    // Если уже игра активна — перезапускаем с чистой совестью
-    if(interval) clearInterval(interval);
-    fullReset(false);   // сброс без меню
-    gameOver = false;
-    isGameActive = true;
-    // запускаем цикл
-    interval = setInterval(update, GAME_SPEED_MS);
+// Старт игры (из меню или перезапуск)
+function launchGame() {
+    fullReset();
+    startGameLoop();
+    startOverlay.classList.add('hide-overlay');
 }
 
-// Функция для рестарта (кнопка "НОВАЯ ИГРА"), которая также показывает меню (сохраняем опыт)
-function restartFromButton() {
-    // Полностью останавливаем всё
-    if(interval) {
-        clearInterval(interval);
-        interval = null;
-    }
+// Перезапуск через кнопку "НОВАЯ ИГРА" — показываем меню
+function restartWithMenu() {
+    if(interval) clearInterval(interval);
     isGameActive = false;
     gameOver = false;
-    fullReset(false);
-    // Показываем стартовое меню заново (как в первый раз)
+    isPaused = false;
+    pauseIndicator.classList.add('hide-pause');
+    pauseCornerBtn.innerHTML = '⏸';
+    pauseCornerBtn.title = 'Пауза';
+    fullReset();
     startOverlay.classList.remove('hide-overlay');
-    // Дополнительно рисуем статичную картинку (змейка уже стоит)
-    draw();
 }
 
-// Настоящий старт из оверлея -> скрываем меню и запускаем игру
-function launchGame() {
-    startOverlay.classList.add('hide-overlay');
-    startGame(); // чистая активная игра
-}
-
-// --- Инициализация и обработчики ---
+// Инициализация UI и обработчиков
 updateBestScoreUI();
-
-// начальная отрисовка (змейка и еда видны на фоне меню)
-fullReset(false);
+fullReset();
 draw();
-
-// Открываем стартовое меню при загрузке страницы (убеждаемся, что оно активно)
 startOverlay.classList.remove('hide-overlay');
 
-// При клике на кнопку "СТАРТ"
+// Кнопка СТАРТ
 startBtn.addEventListener('click', (e) => {
     e.preventDefault();
     launchGame();
 });
 
-// Кнопка перезапуска (теперь показывает меню)
+// Кнопка паузы в левом верхнем углу
+pauseCornerBtn.addEventListener('click', () => {
+    if (startOverlay.classList.contains('hide-overlay') && isGameActive && !gameOver) {
+        togglePause();
+    }
+});
+
+// Кнопка НОВАЯ ИГРА
 document.getElementById('restart').onclick = () => {
-    restartFromButton();
+    restartWithMenu();
 };
 
-// Управление с клавиатуры: работает только если игра активна и не Game Over, и меню скрыто
+// Клавиатура
 document.addEventListener('keydown', (e) => {
-    // Если меню видно — игнорируем все клавиши (кроме возможной кнопки старта? но старт только кнопка, чтоб не сбить)
+    // Если меню открыто — реагируем только на пробел / Enter для старта
     if (!startOverlay.classList.contains('hide-overlay')) {
-        // Если меню показано, то клавиши не должны управлять змейкой.
-        // Но разрешаем пробел или Enter для старта по желанию — удобно.
         if (e.code === 'Space' || e.code === 'Enter') {
             e.preventDefault();
             launchGame();
@@ -540,48 +620,47 @@ document.addEventListener('keydown', (e) => {
         return;
     }
     
-    // Игра не активна (пауза или game over) — разрешаем новую игру через пробел, но без движения змейки
-    if(!isGameActive || gameOver) {
-        if(e.code === 'Space') {
-            e.preventDefault();
-            restartFromButton();
+    // Пауза по пробелу (если игра активна и не game over)
+    if (e.code === 'Space') {
+        e.preventDefault();
+        if (isGameActive && !gameOver) {
+            togglePause();
+        } else if (gameOver) {
+            restartWithMenu();
         }
         return;
     }
     
-    // Активная игра: управление движением
-    let k=e.key;
-    if(k=='ArrowUp' && dir!='down'){ nextDir='up'; e.preventDefault(); }
-    else if(k=='ArrowDown' && dir!='up'){ nextDir='down'; e.preventDefault(); }
-    else if(k=='ArrowLeft' && dir!='right'){ nextDir='left'; e.preventDefault(); }
-    else if(k=='ArrowRight' && dir!='left'){ nextDir='right'; e.preventDefault(); }
+    // Управление движением (только если игра активна, не на паузе, не game over)
+    if (!isGameActive || gameOver || isPaused) return;
+    
+    let k = e.key;
+    if (k === 'ArrowUp' && dir !== 'down') { nextDir = 'up'; e.preventDefault(); }
+    else if (k === 'ArrowDown' && dir !== 'up') { nextDir = 'down'; e.preventDefault(); }
+    else if (k === 'ArrowLeft' && dir !== 'right') { nextDir = 'left'; e.preventDefault(); }
+    else if (k === 'ArrowRight' && dir !== 'left') { nextDir = 'right'; e.preventDefault(); }
 });
 
-// Сенсорный геймпад (работает только при активной игре и скрытом меню)
+// Сенсорный геймпад (движение только при активной игре, без паузы, без меню)
 const ctrlBtns = document.querySelectorAll('.ctrl-btn');
 ctrlBtns.forEach(btn => {
     const handler = (e) => {
         e.preventDefault();
-        // Если меню видно — не реагируем
         if (!startOverlay.classList.contains('hide-overlay')) return;
-        if(!isGameActive || gameOver) return;
+        if (!isGameActive || gameOver || isPaused) return;
         const ndir = btn.getAttribute('data-dir');
-        if(!ndir) return;
-        if(ndir=='up' && dir!='down') nextDir='up';
-        else if(ndir=='down' && dir!='up') nextDir='down';
-        else if(ndir=='left' && dir!='right') nextDir='left';
-        else if(ndir=='right' && dir!='left') nextDir='right';
+        if (!ndir) return;
+        if (ndir === 'up' && dir !== 'down') nextDir = 'up';
+        else if (ndir === 'down' && dir !== 'up') nextDir = 'down';
+        else if (ndir === 'left' && dir !== 'right') nextDir = 'left';
+        else if (ndir === 'right' && dir !== 'left') nextDir = 'right';
     };
     btn.addEventListener('click', handler);
-    btn.addEventListener('touchstart', handler, {passive: false});
+    btn.addEventListener('touchstart', handler, { passive: false });
 });
 
-// Дополнительная защита: если игра окончена и меню не активно, кнопка "НОВАЯ ИГРА" уже вызывает меню.
-// Также убедимся, что при клике на оверлей случайно не передать клики на канвас.
-startOverlay.addEventListener('click', (e) => {
-    // Чтобы не закрыть меню случайно; только кнопка старт сработает
-    e.stopPropagation();
-});
+// Защита от случайного клика по оверлею
+startOverlay.addEventListener('click', (e) => e.stopPropagation());
 </script>
 </body>
 </html>
