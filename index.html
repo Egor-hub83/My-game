@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Змейка — крестовидный геймпад</title>
+<title>Змейка — крестовидный геймпад (медленный режим)</title>
 <style>
 * {
     user-select: none;
@@ -61,6 +61,7 @@ button {
     font-weight: bold;
     cursor: pointer;
     font-family: monospace;
+    transition: 0.07s;
 }
 button:active {
     transform: scale(0.96);
@@ -112,8 +113,13 @@ button:active {
 .hint {
     text-align: center;
     margin-top: 10px;
-    color: #555;
-    font-size: 10px;
+    color: #777;
+    font-size: 11px;
+    background: #151520;
+    padding: 4px 10px;
+    border-radius: 30px;
+    display: inline-block;
+    width: auto;
 }
 </style>
 </head>
@@ -139,7 +145,7 @@ button:active {
         <div class="ctrl-btn" data-dir="right">▶</div>
     </div>
 </div>
-<div class="hint">▲ вверх, ▼ вниз, ◀ влево, ▶ вправо</div>
+<div class="hint">▲ ▼ ◀ ▶ &nbsp;&nbsp;|&nbsp; плавная игра</div>
 </div>
 
 <script>
@@ -158,6 +164,10 @@ let score=0;
 let gameOver=false;
 let interval;
 
+// ⚡ ОСНОВНОЕ ИЗМЕНЕНИЕ: скорость игры значительно снижена (210 мс вместо 130)
+// Это делает игру медленнее, даёт больше времени на размышление
+const GAME_SPEED_MS = 210;
+
 function randomFood(){
     let free=[];
     for(let i=0;i<GRID_SIZE;i++){
@@ -175,32 +185,81 @@ function randomFood(){
 function draw(){
     ctx.fillStyle='#111';
     ctx.fillRect(0,0,canvas.width,canvas.height);
-    // змейка
+    
+    // рисуем сетку (лёгкая стилизация для лучшего восприятия)
+    ctx.strokeStyle = '#202030';
+    ctx.lineWidth = 0.5;
+    for(let i = 0; i <= GRID_SIZE; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * CELL_SIZE, 0);
+        ctx.lineTo(i * CELL_SIZE, canvas.height);
+        ctx.stroke();
+        ctx.moveTo(0, i * CELL_SIZE);
+        ctx.lineTo(canvas.width, i * CELL_SIZE);
+        ctx.stroke();
+    }
+    
+    // змейка — тело
     ctx.fillStyle='#2ecc71';
     for(let i=0;i<snake.length;i++){
         let x=snake[i][0]*CELL_SIZE,y=snake[i][1]*CELL_SIZE;
         ctx.fillRect(x+1,y+1,CELL_SIZE-2,CELL_SIZE-2);
+        // добавляем лёгкий градиент/тень для объёма
+        ctx.fillStyle = i === 0 ? '#3cff7a' : '#2ecc71';
     }
-    // голова
+    // голова (ярче)
     if(snake.length>0 && !gameOver){
         ctx.fillStyle='#3cff7a';
         let x=snake[0][0]*CELL_SIZE,y=snake[0][1]*CELL_SIZE;
         ctx.fillRect(x+1,y+1,CELL_SIZE-2,CELL_SIZE-2);
+        // глаза змейки
+        ctx.fillStyle = '#ffffff';
+        let eyeSize = 3;
+        if(dir === 'right') {
+            ctx.fillRect(x+CELL_SIZE-7, y+5, eyeSize, eyeSize);
+            ctx.fillRect(x+CELL_SIZE-7, y+CELL_SIZE-9, eyeSize, eyeSize);
+        } else if(dir === 'left') {
+            ctx.fillRect(x+2, y+5, eyeSize, eyeSize);
+            ctx.fillRect(x+2, y+CELL_SIZE-9, eyeSize, eyeSize);
+        } else if(dir === 'up') {
+            ctx.fillRect(x+5, y+2, eyeSize, eyeSize);
+            ctx.fillRect(x+CELL_SIZE-9, y+2, eyeSize, eyeSize);
+        } else if(dir === 'down') {
+            ctx.fillRect(x+5, y+CELL_SIZE-7, eyeSize, eyeSize);
+            ctx.fillRect(x+CELL_SIZE-9, y+CELL_SIZE-7, eyeSize, eyeSize);
+        } else {
+            ctx.fillRect(x+5, y+5, eyeSize, eyeSize);
+            ctx.fillRect(x+CELL_SIZE-9, y+5, eyeSize, eyeSize);
+        }
     }
-    // еда
-    ctx.fillStyle='#e74c3c';
+    
+    // еда — стилизованное яблоко
     let fx=food[0]*CELL_SIZE,fy=food[1]*CELL_SIZE;
-    ctx.fillRect(fx+2,fy+2,CELL_SIZE-4,CELL_SIZE-4);
+    ctx.fillStyle='#e74c3c';
+    ctx.beginPath();
+    ctx.ellipse(fx+CELL_SIZE/2, fy+CELL_SIZE/2, CELL_SIZE*0.4, CELL_SIZE*0.4, 0, 0, Math.PI*2);
+    ctx.fill();
     ctx.fillStyle='#f1c40f';
-    ctx.fillRect(fx+CELL_SIZE-7,fy+2,4,6);
+    ctx.beginPath();
+    ctx.moveTo(fx+CELL_SIZE-6, fy+3);
+    ctx.lineTo(fx+CELL_SIZE-2, fy+8);
+    ctx.lineTo(fx+CELL_SIZE-8, fy+8);
+    ctx.fill();
+    ctx.fillStyle='#27ae60';
+    ctx.fillRect(fx+CELL_SIZE-4, fy+1, 2, 5);
     
     if(gameOver){
-        ctx.fillStyle='white';
+        ctx.fillStyle='rgba(0,0,0,0.75)';
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle='#e94560';
         ctx.font='bold 18px monospace';
-        ctx.fillText('GAME OVER',75,140);
-        ctx.font='10px monospace';
+        ctx.fillText('GAME OVER',85,135);
+        ctx.font='11px monospace';
+        ctx.fillStyle='#dddddd';
+        ctx.fillText('нажми "НОВАЯ ИГРА"',95,170);
         ctx.fillStyle='#aaa';
-        ctx.fillText('нажми "НОВАЯ ИГРА"',90,170);
+        ctx.font='9px monospace';
+        ctx.fillText('или пробел',120,195);
     }
 }
 
@@ -220,12 +279,19 @@ function update(){
         score++;
         scoreSpan.innerText=score;
         let win=randomFood();
-        if(win){gameOver=true;clearInterval(interval);draw();return;}
+        if(win){
+            gameOver=true;
+            clearInterval(interval);
+            draw();
+            return;
+        }
     }
     
+    // Проверка столкновения со стенами
     if(head[0]<0||head[0]>=GRID_SIZE||head[1]<0||head[1]>=GRID_SIZE){
         gameOver=true;clearInterval(interval);draw();return;
     }
+    // Проверка столкновения с собой
     for(let i=1;i<snake.length;i++){
         if(snake[i][0]==head[0]&&snake[i][1]==head[1]){
             gameOver=true;clearInterval(interval);draw();return;
@@ -235,6 +301,7 @@ function update(){
 }
 
 function restart(){
+    // сброс состояния
     snake=[[10,10],[9,10],[8,10],[7,10]];
     dir='right';
     nextDir='right';
@@ -243,39 +310,49 @@ function restart(){
     gameOver=false;
     food=[15,10];
     if(interval)clearInterval(interval);
+    // убеждаемся что еда не на змейке
     randomFood();
     draw();
-    interval=setInterval(update,130);
+    // используем более медленный интервал (210 мс)
+    interval=setInterval(update, GAME_SPEED_MS);
 }
 
-// Управление с клавиатуры
+// Управление с клавиатуры (с поддержкой пробела для перезапуска в конце игры)
 document.addEventListener('keydown',(e)=>{
-    if(gameOver && e.code=='Space'){restart();return;}
+    if(gameOver && (e.code === 'Space' || e.code === 'KeyR')) {
+        if(e.code === 'Space') e.preventDefault();
+        restart();
+        return;
+    }
     let k=e.key;
+    // блокируем движение в противоположную сторону
     if(k=='ArrowUp' && dir!='down'){nextDir='up'; e.preventDefault();}
-    if(k=='ArrowDown' && dir!='up'){nextDir='down'; e.preventDefault();}
-    if(k=='ArrowLeft' && dir!='right'){nextDir='left'; e.preventDefault();}
-    if(k=='ArrowRight' && dir!='left'){nextDir='right'; e.preventDefault();}
+    else if(k=='ArrowDown' && dir!='up'){nextDir='down'; e.preventDefault();}
+    else if(k=='ArrowLeft' && dir!='right'){nextDir='left'; e.preventDefault();}
+    else if(k=='ArrowRight' && dir!='left'){nextDir='right'; e.preventDefault();}
 });
 
-// Сенсорные кнопки (крестовина)
+// Сенсорные кнопки (крестовина) с защитой от багов касания
 const ctrlBtns = document.querySelectorAll('.ctrl-btn');
 ctrlBtns.forEach(btn => {
     const handler = (e) => {
         e.preventDefault();
+        if(gameOver) return;
         const ndir = btn.getAttribute('data-dir');
-        if(!ndir || gameOver) return;
+        if(!ndir) return;
         if(ndir=='up' && dir!='down') nextDir='up';
-        if(ndir=='down' && dir!='up') nextDir='down';
-        if(ndir=='left' && dir!='right') nextDir='left';
-        if(ndir=='right' && dir!='left') nextDir='right';
+        else if(ndir=='down' && dir!='up') nextDir='down';
+        else if(ndir=='left' && dir!='right') nextDir='left';
+        else if(ndir=='right' && dir!='left') nextDir='right';
     };
     btn.addEventListener('click', handler);
-    btn.addEventListener('touchstart', handler);
+    btn.addEventListener('touchstart', handler, {passive: false});
 });
 
-document.getElementById('restart').onclick=()=>{restart();};
+// Кнопка перезапуска
+document.getElementById('restart').onclick=()=>{ restart(); };
 
+// Старт игры с уменьшенной скоростью
 restart();
 </script>
 </body>
