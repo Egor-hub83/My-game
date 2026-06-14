@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Змейка — кнопка паузы выше</title>
+<title>Змейка — пауза вне игрового поля</title>
 <style>
 * {
     user-select: none;
@@ -25,13 +25,6 @@ body {
     border-radius: 20px;
     box-shadow: 0 8px 20px rgba(0,0,0,0.5);
     position: relative;
-    display: inline-block;
-}
-.canvas-wrapper {
-    position: relative;
-    display: inline-block;
-    width: 100%;
-    text-align: center;
 }
 canvas {
     background: #111;
@@ -40,50 +33,24 @@ canvas {
     display: block;
     margin: 0 auto;
 }
-/* Кнопка паузы высоко над канвасом (top: -20px, чтобы выступала вверх) */
-.pause-corner {
-    position: absolute;
-    top: -20px;
-    left: -8px;
-    background: #1a1a2e;
-    border: 2px solid #e94560;
-    color: white;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    font-weight: bold;
-    cursor: pointer;
-    z-index: 35;
-    backdrop-filter: blur(4px);
-    background: rgba(26, 26, 46, 0.95);
-    transition: 0.07s linear;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.4);
-}
-.pause-corner:active {
-    transform: scale(0.94);
-    background: #e94560;
-}
 .info {
     text-align: center;
     margin-top: 10px;
 }
-.score-box {
+/* Панель управления (счет, рекорд, кнопки) — ЗДЕСЬ кнопка паузы */
+.control-panel {
     display: flex;
     justify-content: center;
-    gap: 12px;
-    margin-bottom: 5px;
-    flex-wrap: wrap;
     align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
 }
 .score, .best {
     color: white;
     font-size: 16px;
     background: #1a1a2e;
-    padding: 4px 12px;
+    padding: 6px 14px;
     border-radius: 30px;
     display: inline-block;
 }
@@ -95,12 +62,30 @@ canvas {
 .best span {
     color: #f9ca24;
 }
-button {
+.pause-btn {
+    background: #2c3e66;
+    border: none;
+    color: white;
+    padding: 6px 18px;
+    border-radius: 30px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: monospace;
+    transition: 0.07s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.pause-btn:active {
+    transform: scale(0.96);
+}
+.restart-btn {
     background: #e94560;
     border: none;
     color: white;
-    padding: 6px 16px;
-    margin: 4px;
+    padding: 6px 18px;
+    margin: 0;
     border-radius: 30px;
     font-size: 14px;
     font-weight: bold;
@@ -108,7 +93,7 @@ button {
     font-family: monospace;
     transition: 0.07s;
 }
-button:active {
+.restart-btn:active {
     transform: scale(0.96);
 }
 
@@ -188,7 +173,7 @@ button:active {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 40;
+    z-index: 30;
     transition: all 0.2s ease;
 }
 .start-card {
@@ -238,7 +223,7 @@ button:active {
     display: none;
 }
 
-/* Индикатор паузы по центру */
+/* Индикатор паузы по центру канваса (всегда поверх, но НЕ кнопка) */
 .pause-marker {
     position: absolute;
     top: 50%;
@@ -246,17 +231,17 @@ button:active {
     transform: translate(-50%, -50%);
     background: rgba(0,0,0,0.8);
     color: #f9ca24;
-    font-size: 28px;
+    font-size: 24px;
     font-weight: bold;
-    padding: 12px 24px;
-    border-radius: 60px;
+    padding: 10px 20px;
+    border-radius: 50px;
     font-family: monospace;
     pointer-events: none;
-    z-index: 25;
+    z-index: 20;
     backdrop-filter: blur(6px);
     border: 1px solid #e94560;
     white-space: nowrap;
-    letter-spacing: 3px;
+    letter-spacing: 2px;
 }
 .hide-pause {
     display: none;
@@ -265,18 +250,15 @@ button:active {
 </head>
 <body>
 <div class="container" style="position: relative;">
-<div class="canvas-wrapper">
-    <canvas id="game" width="300" height="300"></canvas>
-    <!-- Кнопка паузы высоко (поднята выше канваса) -->
-    <div id="pauseCornerBtn" class="pause-corner" title="Пауза">⏸</div>
-    <div id="pauseIndicator" class="pause-marker hide-pause">⏸ ПАУЗА</div>
-</div>
+<canvas id="game" width="300" height="300"></canvas>
 <div class="info">
-<div class="score-box">
-    <div class="score">🍎 <span id="score">0</span></div>
-    <div class="best">🏆 <span id="bestScore">0</span></div>
-</div>
-<button id="restart">🔄 НОВАЯ ИГРА</button>
+    <!-- Панель управления: счет, рекорд, КНОПКА ПАУЗЫ (вне поля) и рестарт -->
+    <div class="control-panel">
+        <div class="score">🍎 <span id="score">0</span></div>
+        <div class="best">🏆 <span id="bestScore">0</span></div>
+        <button id="pauseGameBtn" class="pause-btn">⏸️ ПАУЗА</button>
+        <button id="restart" class="restart-btn">🔄 НОВАЯ ИГРА</button>
+    </div>
 </div>
 
 <!-- КРЕСТОВИДНЫЙ ГЕЙМПАД -->
@@ -292,7 +274,10 @@ button:active {
         <div class="ctrl-btn" data-dir="right">▶</div>
     </div>
 </div>
-<div class="hint">▲ ▼ ◀ ▶ &nbsp;&nbsp;| &nbsp;⏸ пауза (кнопка сверху слева / пробел) • личный рекорд</div>
+<div class="hint">▲ ▼ ◀ ▶ &nbsp;&nbsp;| &nbsp;⏸ пауза (кнопка сверху / пробел) • личный рекорд</div>
+
+<!-- Индикатор паузы поверх канваса (только надпись) -->
+<div id="pauseIndicator" class="pause-marker hide-pause">⏸ ПАУЗА</div>
 
 <!-- СТАРТОВОЕ МЕНЮ -->
 <div id="startOverlay" class="start-overlay">
@@ -313,7 +298,7 @@ const scoreSpan = document.getElementById('score');
 const bestScoreSpan = document.getElementById('bestScore');
 const startOverlay = document.getElementById('startOverlay');
 const startBtn = document.getElementById('startGameBtn');
-const pauseCornerBtn = document.getElementById('pauseCornerBtn');
+const pauseGameBtn = document.getElementById('pauseGameBtn');
 const pauseIndicator = document.getElementById('pauseIndicator');
 
 const GRID_SIZE = 20;
@@ -456,14 +441,14 @@ function setPause(state) {
         pauseIndicator.classList.remove('hide-pause');
         if (interval) clearInterval(interval);
         interval = null;
-        pauseCornerBtn.innerHTML = '▶';
-        pauseCornerBtn.title = 'Продолжить';
+        pauseGameBtn.innerHTML = '▶️ СТАРТ';
+        pauseGameBtn.style.background = '#27ae60';
     } else {
         pauseIndicator.classList.add('hide-pause');
         if (interval) clearInterval(interval);
         interval = setInterval(update, GAME_SPEED_MS);
-        pauseCornerBtn.innerHTML = '⏸';
-        pauseCornerBtn.title = 'Пауза';
+        pauseGameBtn.innerHTML = '⏸️ ПАУЗА';
+        pauseGameBtn.style.background = '#2c3e66';
     }
 }
 
@@ -527,8 +512,8 @@ function stopGameLoop() {
     isGameActive = false;
     isPaused = false;
     pauseIndicator.classList.add('hide-pause');
-    pauseCornerBtn.innerHTML = '⏸';
-    pauseCornerBtn.title = 'Пауза';
+    pauseGameBtn.innerHTML = '⏸️ ПАУЗА';
+    pauseGameBtn.style.background = '#2c3e66';
 }
 
 function startGameLoop() {
@@ -538,8 +523,8 @@ function startGameLoop() {
     isPaused = false;
     pauseIndicator.classList.add('hide-pause');
     interval = setInterval(update, GAME_SPEED_MS);
-    pauseCornerBtn.innerHTML = '⏸';
-    pauseCornerBtn.title = 'Пауза';
+    pauseGameBtn.innerHTML = '⏸️ ПАУЗА';
+    pauseGameBtn.style.background = '#2c3e66';
 }
 
 function fullReset() {
@@ -548,8 +533,8 @@ function fullReset() {
     gameOver = false;
     isPaused = false;
     pauseIndicator.classList.add('hide-pause');
-    pauseCornerBtn.innerHTML = '⏸';
-    pauseCornerBtn.title = 'Пауза';
+    pauseGameBtn.innerHTML = '⏸️ ПАУЗА';
+    pauseGameBtn.style.background = '#2c3e66';
     snake = [[10,10],[9,10],[8,10],[7,10]];
     dir = 'right';
     nextDir = 'right';
@@ -572,8 +557,8 @@ function restartWithMenu() {
     gameOver = false;
     isPaused = false;
     pauseIndicator.classList.add('hide-pause');
-    pauseCornerBtn.innerHTML = '⏸';
-    pauseCornerBtn.title = 'Пауза';
+    pauseGameBtn.innerHTML = '⏸️ ПАУЗА';
+    pauseGameBtn.style.background = '#2c3e66';
     fullReset();
     startOverlay.classList.remove('hide-overlay');
 }
@@ -590,7 +575,7 @@ startBtn.addEventListener('click', (e) => {
     launchGame();
 });
 
-pauseCornerBtn.addEventListener('click', () => {
+pauseGameBtn.addEventListener('click', () => {
     if (startOverlay.classList.contains('hide-overlay') && isGameActive && !gameOver) {
         togglePause();
     }
