@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Змейка — крестовидный геймпад</title>
+<style>
+* {
+    user-select: none;
+    touch-action: manipulation;
+}
+body {
+    background: #0a0a1a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 15px;
+    font-family: monospace;
+}
+.container {
+    background: #0f0f1a;
+    padding: 12px;
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+}
+canvas {
+    background: #111;
+    border: 3px solid #e94560;
+    border-radius: 10px;
+    display: block;
+    margin: 0 auto;
+}
+.info {
+    text-align: center;
+    margin-top: 10px;
+}
+.score {
+    color: white;
+    font-size: 18px;
+    margin: 6px;
+    background: #1a1a2e;
+    padding: 4px 12px;
+    border-radius: 30px;
+    display: inline-block;
+}
+.score span {
+    color: #e94560;
+    font-weight: bold;
+    font-size: 22px;
+}
+button {
+    background: #e94560;
+    border: none;
+    color: white;
+    padding: 6px 16px;
+    margin: 4px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: monospace;
+}
+button:active {
+    transform: scale(0.96);
+}
+
+/* КРЕСТОВИДНЫЙ ГЕЙМПАД */
+.dpad {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 15px;
+}
+.dpad-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 0;
+}
+.ctrl-btn {
+    background: #1a2a4a;
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #0a1220;
+    transition: 0.03s linear;
+    touch-action: manipulation;
+}
+.ctrl-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 #0a1220;
+}
+/* Пустая заглушка для крестовины (невидимая) */
+.empty {
+    background: transparent;
+    box-shadow: none;
+    cursor: default;
+}
+.empty:active {
+    transform: none;
+    box-shadow: none;
+}
+.hint {
+    text-align: center;
+    margin-top: 10px;
+    color: #555;
+    font-size: 10px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<!-- Экран 300x300 -->
+<canvas id="game" width="300" height="300"></canvas>
+<div class="info">
+<div class="score">🍎 <span id="score">0</span></div>
+<button id="restart">🔄 НОВАЯ ИГРА</button>
+</div>
+
+<!-- КРЕСТОВИДНЫЙ ГЕЙМПАД -->
+<div class="dpad">
+    <div class="dpad-row">
+        <div class="empty"></div>
+        <div class="ctrl-btn" data-dir="up">▲</div>
+        <div class="empty"></div>
+    </div>
+    <div class="dpad-row">
+        <div class="ctrl-btn" data-dir="left">◀</div>
+        <div class="ctrl-btn" data-dir="down">▼</div>
+        <div class="ctrl-btn" data-dir="right">▶</div>
+    </div>
+</div>
+<div class="hint">▲ вверх, ▼ вниз, ◀ влево, ▶ вправо</div>
+</div>
+
+<script>
+const canvas=document.getElementById('game');
+const ctx=canvas.getContext('2d');
+const scoreSpan=document.getElementById('score');
+
+const GRID_SIZE = 20;
+const CELL_SIZE = canvas.width / GRID_SIZE;
+
+let snake=[[10,10],[9,10],[8,10],[7,10]];
+let dir='right';
+let nextDir='right';
+let food=[15,10];
+let score=0;
+let gameOver=false;
+let interval;
+
+function randomFood(){
+    let free=[];
+    for(let i=0;i<GRID_SIZE;i++){
+        for(let j=0;j<GRID_SIZE;j++){
+            let ok=true;
+            for(let s of snake)if(s[0]==i&&s[1]==j){ok=false;break;}
+            if(ok)free.push([i,j]);
+        }
+    }
+    if(free.length==0)return true;
+    food=free[Math.floor(Math.random()*free.length)];
+    return false;
+}
+
+function draw(){
+    ctx.fillStyle='#111';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    // змейка
+    ctx.fillStyle='#2ecc71';
+    for(let i=0;i<snake.length;i++){
+        let x=snake[i][0]*CELL_SIZE,y=snake[i][1]*CELL_SIZE;
+        ctx.fillRect(x+1,y+1,CELL_SIZE-2,CELL_SIZE-2);
+    }
+    // голова
+    if(snake.length>0 && !gameOver){
+        ctx.fillStyle='#3cff7a';
+        let x=snake[0][0]*CELL_SIZE,y=snake[0][1]*CELL_SIZE;
+        ctx.fillRect(x+1,y+1,CELL_SIZE-2,CELL_SIZE-2);
+    }
+    // еда
+    ctx.fillStyle='#e74c3c';
+    let fx=food[0]*CELL_SIZE,fy=food[1]*CELL_SIZE;
+    ctx.fillRect(fx+2,fy+2,CELL_SIZE-4,CELL_SIZE-4);
+    ctx.fillStyle='#f1c40f';
+    ctx.fillRect(fx+CELL_SIZE-7,fy+2,4,6);
+    
+    if(gameOver){
+        ctx.fillStyle='white';
+        ctx.font='bold 18px monospace';
+        ctx.fillText('GAME OVER',75,140);
+        ctx.font='10px monospace';
+        ctx.fillStyle='#aaa';
+        ctx.fillText('нажми "НОВАЯ ИГРА"',90,170);
+    }
+}
+
+function update(){
+    if(gameOver)return;
+    dir=nextDir;
+    let head=[snake[0][0],snake[0][1]];
+    if(dir=='right')head[0]++;
+    if(dir=='left')head[0]--;
+    if(dir=='up')head[1]--;
+    if(dir=='down')head[1]++;
+    
+    let eat=(head[0]==food[0]&&head[1]==food[1]);
+    snake.unshift([head[0],head[1]]);
+    if(!eat)snake.pop();
+    else{
+        score++;
+        scoreSpan.innerText=score;
+        let win=randomFood();
+        if(win){gameOver=true;clearInterval(interval);draw();return;}
+    }
+    
+    if(head[0]<0||head[0]>=GRID_SIZE||head[1]<0||head[1]>=GRID_SIZE){
+        gameOver=true;clearInterval(interval);draw();return;
+    }
+    for(let i=1;i<snake.length;i++){
+        if(snake[i][0]==head[0]&&snake[i][1]==head[1]){
+            gameOver=true;clearInterval(interval);draw();return;
+        }
+    }
+    draw();
+}
+
+function restart(){
+    snake=[[10,10],[9,10],[8,10],[7,10]];
+    dir='right';
+    nextDir='right';
+    score=0;
+    scoreSpan.innerText='0';
+    gameOver=false;
+    food=[15,10];
+    if(interval)clearInterval(interval);
+    randomFood();
+    draw();
+    interval=setInterval(update,130);
+}
+
+// Управление с клавиатуры
+document.addEventListener('keydown',(e)=>{
+    if(gameOver && e.code=='Space'){restart();return;}
+    let k=e.key;
+    if(k=='ArrowUp' && dir!='down'){nextDir='up'; e.preventDefault();}
+    if(k=='ArrowDown' && dir!='up'){nextDir='down'; e.preventDefault();}
+    if(k=='ArrowLeft' && dir!='right'){nextDir='left'; e.preventDefault();}
+    if(k=='ArrowRight' && dir!='left'){nextDir='right'; e.preventDefault();}
+});
+
+// Сенсорные кнопки (крестовина)
+const ctrlBtns = document.querySelectorAll('.ctrl-btn');
+ctrlBtns.forEach(btn => {
+    const handler = (e) => {
+        e.preventDefault();
+        const ndir = btn.getAttribute('data-dir');
+        if(!ndir || gameOver) return;
+        if(ndir=='up' && dir!='down') nextDir='up';
+        if(ndir=='down' && dir!='up') nextDir='down';
+        if(ndir=='left' && dir!='right') nextDir='left';
+        if(ndir=='right' && dir!='left') nextDir='right';
+    };
+    btn.addEventListener('click', handler);
+    btn.addEventListener('touchstart', handler);
+});
+
+document.getElementById('restart').onclick=()=>{restart();};
+
+restart();
+</script>
+</body>
+</html>
