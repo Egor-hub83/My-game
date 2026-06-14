@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Змейка — крестовидный геймпад (медленный режим)</title>
+<title>Змейка — личный рекорд</title>
 <style>
 * {
     user-select: none;
@@ -36,19 +36,27 @@ canvas {
     text-align: center;
     margin-top: 10px;
 }
-.score {
+.score-box {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 5px;
+}
+.score, .best {
     color: white;
-    font-size: 18px;
-    margin: 6px;
+    font-size: 16px;
     background: #1a1a2e;
     padding: 4px 12px;
     border-radius: 30px;
     display: inline-block;
 }
-.score span {
+.score span, .best span {
     color: #e94560;
     font-weight: bold;
-    font-size: 22px;
+    font-size: 20px;
+}
+.best span {
+    color: #f9ca24;
 }
 button {
     background: #e94560;
@@ -100,7 +108,6 @@ button:active {
     transform: translateY(3px);
     box-shadow: 0 2px 0 #0a1220;
 }
-/* Пустая заглушка для крестовины (невидимая) */
 .empty {
     background: transparent;
     box-shadow: none;
@@ -121,14 +128,24 @@ button:active {
     display: inline-block;
     width: auto;
 }
+.new-record {
+    animation: pulse 0.5s ease-in-out 3;
+}
+@keyframes pulse {
+    0% { transform: scale(1); background: #e94560; }
+    50% { transform: scale(1.05); background: #f39c12; box-shadow: 0 0 8px gold; }
+    100% { transform: scale(1); background: #e94560; }
+}
 </style>
 </head>
 <body>
 <div class="container">
-<!-- Экран 300x300 -->
 <canvas id="game" width="300" height="300"></canvas>
 <div class="info">
-<div class="score">🍎 <span id="score">0</span></div>
+<div class="score-box">
+    <div class="score">🍎 ТЕКУЩИЙ <span id="score">0</span></div>
+    <div class="best">🏆 РЕКОРД <span id="bestScore">0</span></div>
+</div>
 <button id="restart">🔄 НОВАЯ ИГРА</button>
 </div>
 
@@ -145,13 +162,14 @@ button:active {
         <div class="ctrl-btn" data-dir="right">▶</div>
     </div>
 </div>
-<div class="hint">▲ ▼ ◀ ▶ &nbsp;&nbsp;|&nbsp; плавная игра</div>
+<div class="hint">▲ ▼ ◀ ▶ &nbsp;&nbsp;| &nbsp;ваш личный рекорд сохраняется</div>
 </div>
 
 <script>
 const canvas=document.getElementById('game');
 const ctx=canvas.getContext('2d');
 const scoreSpan=document.getElementById('score');
+const bestScoreSpan=document.getElementById('bestScore');
 
 const GRID_SIZE = 20;
 const CELL_SIZE = canvas.width / GRID_SIZE;
@@ -164,10 +182,40 @@ let score=0;
 let gameOver=false;
 let interval;
 
-// ⚡ ОСНОВНОЕ ИЗМЕНЕНИЕ: скорость игры значительно снижена (210 мс вместо 130)
-// Это делает игру медленнее, даёт больше времени на размышление
 const GAME_SPEED_MS = 210;
 
+// ----- РАБОТА С РЕКОРДОМ (LocalStorage) -----
+function loadBestScore() {
+    let best = localStorage.getItem('snakeBestScore');
+    if (best === null) {
+        localStorage.setItem('snakeBestScore', '0');
+        return 0;
+    }
+    return parseInt(best, 10);
+}
+
+function updateBestScoreUI() {
+    let best = loadBestScore();
+    bestScoreSpan.innerText = best;
+}
+
+function checkAndUpdateRecord(currentScore) {
+    let best = loadBestScore();
+    if (currentScore > best) {
+        localStorage.setItem('snakeBestScore', currentScore.toString());
+        updateBestScoreUI();
+        // визуальный эффект "новый рекорд"
+        const bestElement = document.getElementById('bestScore');
+        bestElement.classList.add('new-record');
+        setTimeout(() => {
+            bestElement.classList.remove('new-record');
+        }, 600);
+        return true;
+    }
+    return false;
+}
+
+// Остальная логика игры
 function randomFood(){
     let free=[];
     for(let i=0;i<GRID_SIZE;i++){
@@ -177,7 +225,7 @@ function randomFood(){
             if(ok)free.push([i,j]);
         }
     }
-    if(free.length==0)return true;
+    if(free.length==0)return true; // победа, поле заполнено
     food=free[Math.floor(Math.random()*free.length)];
     return false;
 }
@@ -186,7 +234,7 @@ function draw(){
     ctx.fillStyle='#111';
     ctx.fillRect(0,0,canvas.width,canvas.height);
     
-    // рисуем сетку (лёгкая стилизация для лучшего восприятия)
+    // сетка
     ctx.strokeStyle = '#202030';
     ctx.lineWidth = 0.5;
     for(let i = 0; i <= GRID_SIZE; i++) {
@@ -199,20 +247,17 @@ function draw(){
         ctx.stroke();
     }
     
-    // змейка — тело
-    ctx.fillStyle='#2ecc71';
+    // змейка
     for(let i=0;i<snake.length;i++){
         let x=snake[i][0]*CELL_SIZE,y=snake[i][1]*CELL_SIZE;
+        if(i===0) ctx.fillStyle='#3cff7a';
+        else ctx.fillStyle='#2ecc71';
         ctx.fillRect(x+1,y+1,CELL_SIZE-2,CELL_SIZE-2);
-        // добавляем лёгкий градиент/тень для объёма
-        ctx.fillStyle = i === 0 ? '#3cff7a' : '#2ecc71';
     }
-    // голова (ярче)
+    
+    // глаза головы
     if(snake.length>0 && !gameOver){
-        ctx.fillStyle='#3cff7a';
         let x=snake[0][0]*CELL_SIZE,y=snake[0][1]*CELL_SIZE;
-        ctx.fillRect(x+1,y+1,CELL_SIZE-2,CELL_SIZE-2);
-        // глаза змейки
         ctx.fillStyle = '#ffffff';
         let eyeSize = 3;
         if(dir === 'right') {
@@ -233,7 +278,7 @@ function draw(){
         }
     }
     
-    // еда — стилизованное яблоко
+    // еда
     let fx=food[0]*CELL_SIZE,fy=food[1]*CELL_SIZE;
     ctx.fillStyle='#e74c3c';
     ctx.beginPath();
@@ -249,7 +294,7 @@ function draw(){
     ctx.fillRect(fx+CELL_SIZE-4, fy+1, 2, 5);
     
     if(gameOver){
-        ctx.fillStyle='rgba(0,0,0,0.75)';
+        ctx.fillStyle='rgba(0,0,0,0.8)';
         ctx.fillRect(0,0,canvas.width,canvas.height);
         ctx.fillStyle='#e94560';
         ctx.font='bold 18px monospace';
@@ -257,9 +302,10 @@ function draw(){
         ctx.font='11px monospace';
         ctx.fillStyle='#dddddd';
         ctx.fillText('нажми "НОВАЯ ИГРА"',95,170);
-        ctx.fillStyle='#aaa';
-        ctx.font='9px monospace';
-        ctx.fillText('или пробел',120,195);
+        ctx.fillStyle='#f9ca24';
+        ctx.font='bold 10px monospace';
+        let best = loadBestScore();
+        ctx.fillText(`🏆 ЛУЧШИЙ: ${best}`, 108, 195);
     }
 }
 
@@ -282,26 +328,35 @@ function update(){
         if(win){
             gameOver=true;
             clearInterval(interval);
+            // победа: поле полностью заполнено -> проверяем рекорд
+            checkAndUpdateRecord(score);
             draw();
             return;
         }
     }
     
-    // Проверка столкновения со стенами
+    // столкновение со стенами
     if(head[0]<0||head[0]>=GRID_SIZE||head[1]<0||head[1]>=GRID_SIZE){
-        gameOver=true;clearInterval(interval);draw();return;
+        gameOver=true;
+        clearInterval(interval);
+        checkAndUpdateRecord(score);
+        draw();
+        return;
     }
-    // Проверка столкновения с собой
+    // столкновение с собой
     for(let i=1;i<snake.length;i++){
         if(snake[i][0]==head[0]&&snake[i][1]==head[1]){
-            gameOver=true;clearInterval(interval);draw();return;
+            gameOver=true;
+            clearInterval(interval);
+            checkAndUpdateRecord(score);
+            draw();
+            return;
         }
     }
     draw();
 }
 
 function restart(){
-    // сброс состояния
     snake=[[10,10],[9,10],[8,10],[7,10]];
     dir='right';
     nextDir='right';
@@ -310,14 +365,12 @@ function restart(){
     gameOver=false;
     food=[15,10];
     if(interval)clearInterval(interval);
-    // убеждаемся что еда не на змейке
-    randomFood();
+    randomFood(); // гарантируем валидную еду
     draw();
-    // используем более медленный интервал (210 мс)
     interval=setInterval(update, GAME_SPEED_MS);
 }
 
-// Управление с клавиатуры (с поддержкой пробела для перезапуска в конце игры)
+// Клавиатура
 document.addEventListener('keydown',(e)=>{
     if(gameOver && (e.code === 'Space' || e.code === 'KeyR')) {
         if(e.code === 'Space') e.preventDefault();
@@ -325,14 +378,13 @@ document.addEventListener('keydown',(e)=>{
         return;
     }
     let k=e.key;
-    // блокируем движение в противоположную сторону
     if(k=='ArrowUp' && dir!='down'){nextDir='up'; e.preventDefault();}
     else if(k=='ArrowDown' && dir!='up'){nextDir='down'; e.preventDefault();}
     else if(k=='ArrowLeft' && dir!='right'){nextDir='left'; e.preventDefault();}
     else if(k=='ArrowRight' && dir!='left'){nextDir='right'; e.preventDefault();}
 });
 
-// Сенсорные кнопки (крестовина) с защитой от багов касания
+// Сенсорный геймпад
 const ctrlBtns = document.querySelectorAll('.ctrl-btn');
 ctrlBtns.forEach(btn => {
     const handler = (e) => {
@@ -352,7 +404,8 @@ ctrlBtns.forEach(btn => {
 // Кнопка перезапуска
 document.getElementById('restart').onclick=()=>{ restart(); };
 
-// Старт игры с уменьшенной скоростью
+// Инициализация рекорда и старт
+updateBestScoreUI();
 restart();
 </script>
 </body>
