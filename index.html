@@ -3,1186 +3,1101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Змейка — скины, кейсы, настройки</title>
+    <title>Змейка — скины, кейсы, задания</title>
     <style>
-        * {
-            user-select: none;
-            touch-action: manipulation;
-            box-sizing: border-box;
-        }
-        body {
-            background: #0a0a1a;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 10px;
-            font-family: monospace;
-        }
-        .container {
-            background: #0f0f1a;
-            padding: 10px 8px;
-            border-radius: 20px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-            position: relative;
-            max-width: 380px;
-            width: 100%;
-        }
-        canvas {
-            background: #111;
-            border: 3px solid #e94560;
-            border-radius: 12px;
-            display: block;
-            margin: 0 auto;
-            touch-action: none;
-        }
-        .info {
-            text-align: center;
-            margin-top: 8px;
-        }
-        .control-panel {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 6px;
-            flex-wrap: wrap;
-        }
-        .score,
-        .best,
-        .coins-display {
-            color: white;
-            font-size: 14px;
-            background: #1a1a2e;
-            padding: 5px 10px;
-            border-radius: 30px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .score span,
-        .best span,
-        .coins-display span {
-            font-weight: bold;
-            font-size: 18px;
-        }
-        .score span {
-            color: #e94560;
-        }
-        .best span {
-            color: #f9ca24;
-        }
-        .coins-display span {
-            color: #f1c40f;
-        }
-        .btn {
-            border: none;
-            color: white;
-            padding: 6px 14px;
-            border-radius: 30px;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
-            font-family: monospace;
-            transition: 0.07s;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: #2c3e66;
-        }
-        .btn:active {
-            transform: scale(0.95);
-        }
-        .btn.red {
-            background: #e94560;
-        }
-        .btn.gold {
-            background: #b8860b;
-            color: #fff;
-        }
-        .btn.green {
-            background: #27ae60;
-        }
+        * { user-select: none; touch-action: manipulation; box-sizing: border-box; }
+        body { background: #0a0a1a; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px; font-family: monospace; }
+        .container { background: #0f0f1a; padding: 10px 8px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); position: relative; max-width: 380px; width: 100%; }
+        canvas { background: #111; border: 3px solid #e94560; border-radius: 12px; display: block; margin: 0 auto; touch-action: none; }
+        .info { text-align: center; margin-top: 8px; }
+        .control-panel { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+        .score, .best, .coins-display { color: white; font-size: 14px; background: #1a1a2e; padding: 5px 10px; border-radius: 30px; display: inline-flex; align-items: center; gap: 4px; cursor: default; }
+        .score span, .best span, .coins-display span { font-weight: bold; font-size: 18px; }
+        .score span { color: #e94560; }
+        .best span { color: #f9ca24; }
+        .coins-display span { color: #f1c40f; }
+        .btn { border: none; color: white; padding: 6px 14px; border-radius: 30px; font-size: 13px; font-weight: bold; cursor: pointer; font-family: monospace; transition: 0.07s; display: inline-flex; align-items: center; gap: 4px; background: #2c3e66; }
+        .btn:active { transform: scale(0.95); }
+        .btn.red { background: #e94560; }
+        .btn.gold { background: #b8860b; color: #fff; }
+        .btn.green { background: #27ae60; }
+        .btn.dev { background: #333; font-size: 9px; padding: 3px 6px; opacity: 0.4; position: absolute; bottom: 8px; left: 8px; z-index: 40; letter-spacing: 0.5px; }
+        .promo-input { background: #1a1a2e; border: 1px solid #555; color: white; padding: 6px 10px; border-radius: 20px; font-family: monospace; width: 110px; text-align: center; outline: none; }
+        .promo-input:focus { border-color: #f9ca24; }
+        .dpad { display: flex; flex-direction: column; align-items: center; margin-top: 8px; }
+        .dpad-row { display: flex; justify-content: center; gap: 8px; margin: 0; }
+        .ctrl-btn { background: #1a2a4a; width: 54px; height: 54px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; color: white; cursor: pointer; box-shadow: 0 4px 0 #0a1220; transition: 0.03s linear; touch-action: manipulation; }
+        .ctrl-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #0a1220; }
+        .empty { background: transparent; box-shadow: none; cursor: default; pointer-events: none; }
+        .hint { text-align: center; margin-top: 6px; color: #777; font-size: 10px; background: #151520; padding: 3px 8px; border-radius: 20px; display: inline-block; width: auto; }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,26,0.94); backdrop-filter: blur(4px); border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 30; transition: all 0.2s ease; }
+        .overlay-card { background: #1a1a2e; padding: 20px 16px; border-radius: 24px; text-align: center; border: 2px solid #e94560; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-width: 300px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        .overlay-card h2 { color: #f9ca24; font-size: 22px; margin: 0 0 8px; letter-spacing: 1px; }
+        .overlay-card p { color: #ddd; font-size: 14px; margin: 8px 0; }
+        .hide-overlay { display: none !important; }
+        .btn-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+        .pause-marker { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(0,0,0,0.85); color: #f9ca24; font-size: 22px; font-weight: bold; padding: 10px 18px; border-radius: 50px; font-family: monospace; pointer-events: none; z-index: 20; backdrop-filter: blur(6px); border: 1px solid #e94560; white-space: nowrap; letter-spacing: 2px; }
+        .hide-pause { display: none; }
+        .joystick-zone { position: relative; width: 120px; height: 120px; margin: 10px auto; display: none; background: rgba(255,255,255,0.03); border-radius: 50%; border: 2px dashed #444; }
+        .joystick-knob { position: absolute; width: 50px; height: 50px; background: #e94560; border-radius: 50%; left: 35px; top: 35px; transition: 0.05s linear; box-shadow: 0 4px 10px rgba(0,0,0,0.6); pointer-events: none; }
+        .joystick-zone.active .joystick-knob { background: #f9ca24; box-shadow: 0 0 15px gold; }
+        .skin-item { display: inline-block; width: 48px; height: 48px; border-radius: 8px; margin: 4px; border: 2px solid #555; cursor: pointer; position: relative; transition: 0.1s; background: #222; overflow: hidden; }
+        .skin-item.selected { border: 3px solid #f9ca24; box-shadow: 0 0 10px gold; }
+        .skin-item.locked { opacity: 0.4; cursor: not-allowed; }
+        .skin-item .rarity-dot { position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; border: 1px solid #000; }
+        .rarity-rare { background: #5dade2; }
+        .rarity-superrare { background: #1b3a5c; }
+        .rarity-legendary { background: #f1c40f; }
+        .rarity-secret { background: #ff6b6b; box-shadow: 0 0 10px #ff6b6b; }
+        .skin-item .mini-snake { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 28px; animation: spinSnake 3s linear infinite; }
+        @keyframes spinSnake { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .case-shop { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 6px 0; }
+        .speed-slider-wrapper { display: flex; flex-direction: column; align-items: center; margin: 6px 0; }
+        .speed-slider-wrapper input[type="range"] { width: 100%; max-width: 200px; background: #2c3e66; height: 4px; border-radius: 4px; -webkit-appearance: none; appearance: none; outline: none; }
+        .speed-slider-wrapper input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #f9ca24; cursor: pointer; border: 2px solid #fff; }
+        .speed-slider-wrapper input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #f9ca24; cursor: pointer; border: 2px solid #fff; }
+        .speed-labels { display: flex; justify-content: space-between; width: 100%; max-width: 200px; color: #aaa; font-size: 10px; padding: 0 4px; }
+        .speed-labels span { cursor: default; }
+        .secret-glow { animation: secretPulse 0.5s ease-in-out 3; }
+        @keyframes secretPulse { 0%,100% { text-shadow: 0 0 5px #f9ca24; } 50% { text-shadow: 0 0 20px #f9ca24, 0 0 40px #e94560; } }
+        .promo-entry { display: flex; justify-content: space-between; align-items: center; margin: 2px 0; font-size: 11px; color: #ccc; gap: 8px; }
+        .promo-entry .promo-code { font-weight: bold; color: #f9ca24; }
+        .promo-entry .promo-reward { color: #aaa; }
+        .promo-entry .delete-promo { background: #c0392b; border: none; color: white; border-radius: 12px; padding: 1px 8px; font-size: 11px; cursor: pointer; }
+        .promo-entry .delete-promo:hover { background: #e74c3c; }
 
-        /* D-PAD */
-        .dpad {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 8px;
-        }
-        .dpad-row {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin: 0;
-        }
-        .ctrl-btn {
-            background: #1a2a4a;
-            width: 54px;
-            height: 54px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            font-weight: bold;
-            color: white;
-            cursor: pointer;
-            box-shadow: 0 4px 0 #0a1220;
-            transition: 0.03s linear;
-            touch-action: manipulation;
-        }
-        .ctrl-btn:active {
-            transform: translateY(3px);
-            box-shadow: 0 1px 0 #0a1220;
-        }
-        .empty {
-            background: transparent;
-            box-shadow: none;
-            cursor: default;
-            pointer-events: none;
-        }
-        .hint {
-            text-align: center;
-            margin-top: 6px;
-            color: #777;
-            font-size: 10px;
-            background: #151520;
-            padding: 3px 8px;
-            border-radius: 20px;
-            display: inline-block;
-            width: auto;
-        }
+        /* Задания */
+        .quest-item { background: #1a1a2e; border-radius: 12px; padding: 8px; margin: 6px 0; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .quest-item .quest-info { text-align: left; color: #ddd; font-size: 12px; }
+        .quest-item .quest-info .quest-name { color: #f9ca24; font-weight: bold; }
+        .quest-item .quest-progress { color: #aaa; font-size: 11px; }
+        .quest-item .quest-reward { color: #f1c40f; font-size: 12px; }
+        .quest-item .quest-btn { background: #27ae60; border: none; color: white; border-radius: 20px; padding: 2px 12px; font-size: 11px; cursor: pointer; }
+        .quest-item .quest-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .quest-item .quest-btn.claimed { background: #555; }
 
-        /* OVERLAYS */
-        .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10, 10, 26, 0.94);
-            backdrop-filter: blur(4px);
-            border-radius: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 30;
-            transition: all 0.2s ease;
-        }
-        .overlay-card {
-            background: #1a1a2e;
-            padding: 20px 16px;
-            border-radius: 24px;
-            text-align: center;
-            border: 2px solid #e94560;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            max-width: 280px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        .overlay-card h2 {
-            color: #f9ca24;
-            font-size: 22px;
-            margin: 0 0 8px;
-            letter-spacing: 1px;
-        }
-        .overlay-card p {
-            color: #ddd;
-            font-size: 14px;
-            margin: 8px 0;
-        }
-        .hide-overlay {
-            display: none !important;
-        }
-        .btn-row {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 10px;
-        }
-
-        /* Пауза маркер */
-        .pause-marker {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.85);
-            color: #f9ca24;
-            font-size: 22px;
-            font-weight: bold;
-            padding: 10px 18px;
-            border-radius: 50px;
-            font-family: monospace;
-            pointer-events: none;
-            z-index: 20;
-            backdrop-filter: blur(6px);
-            border: 1px solid #e94560;
-            white-space: nowrap;
-            letter-spacing: 2px;
-        }
-        .hide-pause {
-            display: none;
-        }
-
-        /* Джойстик */
-        .joystick-zone {
-            position: relative;
-            width: 120px;
-            height: 120px;
-            margin: 10px auto;
-            display: none;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 50%;
-            border: 2px dashed #444;
-        }
-        .joystick-knob {
-            position: absolute;
-            width: 50px;
-            height: 50px;
-            background: #e94560;
-            border-radius: 50%;
-            left: 35px;
-            top: 35px;
-            transition: 0.05s linear;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
-            pointer-events: none;
-        }
-        .joystick-zone.active .joystick-knob {
-            background: #f9ca24;
-            box-shadow: 0 0 15px gold;
-        }
-
-        /* Скин инвентарь */
-        .skin-item {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            margin: 4px;
-            border: 2px solid #555;
-            cursor: pointer;
-            position: relative;
-            transition: 0.1s;
-        }
-        .skin-item.selected {
-            border: 3px solid #f9ca24;
-            box-shadow: 0 0 10px gold;
-        }
-        .skin-item.locked {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-        .skin-item .rarity-dot {
-            position: absolute;
-            bottom: -4px;
-            right: -4px;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            border: 1px solid #000;
-        }
-        .rarity-rare {
-            background: #5dade2;
-        }
-        .rarity-superrare {
-            background: #1b3a5c;
-        }
-        .rarity-legendary {
-            background: #f1c40f;
-        }
-
-        /* Анимация открытия кейса */
-        @keyframes caseShake {
-            0%,
-            100% {
-                transform: rotate(0);
-            }
-            25% {
-                transform: rotate(-8deg);
-            }
-            75% {
-                transform: rotate(8deg);
-            }
-        }
-        @keyframes revealGlow {
-            0% {
-                transform: scale(0);
-                opacity: 0;
-            }
-            60% {
-                transform: scale(1.2);
-                opacity: 1;
-            }
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-        .case-shake {
-            animation: caseShake 0.6s ease-in-out 3;
-        }
-        .reveal-item {
-            animation: revealGlow 0.5s ease-out forwards;
-        }
+        .achievement { background: #1a1a2e; border-radius: 12px; padding: 6px; margin: 4px 0; border: 1px solid #f9ca24; display: flex; justify-content: space-between; align-items: center; }
+        .achievement .ach-name { color: #f9ca24; font-size: 12px; }
+        .achievement .ach-status { color: #aaa; font-size: 11px; }
+        .achievement .ach-reward { color: #f1c40f; font-size: 12px; }
+        .case-arrow { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 24px; color: #f9ca24; text-shadow: 0 0 10px gold; z-index: 5; pointer-events: none; }
     </style>
 </head>
 <body>
-    <div class="container" id="mainContainer">
-        <canvas id="game" width="300" height="300"></canvas>
-        <div class="info">
-            <div class="control-panel">
-                <div class="score">🍎 <span id="score">0</span></div>
-                <div class="best">🏆 <span id="bestScore">0</span></div>
-                <div class="coins-display">🪙 <span id="coinsDisplay">0</span></div>
-                <button id="pauseGameBtn" class="btn">⏸️ ПАУЗА</button>
-                <button id="shopBtn" class="btn gold">🎁 МАГАЗИН</button>
-                <button id="settingsBtn" class="btn">⚙️</button>
-                <button id="restart" class="btn red">🔄</button>
-            </div>
-        </div>
+<div class="container" id="mainContainer">
+    <canvas id="game" width="300" height="300"></canvas>
+    <button id="devBtn" class="btn dev" title="dev">⚙️ dev</button>
 
-        <!-- Геймпад (крест) -->
-        <div class="dpad" id="dpadContainer">
-            <div class="dpad-row">
-                <div class="empty"></div>
-                <div class="ctrl-btn" data-dir="up">▲</div>
-                <div class="empty"></div>
-            </div>
-            <div class="dpad-row">
-                <div class="ctrl-btn" data-dir="left">◀</div>
-                <div class="ctrl-btn" data-dir="down">▼</div>
-                <div class="ctrl-btn" data-dir="right">▶</div>
-            </div>
-        </div>
-
-        <!-- Джойстик (скрыт по умолчанию) -->
-        <div class="joystick-zone" id="joystickZone">
-            <div class="joystick-knob" id="joystickKnob"></div>
-        </div>
-
-        <div class="hint" id="hintText">▲ ▼ ◀ ▶ | ⏸ пауза | 🎁 магазин | ⚙ настройки</div>
-
-        <!-- Индикатор паузы -->
-        <div id="pauseIndicator" class="pause-marker hide-pause">⏸ ПАУЗА</div>
-
-        <!-- Стартовое меню -->
-        <div id="startOverlay" class="overlay">
-            <div class="overlay-card">
-                <div style="font-size:42px;">🐍</div>
-                <h2>Ты готов?</h2>
-                <p>🎮 Змейка ждёт</p>
-                <button id="startGameBtn" class="btn red" style="font-size:18px;padding:10px 24px;">▶ СТАРТ</button>
-                <div style="margin-top:10px;font-size:10px;color:#aaa;">клавиши ↑ ↓ ← →</div>
-            </div>
-        </div>
-
-        <!-- МАГАЗИН -->
-        <div id="shopOverlay" class="overlay hide-overlay">
-            <div class="overlay-card" style="max-width:300px;">
-                <h2>🎁 Магазин</h2>
-                <p>🪙 Монеты: <b id="shopCoins">0</b></p>
-                <p>Кейс со скином — <b>50</b> 🪙</p>
-                <button id="buyCaseBtn" class="btn gold" style="font-size:16px;padding:8px 20px;">🔑 Купить кейс</button>
-                <div id="caseResult" style="margin-top:10px;min-height:50px;"></div>
-                <p style="font-size:11px;color:#aaa;margin-top:6px;">Монетки падают на поле (шанс 67%)</p>
-                <hr style="border-color:#333;margin:8px 0;">
-                <p style="font-size:13px;color:#ddd;">🎨 Твои скины:</p>
-                <div id="skinInventory" style="display:flex;flex-wrap:wrap;justify-content:center;gap:4px;"></div>
-                <button id="closeShopBtn" class="btn red" style="margin-top:10px;">Закрыть</button>
-            </div>
-        </div>
-
-        <!-- НАСТРОЙКИ -->
-        <div id="settingsOverlay" class="overlay hide-overlay">
-            <div class="overlay-card" style="max-width:280px;">
-                <h2>⚙️ Настройки</h2>
-                <p style="color:#ddd;">Скорость (FPS):</p>
-                <div class="btn-row">
-                    <button class="btn speed-btn" data-speed="280">🐢 Медленно</button>
-                    <button class="btn speed-btn" data-speed="180">🐇 Средне</button>
-                    <button class="btn speed-btn active-speed" data-speed="100">⚡ Быстро</button>
-                </div>
-                <p style="color:#ddd;margin-top:12px;">Управление:</p>
-                <div class="btn-row">
-                    <button class="btn control-mode-btn active-mode" data-mode="dpad">✚ Крест</button>
-                    <button class="btn control-mode-btn" data-mode="swipe">👆 Сенсор</button>
-                    <button class="btn control-mode-btn" data-mode="joystick">🕹 Джойстик</button>
-                </div>
-                <button id="closeSettingsBtn" class="btn red" style="margin-top:14px;">Закрыть</button>
-            </div>
+    <div class="info">
+        <div class="control-panel">
+            <div class="score" id="scoreDisplay">🍎 <span id="score">0</span></div>
+            <div class="best">🏆 <span id="bestScore">0</span></div>
+            <div class="coins-display" id="coinsDisplayWrap">🪙 <span id="coinsDisplay">0</span></div>
+            <button id="pauseGameBtn" class="btn">⏸️</button>
+            <button id="shopBtn" class="btn gold">🎁</button>
+            <button id="questBtn" class="btn green">📋</button>
+            <button id="settingsBtn" class="btn">⚙️</button>
+            <button id="restart" class="btn red">🔄</button>
         </div>
     </div>
 
-    <script>
-        (function() {
-            const canvas = document.getElementById('game');
-            const ctx = canvas.getContext('2d');
-            const scoreSpan = document.getElementById('score');
-            const bestScoreSpan = document.getElementById('bestScore');
-            const coinsDisplay = document.getElementById('coinsDisplay');
-            const shopCoinsSpan = document.getElementById('shopCoins');
-            const startOverlay = document.getElementById('startOverlay');
-            const startBtn = document.getElementById('startGameBtn');
-            const pauseGameBtn = document.getElementById('pauseGameBtn');
-            const pauseIndicator = document.getElementById('pauseIndicator');
-            const shopOverlay = document.getElementById('shopOverlay');
-            const settingsOverlay = document.getElementById('settingsOverlay');
-            const skinInventory = document.getElementById('skinInventory');
-            const caseResult = document.getElementById('caseResult');
-            const dpadContainer = document.getElementById('dpadContainer');
-            const joystickZone = document.getElementById('joystickZone');
-            const joystickKnob = document.getElementById('joystickKnob');
-            const hintText = document.getElementById('hintText');
-            const mainContainer = document.getElementById('mainContainer');
+    <div class="dpad" id="dpadContainer">
+        <div class="dpad-row"><div class="empty"></div><div class="ctrl-btn" data-dir="up">▲</div><div class="empty"></div></div>
+        <div class="dpad-row"><div class="ctrl-btn" data-dir="left">◀</div><div class="ctrl-btn" data-dir="down">▼</div><div class="ctrl-btn" data-dir="right">▶</div></div>
+    </div>
 
-            const GRID_SIZE = 20;
-            const CELL_SIZE = canvas.width / GRID_SIZE;
+    <div class="joystick-zone" id="joystickZone"><div class="joystick-knob" id="joystickKnob"></div></div>
+    <div class="hint" id="hintText">▲ ▼ ◀ ▶ | ⏸ пауза | 🎁 магазин | 📋 задания</div>
+    <div id="pauseIndicator" class="pause-marker hide-pause">⏸ ПАУЗА</div>
 
-            // Состояние игры
-            let snake, dir, nextDir, food, coin, score, gameOver, interval, isGameActive, isPaused;
-            let gameSpeed = 100; // мс (быстро по умолчанию)
-            let controlMode = 'dpad'; // dpad | swipe | joystick
-            let coins = 0;
-            let activeSkin = 'default'; // ключ скина
-            let ownedSkins = ['default']; // массив ключей
+    <!-- Стартовое меню -->
+    <div id="startOverlay" class="overlay">
+        <div class="overlay-card">
+            <div style="font-size:42px;">🐍</div>
+            <h2>Ты готов?</h2>
+            <p>🎮 Змейка ждёт</p>
+            <button id="startGameBtn" class="btn red" style="font-size:18px;padding:10px 24px;">▶ СТАРТ</button>
+            <div style="margin-top:10px;font-size:10px;color:#aaa;">клавиши ↑ ↓ ← →</div>
+        </div>
+    </div>
 
-            // Скины: { key, name, bodyColor, headColor, rarity, rarityColor }
-            const allSkins = [
-                { key: 'default', name: 'Классика', bodyColor: '#2ecc71', headColor: '#3cff7a', rarity: 'common',
-                    rarityColor: '#888' },
-                { key: 'blue', name: 'Синий', bodyColor: '#3498db', headColor: '#5dade2', rarity: 'rare',
-                    rarityColor: '#5dade2' },
-                { key: 'red', name: 'Красный', bodyColor: '#e74c3c', headColor: '#f1948a', rarity: 'rare',
-                rarityColor: '#5dade2' },
-                { key: 'purple', name: 'Фиолетовый', bodyColor: '#8e44ad', headColor: '#af7ac5', rarity: 'superrare',
-                    rarityColor: '#1b3a5c' },
-                { key: 'pink', name: 'Розовый', bodyColor: '#e91e63', headColor: '#f8bbd0', rarity: 'superrare',
-                    rarityColor: '#1b3a5c' },
-                { key: 'khaki', name: 'Хаки', bodyColor: '#bdb76b', headColor: '#d4cd8c', rarity: 'legendary',
-                    rarityColor: '#f1c40f' },
-                { key: 'black', name: 'Чёрный', bodyColor: '#2c3e50', headColor: '#555', rarity: 'legendary',
-                    rarityColor: '#f1c40f' },
-                { key: 'lime', name: 'Салатовый', bodyColor: '#7cfc00', headColor: '#adff2f', rarity: 'legendary',
-                    rarityColor: '#f1c40f' },
+    <!-- МАГАЗИН -->
+    <div id="shopOverlay" class="overlay hide-overlay">
+        <div class="overlay-card" style="max-width:340px;">
+            <h2>🎁 Магазин</h2>
+            <p>🪙 Монеты: <b id="shopCoins">0</b></p>
+            <p>🎒 Кейсы: <b id="caseCount">0</b></p>
+            <div class="case-shop">
+                <button id="buyCaseBtn" class="btn gold">🛒 Купить кейс (50 🪙)</button>
+                <button id="openCaseBtn" class="btn red">🔑 Открыть кейс</button>
+            </div>
+            <div id="caseResult" style="margin-top:10px;min-height:50px;"></div>
+            <hr style="border-color:#333;margin:10px 0;">
+            <p style="font-size:13px;color:#f9ca24;">🎟️ Промокод</p>
+            <div style="display:flex;gap:6px;justify-content:center;align-items:center;flex-wrap:wrap;">
+                <input type="text" id="promoInput" class="promo-input" placeholder="Введите код">
+                <button id="activatePromoBtn" class="btn gold">Активировать</button>
+            </div>
+            <div id="promoResult" style="margin-top:6px;font-size:12px;min-height:20px;"></div>
+            <hr style="border-color:#333;margin:10px 0;">
+            <p style="font-size:13px;color:#ddd;">🎨 Твои скины:</p>
+            <div id="skinInventory" style="display:flex;flex-wrap:wrap;justify-content:center;gap:4px;"></div>
+            <button id="closeShopBtn" class="btn red" style="margin-top:10px;">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- ЗАДАНИЯ -->
+    <div id="questOverlay" class="overlay hide-overlay">
+        <div class="overlay-card" style="max-width:340px;">
+            <h2>📋 Задания</h2>
+            <div id="questList" style="text-align:left; max-height:300px; overflow-y:auto;"></div>
+            <hr style="border-color:#333;margin:10px 0;">
+            <h3 style="color:#f9ca24;font-size:16px;">🏆 Достижения</h3>
+            <div id="achievementList" style="text-align:left;"></div>
+            <button id="closeQuestBtn" class="btn red" style="margin-top:10px;">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- НАСТРОЙКИ -->
+    <div id="settingsOverlay" class="overlay hide-overlay">
+        <div class="overlay-card" style="max-width:280px;">
+            <h2>⚙️ Настройки</h2>
+            <p style="color:#ddd;">Скорость:</p>
+            <div class="speed-slider-wrapper">
+                <input type="range" id="speedSlider" min="0" max="100" value="80">
+                <div class="speed-labels"><span>🐢 Медленно</span><span>🐇 Средне</span><span>⚡ Быстро</span></div>
+            </div>
+            <p style="color:#ddd;margin-top:12px;">Управление:</p>
+            <div class="btn-row">
+                <button class="btn control-mode-btn active-mode" data-mode="dpad">✚ Крест</button>
+                <button class="btn control-mode-btn" data-mode="swipe">👆 Сенсор</button>
+                <button class="btn control-mode-btn" data-mode="joystick">🕹 Джойстик</button>
+            </div>
+            <button id="closeSettingsBtn" class="btn red" style="margin-top:14px;">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- DEV ПАНЕЛЬ -->
+    <div id="devOverlay" class="overlay hide-overlay">
+        <div class="overlay-card" style="max-width:340px;">
+            <h2>🔧 Dev-панель</h2>
+            <p style="color:#aaa;">Создание промокода</p>
+            <div style="margin:8px 0;"><input type="text" id="newPromoCode" class="promo-input" placeholder="Код" style="width:140px;"></div>
+            <div style="margin:8px 0;">
+                <select id="promoRewardType" class="btn" style="background:#2c3e66;color:white;padding:5px;border-radius:20px;">
+                    <option value="coins">Монеты</option><option value="skin">Скин</option>
+                </select>
+            </div>
+            <div id="promoCoinAmount" style="margin:8px 0;"><input type="number" id="promoCoinValue" class="promo-input" placeholder="Кол-во" value="100" min="1" style="width:100px;"></div>
+            <div id="promoSkinSelect" style="margin:8px 0; display:none;"><select id="promoSkinKey" class="btn" style="background:#2c3e66;color:white;padding:5px;border-radius:20px;"></select></div>
+            <button id="createPromoBtn" class="btn gold" style="margin:8px;">Создать</button>
+            <div id="devMessage" style="font-size:12px;min-height:20px;"></div>
+            <hr style="border-color:#333;margin:8px 0;">
+            <p style="font-size:12px;color:#aaa;">Существующие коды:</p>
+            <div id="existingPromos" style="font-size:11px;max-height:80px;overflow-y:auto;text-align:left;"></div>
+            <button id="closeDevBtn" class="btn red" style="margin-top:10px;">Закрыть</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    // ===================== ОСНОВНЫЕ ПЕРЕМЕННЫЕ =====================
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const scoreSpan = document.getElementById('score');
+    const bestScoreSpan = document.getElementById('bestScore');
+    const coinsDisplay = document.getElementById('coinsDisplay');
+    const shopCoinsSpan = document.getElementById('shopCoins');
+    const caseCountSpan = document.getElementById('caseCount');
+    const startOverlay = document.getElementById('startOverlay');
+    const startBtn = document.getElementById('startGameBtn');
+    const pauseGameBtn = document.getElementById('pauseGameBtn');
+    const pauseIndicator = document.getElementById('pauseIndicator');
+    const shopOverlay = document.getElementById('shopOverlay');
+    const questOverlay = document.getElementById('questOverlay');
+    const settingsOverlay = document.getElementById('settingsOverlay');
+    const skinInventory = document.getElementById('skinInventory');
+    const caseResult = document.getElementById('caseResult');
+    const questList = document.getElementById('questList');
+    const achievementList = document.getElementById('achievementList');
+    const dpadContainer = document.getElementById('dpadContainer');
+    const joystickZone = document.getElementById('joystickZone');
+    const joystickKnob = document.getElementById('joystickKnob');
+    const hintText = document.getElementById('hintText');
+    const mainContainer = document.getElementById('mainContainer');
+    const speedSlider = document.getElementById('speedSlider');
+
+    // Кнопки
+    const devBtn = document.getElementById('devBtn');
+    const devOverlay = document.getElementById('devOverlay');
+    const closeDevBtn = document.getElementById('closeDevBtn');
+    const newPromoCode = document.getElementById('newPromoCode');
+    const promoRewardType = document.getElementById('promoRewardType');
+    const promoCoinAmount = document.getElementById('promoCoinAmount');
+    const promoSkinSelect = document.getElementById('promoSkinSelect');
+    const promoCoinValue = document.getElementById('promoCoinValue');
+    const promoSkinKey = document.getElementById('promoSkinKey');
+    const createPromoBtn = document.getElementById('createPromoBtn');
+    const devMessage = document.getElementById('devMessage');
+    const existingPromos = document.getElementById('existingPromos');
+
+    const promoInput = document.getElementById('promoInput');
+    const activatePromoBtn = document.getElementById('activatePromoBtn');
+    const promoResult = document.getElementById('promoResult');
+    const buyCaseBtn = document.getElementById('buyCaseBtn');
+    const openCaseBtn = document.getElementById('openCaseBtn');
+    const questBtn = document.getElementById('questBtn');
+    const closeQuestBtn = document.getElementById('closeQuestBtn');
+
+    const GRID_SIZE = 20;
+    const CELL_SIZE = canvas.width / GRID_SIZE;
+
+    let snake, dir, nextDir, food, coin, score, gameOver, interval, isGameActive, isPaused;
+    let gameSpeed = 100;
+    let controlMode = 'dpad';
+    let coins = 0;
+    let cases = 0;
+    let activeSkin = 'default';
+    let ownedSkins = ['default'];
+
+    // ===================== СКИНЫ =====================
+    const allSkins = [
+        { key: 'default', name: 'Классика', bodyColor: '#2ecc71', headColor: '#3cff7a', rarity: 'common', rarityColor: '#888' },
+        { key: 'blue', name: 'Синий', bodyColor: '#3498db', headColor: '#5dade2', rarity: 'rare', rarityColor: '#5dade2' },
+        { key: 'red', name: 'Красный', bodyColor: '#e74c3c', headColor: '#f1948a', rarity: 'rare', rarityColor: '#5dade2' },
+        { key: 'purple', name: 'Фиолетовый', bodyColor: '#8e44ad', headColor: '#af7ac5', rarity: 'superrare', rarityColor: '#1b3a5c' },
+        { key: 'pink', name: 'Розовый', bodyColor: '#e91e63', headColor: '#f8bbd0', rarity: 'superrare', rarityColor: '#1b3a5c' },
+        { key: 'khaki', name: 'Хаки', bodyColor: '#bdb76b', headColor: '#d4cd8c', rarity: 'legendary', rarityColor: '#f1c40f' },
+        { key: 'black', name: 'Чёрный', bodyColor: '#2c3e50', headColor: '#555', rarity: 'legendary', rarityColor: '#f1c40f' },
+        { key: 'lime', name: 'Салатовый', bodyColor: '#7cfc00', headColor: '#adff2f', rarity: 'legendary', rarityColor: '#f1c40f' },
+        { key: 'golden', name: 'Золотой', bodyColor: '#ffd700', headColor: '#ffec8b', rarity: 'secret', rarityColor: '#ff6b6b' },
+        { key: 'rainbow', name: 'Радужный', bodyColor: '#ff6b6b', headColor: '#ff9ff3', rarity: 'secret', rarityColor: '#f368e0' },
+        { key: 'neon', name: 'Неоновый', bodyColor: '#00ffcc', headColor: '#7efff5', rarity: 'secret', rarityColor: '#00d2d3' }
+    ];
+
+    function getSkinData(key) { return allSkins.find(s => s.key === key) || allSkins[0]; }
+
+    // ===================== localStorage =====================
+    function saveData() {
+        const data = { bestScore: loadBestScore(), coins, cases, ownedSkins, activeSkin, gameSpeed, controlMode };
+        localStorage.setItem('snakeFullData', JSON.stringify(data));
+    }
+    function loadData() {
+        const raw = localStorage.getItem('snakeFullData');
+        if (raw) {
+            try {
+                const data = JSON.parse(raw);
+                if (typeof data.bestScore === 'number') localStorage.setItem('snakeBestScore', data.bestScore.toString());
+                if (typeof data.coins === 'number') coins = data.coins;
+                if (typeof data.cases === 'number') cases = data.cases;
+                if (Array.isArray(data.ownedSkins)) ownedSkins = data.ownedSkins;
+                if (typeof data.activeSkin === 'string' && ownedSkins.includes(data.activeSkin)) activeSkin = data.activeSkin;
+                if (typeof data.gameSpeed === 'number') gameSpeed = data.gameSpeed;
+                if (typeof data.controlMode === 'string') controlMode = data.controlMode;
+            } catch(e) {}
+        }
+        if (!ownedSkins.includes('default')) ownedSkins = ['default'];
+        if (!ownedSkins.includes(activeSkin)) activeSkin = 'default';
+        const sliderValue = Math.round((300 - gameSpeed) / 250 * 100);
+        speedSlider.value = Math.min(100, Math.max(0, sliderValue));
+        updateCaseUI();
+    }
+    function loadBestScore() { let b = localStorage.getItem('snakeBestScore'); return b ? parseInt(b,10) : 0; }
+    function updateBestScoreUI() { bestScoreSpan.innerText = loadBestScore(); }
+    function checkAndUpdateRecord(currentScore) {
+        let best = loadBestScore();
+        if (currentScore > best) {
+            localStorage.setItem('snakeBestScore', currentScore.toString());
+            updateBestScoreUI();
+            return true;
+        }
+        return false;
+    }
+
+    // ===================== МОНЕТЫ И КЕЙСЫ =====================
+    function updateCoinsUI() { coinsDisplay.innerText = coins; shopCoinsSpan.innerText = coins; saveData(); }
+    function updateCaseUI() { caseCountSpan.innerText = cases; saveData(); }
+    function addCoins(amount) { coins += amount; updateCoinsUI(); }
+    function spendCoins(amount) { if (coins >= amount) { coins -= amount; updateCoinsUI(); return true; } return false; }
+    function buyCase() {
+        if (spendCoins(50)) { cases++; updateCaseUI(); caseResult.innerHTML = '<span style="color:#2ecc71;">✅ Кейс куплен! ('+cases+')</span>'; }
+        else caseResult.innerHTML = '<span style="color:#e74c3c;">Недостаточно монет!</span>';
+    }
+
+    // ===================== ЗАДАНИЯ =====================
+    let quests = [];
+    let achievements = [];
+    let totalQuestsCompleted = 0;
+
+    function initQuests() {
+        // Ежедневные задания (сброс в полночь)
+        const today = new Date().toDateString();
+        const saved = localStorage.getItem('questsData');
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                if (data.date === today) {
+                    quests = data.quests;
+                    totalQuestsCompleted = data.totalCompleted || 0;
+                    return;
+                }
+            } catch(e) {}
+        }
+        // Создаём новые задания на сегодня
+        const questTemplates = [
+            { id: 'eat10', name: 'Съесть 10 яблок', target: 10, reward: 5, progress: 0, completed: false },
+            { id: 'eat25', name: 'Съесть 25 яблок', target: 25, reward: 10, progress: 0, completed: false },
+            { id: 'score30', name: 'Набрать 30 очков', target: 30, reward: 8, progress: 0, completed: false },
+            { id: 'score50', name: 'Набрать 50 очков', target: 50, reward: 15, progress: 0, completed: false },
+            { id: 'collect5', name: 'Собрать 5 монет', target: 5, reward: 10, progress: 0, completed: false },
+            { id: 'play3', name: 'Сыграть 3 игры', target: 3, reward: 12, progress: 0, completed: false },
+            { id: 'play5', name: 'Сыграть 5 игр', target: 5, reward: 20, progress: 0, completed: false }
+        ];
+        // Берём первые 5 для ежедневных
+        quests = questTemplates.slice(0,5).map(q => ({ ...q, progress: 0, completed: false }));
+        totalQuestsCompleted = 0;
+        saveQuests();
+    }
+
+    function saveQuests() {
+        const data = { date: new Date().toDateString(), quests, totalCompleted: totalQuestsCompleted };
+        localStorage.setItem('questsData', JSON.stringify(data));
+    }
+
+    function updateQuestProgress(type, amount = 1) {
+        let changed = false;
+        quests.forEach(q => {
+            if (q.completed) return;
+            if (type === 'eat' && q.id.startsWith('eat')) {
+                q.progress = Math.min(q.target, q.progress + amount);
+                if (q.progress >= q.target) { q.completed = true; totalQuestsCompleted++; changed = true; }
+            }
+            if (type === 'score' && q.id.startsWith('score')) {
+                q.progress = Math.min(q.target, q.progress + amount);
+                if (q.progress >= q.target) { q.completed = true; totalQuestsCompleted++; changed = true; }
+            }
+            if (type === 'collect' && q.id.startsWith('collect')) {
+                q.progress = Math.min(q.target, q.progress + amount);
+                if (q.progress >= q.target) { q.completed = true; totalQuestsCompleted++; changed = true; }
+            }
+            if (type === 'play' && q.id.startsWith('play')) {
+                q.progress = Math.min(q.target, q.progress + amount);
+                if (q.progress >= q.target) { q.completed = true; totalQuestsCompleted++; changed = true; }
+            }
+        });
+        if (changed) {
+            saveQuests();
+            renderQuests();
+            checkAchievements();
+        }
+    }
+
+    function claimQuestReward(index) {
+        const q = quests[index];
+        if (!q || !q.completed) return;
+        addCoins(q.reward);
+        q.completed = true; // уже true, но помечаем как забранное
+        q.claimed = true;
+        saveQuests();
+        renderQuests();
+    }
+
+    function renderQuests() {
+        if (!questList) return;
+        questList.innerHTML = quests.map((q, i) => {
+            const progress = Math.min(q.progress, q.target);
+            const done = q.completed;
+            const claimed = q.claimed || false;
+            const btnText = claimed ? '✅' : (done ? 'Забрать' : 'Выполняется');
+            const disabled = !done || claimed;
+            return `<div class="quest-item">
+                <div class="quest-info">
+                    <div class="quest-name">${q.name}</div>
+                    <div class="quest-progress">${progress}/${q.target}</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="quest-reward">+${q.reward} 🪙</span>
+                    <button class="quest-btn ${claimed?'claimed':''}" data-index="${i}" ${disabled?'disabled':''}>${btnText}</button>
+                </div>
+            </div>`;
+        }).join('');
+        // Обработчики для кнопок "Забрать"
+        document.querySelectorAll('.quest-btn:not([disabled])').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const idx = parseInt(this.getAttribute('data-index'));
+                claimQuestReward(idx);
+            });
+        });
+    }
+
+    // ===================== ДОСТИЖЕНИЯ =====================
+    function initAchievements() {
+        const saved = localStorage.getItem('achievementsData');
+        if (saved) {
+            try { achievements = JSON.parse(saved); } catch(e) { achievements = []; }
+        } else {
+            achievements = [
+                { id: 'ach5', name: 'Выполни 5 заданий', target: 5, reward: 20, progress: 0, unlocked: false },
+                { id: 'ach20', name: 'Выполни 20 заданий', target: 20, reward: 50, progress: 0, unlocked: false },
+                { id: 'ach50', name: 'Выполни 50 заданий', target: 50, reward: 100, progress: 0, unlocked: false }
             ];
-
-            function getSkinData(key) {
-                return allSkins.find(s => s.key === key) || allSkins[0];
+            saveAchievements();
+        }
+    }
+    function saveAchievements() { localStorage.setItem('achievementsData', JSON.stringify(achievements)); }
+    function checkAchievements() {
+        let changed = false;
+        achievements.forEach(a => {
+            if (a.unlocked) return;
+            if (totalQuestsCompleted >= a.target) {
+                a.unlocked = true;
+                addCoins(a.reward);
+                changed = true;
+                // уведомление
+                const notif = document.createElement('div');
+                notif.textContent = `🏆 Достижение "${a.name}"! +${a.reward} 🪙`;
+                notif.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#1a1a2e;padding:16px 24px;border-radius:16px;border:2px solid #f9ca24;color:#f9ca24;font-weight:bold;z-index:70;font-size:16px;text-align:center;pointer-events:none;';
+                mainContainer.appendChild(notif);
+                setTimeout(() => notif.remove(), 4000);
             }
+        });
+        if (changed) { saveAchievements(); renderAchievements(); }
+    }
+    function renderAchievements() {
+        if (!achievementList) return;
+        achievementList.innerHTML = achievements.map(a => {
+            const status = a.unlocked ? '✅' : `${a.progress}/${a.target}`;
+            const color = a.unlocked ? '#2ecc71' : '#aaa';
+            return `<div class="achievement">
+                <span class="ach-name">${a.name}</span>
+                <span class="ach-status" style="color:${color}">${status}</span>
+                <span class="ach-reward">+${a.reward} 🪙</span>
+            </div>`;
+        }).join('');
+    }
 
-            // ---------- localStorage ----------
-            function saveData() {
-                const data = {
-                    bestScore: loadBestScore(),
-                    coins: coins,
-                    ownedSkins: ownedSkins,
-                    activeSkin: activeSkin,
-                    gameSpeed: gameSpeed,
-                    controlMode: controlMode,
-                };
-                localStorage.setItem('snakeFullData', JSON.stringify(data));
+    // ===================== ОТКРЫТИЕ КЕЙСА (с анимацией) =====================
+    function openCase() {
+        if (cases <= 0) {
+            caseResult.innerHTML = '<span style="color:#e74c3c;">У вас нет кейсов!</span>';
+            return;
+        }
+        const pool = allSkins.filter(s => s.rarity !== 'secret' && s.key !== 'default');
+        let weightedPool = [];
+        pool.forEach(s => {
+            let weight = 0;
+            if (s.rarity === 'common') weight = 10;
+            else if (s.rarity === 'rare') weight = 30;
+            else if (s.rarity === 'superrare') weight = 35;
+            else if (s.rarity === 'legendary') weight = 25;
+            for (let i=0; i<weight; i++) weightedPool.push(s);
+        });
+        if (weightedPool.length === 0) weightedPool = pool;
+        const finalSkin = weightedPool[Math.floor(Math.random() * weightedPool.length)];
+        cases--;
+        updateCaseUI();
+
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `position:absolute;top:0;left:0;width:100%;height:100%;border-radius:20px;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:60;backdrop-filter:blur(6px);`;
+        mainContainer.appendChild(overlay);
+
+        // Стрелка сверху
+        const arrow = document.createElement('div');
+        arrow.className = 'case-arrow';
+        arrow.textContent = '▲';
+        overlay.appendChild(arrow);
+
+        const display = document.createElement('div');
+        display.style.cssText = `width:260px;height:80px;background:#111;border:2px solid #f9ca24;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin:10px 0;position:relative;`;
+        const slots = [];
+        const slotCount = 7;
+        for (let i=0; i<slotCount; i++) {
+            const slot = document.createElement('div');
+            slot.style.cssText = `width:37px;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#222;border-right:1px solid #444;flex-shrink:0;font-size:8px;color:#aaa;text-align:center;`;
+            const preview = document.createElement('div');
+            preview.style.cssText = 'width:28px;height:28px;border-radius:4px;border:1px solid #555;margin-bottom:2px;display:flex;align-items:center;justify-content:center;font-size:20px;';
+            preview.textContent = '🐍';
+            const label = document.createElement('div');
+            label.style.cssText = 'font-size:7px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:32px;';
+            slot.appendChild(preview);
+            slot.appendChild(label);
+            display.appendChild(slot);
+            slots.push({ slot, preview, label });
+        }
+        overlay.appendChild(display);
+
+        const resultText = document.createElement('div');
+        resultText.style.cssText = 'color:#f9ca24;font-size:18px;margin-top:10px;text-align:center;min-height:60px;';
+        overlay.appendChild(resultText);
+
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = 'Закрыть';
+        closeBtn.style.cssText = `margin-top:15px;background:#e94560;border:none;color:white;padding:8px 20px;border-radius:30px;font-weight:bold;cursor:pointer;font-size:14px;display:none;`;
+        overlay.appendChild(closeBtn);
+
+        function fillSlots(startIndex) {
+            for (let i=0; i<slotCount; i++) {
+                const skin = weightedPool[(startIndex + i) % weightedPool.length];
+                slots[i].preview.style.background = skin.bodyColor;
+                slots[i].preview.style.borderColor = skin.rarityColor || '#555';
+                slots[i].preview.textContent = '🐍';
+                slots[i].label.textContent = skin.name.substring(0,4);
             }
+        }
+        let currentIndex = 0;
+        fillSlots(currentIndex);
 
-            function loadData() {
-                const raw = localStorage.getItem('snakeFullData');
-                if (raw) {
-                    try {
-                        const data = JSON.parse(raw);
-                        if (typeof data.bestScore === 'number') localStorage.setItem('snakeBestScore', data.bestScore
-                            .toString());
-                        if (typeof data.coins === 'number') coins = data.coins;
-                        if (Array.isArray(data.ownedSkins)) ownedSkins = data.ownedSkins;
-                        if (typeof data.activeSkin === 'string' && ownedSkins.includes(data.activeSkin)) activeSkin = data
-                            .activeSkin;
-                        if (typeof data.gameSpeed === 'number') gameSpeed = data.gameSpeed;
-                        if (typeof data.controlMode === 'string') controlMode = data.controlMode;
-                    } catch (e) {}
+        let totalSteps = 20 + Math.floor(Math.random() * 15);
+        let stepCount = 0;
+        let delay = 50;
+        function step() {
+            currentIndex = (currentIndex + 1) % weightedPool.length;
+            fillSlots(currentIndex);
+            stepCount++;
+            if (stepCount >= totalSteps - 8) delay += 60;
+            else if (stepCount >= totalSteps - 15) delay += 15;
+            else if (stepCount % 3 === 0) delay += 2;
+            if (stepCount >= totalSteps) {
+                clearInterval(timer);
+                let finalIndex = -1;
+                for (let i=0; i<slotCount; i++) {
+                    const idx = (currentIndex + i) % weightedPool.length;
+                    if (weightedPool[idx] === finalSkin) { finalIndex = i; break; }
                 }
-                if (ownedSkins.length === 0 || !ownedSkins.includes('default')) ownedSkins = ['default'];
-                if (!ownedSkins.includes(activeSkin)) activeSkin = 'default';
-            }
-
-            function loadBestScore() {
-                let best = localStorage.getItem('snakeBestScore');
-                return best ? parseInt(best, 10) : 0;
-            }
-
-            function updateBestScoreUI() {
-                bestScoreSpan.innerText = loadBestScore();
-            }
-
-            function checkAndUpdateRecord(currentScore) {
-                let best = loadBestScore();
-                if (currentScore > best) {
-                    localStorage.setItem('snakeBestScore', currentScore.toString());
-                    updateBestScoreUI();
-                    const bestElement = document.getElementById('bestScore');
-                    bestElement.classList.add('new-record');
-                    setTimeout(() => bestElement.classList.remove('new-record'), 600);
-                    return true;
+                if (finalIndex !== -1) {
+                    slots[finalIndex].slot.style.border = '2px solid #f9ca24';
+                    slots[finalIndex].slot.style.boxShadow = '0 0 20px gold';
+                    slots[finalIndex].preview.style.borderColor = '#f9ca24';
+                    // перемещаем стрелку над этим слотом
+                    const slotWidth = 37;
+                    const offset = finalIndex * slotWidth + slotWidth/2 - 10;
+                    arrow.style.left = `calc(50% + ${offset - 130}px)`;
+                    arrow.style.top = '-25px';
                 }
-                return false;
-            }
-
-            // ---------- Монеты ----------
-            function updateCoinsUI() {
-                coinsDisplay.innerText = coins;
-                shopCoinsSpan.innerText = coins;
-                saveData();
-            }
-
-            function addCoins(amount) {
-                coins += amount;
-                updateCoinsUI();
-            }
-
-            function spendCoins(amount) {
-                if (coins >= amount) {
-                    coins -= amount;
-                    updateCoinsUI();
-                    return true;
-                }
-                return false;
-            }
-
-            // ---------- Еда и монетка ----------
-            function randomFreeCell() {
-                let free = [];
-                for (let i = 0; i < GRID_SIZE; i++) {
-                    for (let j = 0; j < GRID_SIZE; j++) {
-                        let ok = true;
-                        for (let s of snake)
-                            if (s[0] === i && s[1] === j) { ok = false; break; }
-                        if (food && food[0] === i && food[1] === j) ok = false;
-                        if (coin && coin[0] === i && coin[1] === j) ok = false;
-                        if (ok) free.push([i, j]);
-                    }
-                }
-                if (free.length === 0) return null;
-                return free[Math.floor(Math.random() * free.length)];
-            }
-
-            function spawnFood() {
-                const cell = randomFreeCell();
-                if (cell) food = cell;
-                else food = null;
-            }
-
-            function spawnCoin() {
-                // Шанс 67% появления монетки
-                if (Math.random() < 0.67) {
-                    const cell = randomFreeCell();
-                    if (cell) coin = cell;
-                    else coin = null;
-                } else {
-                    coin = null;
-                }
-            }
-
-            function initialSpawn() {
-                food = null;
-                coin = null;
-                spawnFood();
-                spawnCoin();
-            }
-
-            // ---------- Отрисовка ----------
-            function draw() {
-                const skin = getSkinData(activeSkin);
-                ctx.fillStyle = '#111';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                // Сетка
-                ctx.strokeStyle = '#202030';
-                ctx.lineWidth = 0.5;
-                for (let i = 0; i <= GRID_SIZE; i++) {
-                    ctx.beginPath();
-                    ctx.moveTo(i * CELL_SIZE, 0);
-                    ctx.lineTo(i * CELL_SIZE, canvas.height);
-                    ctx.stroke();
-                    ctx.moveTo(0, i * CELL_SIZE);
-                    ctx.lineTo(canvas.width, i * CELL_SIZE);
-                    ctx.stroke();
-                }
-
-                // Змейка
-                for (let i = 0; i < snake.length; i++) {
-                    let x = snake[i][0] * CELL_SIZE,
-                        y = snake[i][1] * CELL_SIZE;
-                    ctx.fillStyle = i === 0 ? skin.headColor : skin.bodyColor;
-                    ctx.fillRect(x + 1, y + 1, CELL_SIZE - 2, CELL_SIZE - 2);
-                    // Рамка редкости
-                    if (skin.rarity !== 'common') {
-                        ctx.strokeStyle = skin.rarityColor;
-                        ctx.lineWidth = 1.5;
-                        ctx.strokeRect(x + 1, y + 1, CELL_SIZE - 2, CELL_SIZE - 2);
-                    }
-                }
-
-                // Глаза
-                if (snake.length > 0 && !gameOver) {
-                    let x = snake[0][0] * CELL_SIZE,
-                        y = snake[0][1] * CELL_SIZE;
-                    ctx.fillStyle = '#ffffff';
-                    let es = 3;
-                    if (dir === 'right') {
-                        ctx.fillRect(x + CELL_SIZE - 7, y + 5, es, es);
-                        ctx.fillRect(x + CELL_SIZE - 7, y + CELL_SIZE - 9, es, es);
-                    } else if (dir === 'left') {
-                        ctx.fillRect(x + 2, y + 5, es, es);
-                        ctx.fillRect(x + 2, y + CELL_SIZE - 9, es, es);
-                    } else if (dir === 'up') {
-                        ctx.fillRect(x + 5, y + 2, es, es);
-                        ctx.fillRect(x + CELL_SIZE - 9, y + 2, es, es);
-                    } else if (dir === 'down') {
-                        ctx.fillRect(x + 5, y + CELL_SIZE - 7, es, es);
-                        ctx.fillRect(x + CELL_SIZE - 9, y + CELL_SIZE - 7, es, es);
-                    }
-                }
-
-                // Еда
-                if (food) {
-                    let fx = food[0] * CELL_SIZE,
-                        fy = food[1] * CELL_SIZE;
-                    ctx.fillStyle = '#e74c3c';
-                    ctx.beginPath();
-                    ctx.ellipse(fx + CELL_SIZE / 2, fy + CELL_SIZE / 2, CELL_SIZE * 0.4, CELL_SIZE * 0.4, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.fillStyle = '#f1c40f';
-                    ctx.beginPath();
-                    ctx.moveTo(fx + CELL_SIZE - 6, fy + 3);
-                    ctx.lineTo(fx + CELL_SIZE - 2, fy + 8);
-                    ctx.lineTo(fx + CELL_SIZE - 8, fy + 8);
-                    ctx.fill();
-                    ctx.fillStyle = '#27ae60';
-                    ctx.fillRect(fx + CELL_SIZE - 4, fy + 1, 2, 5);
-                }
-
-                // Монетка
-                if (coin) {
-                    let cx = coin[0] * CELL_SIZE + CELL_SIZE / 2;
-                    let cy = coin[1] * CELL_SIZE + CELL_SIZE / 2;
-                    ctx.fillStyle = '#f1c40f';
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, CELL_SIZE * 0.35, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.fillStyle = '#f9ca24';
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, CELL_SIZE * 0.2, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.fillStyle = '#000';
-                    ctx.font = 'bold 8px monospace';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('🪙', cx, cy + 3);
-                }
-
-                // Game Over
-                if (gameOver) {
-                    ctx.fillStyle = 'rgba(0,0,0,0.85)';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    ctx.fillStyle = '#e94560';
-                    ctx.font = 'bold 18px monospace';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('GAME OVER', 150, 130);
-                    ctx.font = '11px monospace';
-                    ctx.fillStyle = '#dddddd';
-                    ctx.fillText('нажми "НОВАЯ ИГРА"', 150, 165);
-                    ctx.fillStyle = '#f9ca24';
-                    ctx.font = 'bold 10px monospace';
-                    ctx.fillText(`🏆 ЛУЧШИЙ: ${loadBestScore()}`, 150, 190);
-                    ctx.textAlign = 'start';
-                }
-            }
-
-            // ---------- Пауза ----------
-            function setPause(state) {
-                if (gameOver || !isGameActive) return;
-                isPaused = state;
-                if (isPaused) {
-                    pauseIndicator.classList.remove('hide-pause');
-                    if (interval) clearInterval(interval);
-                    interval = null;
-                    pauseGameBtn.innerHTML = '▶️ СТАРТ';
-                    pauseGameBtn.style.background = '#27ae60';
-                } else {
-                    pauseIndicator.classList.add('hide-pause');
-                    if (interval) clearInterval(interval);
-                    interval = setInterval(update, gameSpeed);
-                    pauseGameBtn.innerHTML = '⏸️ ПАУЗА';
-                    pauseGameBtn.style.background = '#2c3e66';
-                }
-            }
-
-            function togglePause() {
-                if (!isGameActive || gameOver) return;
-                setPause(!isPaused);
-            }
-
-            // ---------- Логика ----------
-            function update() {
-                if (gameOver || !isGameActive || isPaused) return;
-                dir = nextDir;
-                let head = [snake[0][0], snake[0][1]];
-                if (dir === 'right') head[0]++;
-                if (dir === 'left') head[0]--;
-                if (dir === 'up') head[1]--;
-                if (dir === 'down') head[1]++;
-
-                let eatFood = food && head[0] === food[0] && head[1] === food[1];
-                let eatCoin = coin && head[0] === coin[0] && head[1] === coin[1];
-
-                snake.unshift([head[0], head[1]]);
-                if (!eatFood && !eatCoin) {
-                    snake.pop();
-                }
-                if (eatFood) {
-                    score++;
-                    scoreSpan.innerText = score;
-                    food = null;
-                    spawnFood();
-                    spawnCoin(); // новая попытка spawn монетки
-                }
-                if (eatCoin) {
-                    addCoins(1);
-                    coin = null;
-                    // не спавним еду, только убираем монетку
-                }
-
-                // Столкновения
-                if (head[0] < 0 || head[0] >= GRID_SIZE || head[1] < 0 || head[1] >= GRID_SIZE) {
-                    endGame();
-                    return;
-                }
-                for (let i = 1; i < snake.length; i++) {
-                    if (snake[i][0] === head[0] && snake[i][1] === head[1]) {
-                        endGame();
-                        return;
-                    }
-                }
-                draw();
-            }
-
-            function endGame() {
-                gameOver = true;
-                stopGameLoop();
-                checkAndUpdateRecord(score);
-                draw();
-            }
-
-            function stopGameLoop() {
-                if (interval) { clearInterval(interval);
-                    interval = null; }
-                isGameActive = false;
-                isPaused = false;
-                pauseIndicator.classList.add('hide-pause');
-                pauseGameBtn.innerHTML = '⏸️ ПАУЗА';
-                pauseGameBtn.style.background = '#2c3e66';
-            }
-
-            function startGameLoop() {
-                if (interval) clearInterval(interval);
-                isGameActive = true;
-                gameOver = false;
-                isPaused = false;
-                pauseIndicator.classList.add('hide-pause');
-                interval = setInterval(update, gameSpeed);
-                pauseGameBtn.innerHTML = '⏸️ ПАУЗА';
-                pauseGameBtn.style.background = '#2c3e66';
-            }
-
-            function fullReset() {
-                if (interval) clearInterval(interval);
-                isGameActive = false;
-                gameOver = false;
-                isPaused = false;
-                pauseIndicator.classList.add('hide-pause');
-                pauseGameBtn.innerHTML = '⏸️ ПАУЗА';
-                pauseGameBtn.style.background = '#2c3e66';
-                snake = [
-                    [10, 10],
-                    [9, 10],
-                    [8, 10],
-                    [7, 10]
-                ];
-                dir = 'right';
-                nextDir = 'right';
-                score = 0;
-                scoreSpan.innerText = '0';
-                food = null;
-                coin = null;
-                initialSpawn();
-                draw();
-            }
-
-            function launchGame() {
-                fullReset();
-                startGameLoop();
-                startOverlay.classList.add('hide-overlay');
-            }
-
-            function restartWithMenu() {
-                if (interval) clearInterval(interval);
-                isGameActive = false;
-                gameOver = false;
-                isPaused = false;
-                pauseIndicator.classList.add('hide-pause');
-                pauseGameBtn.innerHTML = '⏸️ ПАУЗА';
-                pauseGameBtn.style.background = '#2c3e66';
-                fullReset();
-                startOverlay.classList.remove('hide-overlay');
-            }
-
-            // ---------- Магазин: кейсы ----------
-            function getRandomSkin() {
-                const rand = Math.random() * 100;
-                let pool;
-                if (rand < 67) pool = allSkins.filter(s => s.rarity === 'rare');
-                else if (rand < 90) pool = allSkins.filter(s => s.rarity === 'superrare');
-                else pool = allSkins.filter(s => s.rarity === 'legendary');
-                return pool[Math.floor(Math.random() * pool.length)];
-            }
-
-            function openCase() {
-                if (!spendCoins(50)) {
-                    caseResult.innerHTML = '<p style="color:#e74c3c;">Недостаточно монет! Нужно 50 🪙</p>';
-                    return;
-                }
-                const skin = getRandomSkin();
-                // Анимация
-                caseResult.innerHTML = `
-                    <div class="case-shake" style="font-size:40px;">📦</div>
-                    <p style="color:#aaa;">Открываем...</p>
-                `;
-                setTimeout(() => {
-                    let alreadyOwned = ownedSkins.includes(skin.key);
-                    if (!alreadyOwned) {
-                        ownedSkins.push(skin.key);
-                    }
-                    if (activeSkin === 'default' && !alreadyOwned) {
-                        activeSkin = skin.key;
-                    }
+                const alreadyOwned = ownedSkins.includes(finalSkin.key);
+                if (!alreadyOwned) {
+                    ownedSkins.push(finalSkin.key);
+                    if (activeSkin === 'default') activeSkin = finalSkin.key;
                     saveData();
-                    updateCoinsUI();
                     renderSkinInventory();
-                    caseResult.innerHTML = `
-                        <div class="reveal-item" style="font-size:36px;">🎨</div>
-                        <p style="color:#f9ca24;font-weight:bold;">${skin.name}</p>
-                        <p style="font-size:11px;color:#aaa;">Редкость: ${skin.rarity === 'rare' ? 'Редкий' : skin.rarity === 'superrare' ? 'Суперредкий' : 'Легендарный'}</p>
-                        ${alreadyOwned ? '<p style="color:#888;font-size:10px;">(уже было — скин в коллекции)</p>' : '<p style="color:#2ecc71;font-size:10px;">Новый скин добавлен!</p>'}
-                        <button class="btn gold" onclick="document.getElementById('buyCaseBtn').click()" style="margin-top:6px;">🔑 Открыть ещё</button>
-                    `;
                     draw();
-                }, 1800);
-            }
-
-            function renderSkinInventory() {
-                skinInventory.innerHTML = allSkins.map(s => {
-                    const owned = ownedSkins.includes(s.key);
-                    const selected = activeSkin === s.key;
-                    let rarityClass = '';
-                    if (s.rarity === 'rare') rarityClass = 'rarity-rare';
-                    if (s.rarity === 'superrare') rarityClass = 'rarity-superrare';
-                    if (s.rarity === 'legendary') rarityClass = 'rarity-legendary';
-                    return `
-                        <div class="skin-item ${selected ? 'selected' : ''} ${!owned ? 'locked' : ''}"
-                             style="background:${s.bodyColor};${!owned ? 'filter:grayscale(0.5);' : ''}"
-                             title="${s.name} (${s.rarity}) ${!owned ? '— не получен' : ''}"
-                             data-skin="${s.key}">
-                            ${!owned ? '🔒' : ''}
-                            <span class="rarity-dot ${rarityClass}"></span>
-                        </div>
-                    `;
-                }).join('');
-
-                // Обработчики кликов по скинам
-                document.querySelectorAll('.skin-item').forEach(el => {
-                    el.addEventListener('click', () => {
-                        const key = el.getAttribute('data-skin');
-                        if (ownedSkins.includes(key)) {
-                            activeSkin = key;
-                            saveData();
-                            renderSkinInventory();
-                            draw();
-                        }
-                    });
-                });
-            }
-
-            // ---------- Настройки ----------
-            function applyControlMode() {
-                dpadContainer.style.display = controlMode === 'dpad' ? 'flex' : 'none';
-                joystickZone.style.display = controlMode === 'joystick' ? 'block' : 'none';
-                if (controlMode === 'swipe') {
-                    hintText.innerHTML = '👆 Свайп по полю | ⏸ пауза | 🎁 магазин';
-                } else if (controlMode === 'joystick') {
-                    hintText.innerHTML = '🕹 Тяни джойстик | ⏸ пауза | 🎁 магазин';
+                    resultText.innerHTML = `🎉 Выпал <b>${finalSkin.name}</b> (${finalSkin.rarity})!`;
                 } else {
-                    hintText.innerHTML = '▲ ▼ ◀ ▶ | ⏸ пауза | 🎁 магазин | ⚙ настройки';
+                    addCoins(20);
+                    resultText.innerHTML = `🔄 Выпал <b>${finalSkin.name}</b> (уже был), +20 🪙`;
                 }
-                saveData();
-            }
-
-            function setSpeed(ms) {
-                gameSpeed = ms;
-                document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active-speed'));
-                const activeBtn = document.querySelector(`.speed-btn[data-speed="${ms}"]`);
-                if (activeBtn) activeBtn.classList.add('active-speed');
-                if (isGameActive && !gameOver && !isPaused && interval) {
-                    clearInterval(interval);
-                    interval = setInterval(update, gameSpeed);
-                }
-                saveData();
-            }
-
-            function setControlMode(mode) {
-                controlMode = mode;
-                document.querySelectorAll('.control-mode-btn').forEach(b => b.classList.remove('active-mode'));
-                const activeBtn = document.querySelector(`.control-mode-btn[data-mode="${mode}"]`);
-                if (activeBtn) activeBtn.classList.add('active-mode');
-                applyControlMode();
-            }
-
-            // ---------- Джойстик ----------
-            let joystickActive = false;
-            let joystickCenter = { x: 0, y: 0 };
-            const joystickRadius = 40;
-
-            function initJoystick() {
-                joystickZone.addEventListener('touchstart', (e) => {
-                    if (controlMode !== 'joystick' || !isGameActive || gameOver || isPaused) return;
-                    e.preventDefault();
-                    joystickActive = true;
-                    joystickZone.classList.add('active');
-                    const rect = joystickZone.getBoundingClientRect();
-                    joystickCenter.x = rect.left + rect.width / 2;
-                    joystickCenter.y = rect.top + rect.height / 2;
-                    updateJoystickFromTouch(e.touches[0]);
-                });
-                joystickZone.addEventListener('touchmove', (e) => {
-                    if (!joystickActive) return;
-                    e.preventDefault();
-                    updateJoystickFromTouch(e.touches[0]);
-                });
-                joystickZone.addEventListener('touchend', (e) => {
-                    joystickActive = false;
-                    joystickZone.classList.remove('active');
-                    joystickKnob.style.left = '35px';
-                    joystickKnob.style.top = '35px';
-                });
-                joystickZone.addEventListener('mousedown', (e) => {
-                    if (controlMode !== 'joystick' || !isGameActive || gameOver || isPaused) return;
-                    joystickActive = true;
-                    joystickZone.classList.add('active');
-                    const rect = joystickZone.getBoundingClientRect();
-                    joystickCenter.x = rect.left + rect.width / 2;
-                    joystickCenter.y = rect.top + rect.height / 2;
-                    updateJoystickFromMouse(e);
-                });
-                window.addEventListener('mousemove', (e) => {
-                    if (!joystickActive) return;
-                    updateJoystickFromMouse(e);
-                });
-                window.addEventListener('mouseup', () => {
-                    if (joystickActive) {
-                        joystickActive = false;
-                        joystickZone.classList.remove('active');
-                        joystickKnob.style.left = '35px';
-                        joystickKnob.style.top = '35px';
-                    }
-                });
-            }
-
-            function updateJoystickFromTouch(touch) {
-                const dx = touch.clientX - joystickCenter.x;
-                const dy = touch.clientY - joystickCenter.y;
-                applyJoystick(dx, dy);
-            }
-
-            function updateJoystickFromMouse(e) {
-                const dx = e.clientX - joystickCenter.x;
-                const dy = e.clientY - joystickCenter.y;
-                applyJoystick(dx, dy);
-            }
-
-            function applyJoystick(dx, dy) {
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                const maxDist = joystickRadius;
-                let clampedDx = dx;
-                let clampedDy = dy;
-                if (dist > maxDist) {
-                    clampedDx = (dx / dist) * maxDist;
-                    clampedDy = (dy / dist) * maxDist;
-                }
-                joystickKnob.style.left = (35 + clampedDx) + 'px';
-                joystickKnob.style.top = (35 + clampedDy) + 'px';
-
-                if (dist > 15) {
-                    const angle = Math.atan2(dy, dx);
-                    let newDir = null;
-                    if (angle > -Math.PI / 4 && angle <= Math.PI / 4) newDir = 'right';
-                    else if (angle > Math.PI / 4 && angle <= 3 * Math.PI / 4) newDir = 'down';
-                    else if (angle > -3 * Math.PI / 4 && angle <= -Math.PI / 4) newDir = 'up';
-                    else newDir = 'left';
-
-                    if (newDir === 'up' && dir !== 'down') nextDir = 'up';
-                    else if (newDir === 'down' && dir !== 'up') nextDir = 'down';
-                    else if (newDir === 'left' && dir !== 'right') nextDir = 'left';
-                    else if (newDir === 'right' && dir !== 'left') nextDir = 'right';
-                }
-            }
-
-            // ---------- Сенсорные свайпы ----------
-            let swipeStart = null;
-            canvas.addEventListener('touchstart', (e) => {
-                if (controlMode !== 'swipe' || !isGameActive || gameOver || isPaused) return;
-                e.preventDefault();
-                swipeStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-            });
-            canvas.addEventListener('touchmove', (e) => {
-                if (!swipeStart || controlMode !== 'swipe') return;
-                e.preventDefault();
-            });
-            canvas.addEventListener('touchend', (e) => {
-                if (!swipeStart || controlMode !== 'swipe' || !isGameActive || gameOver || isPaused) {
-                    swipeStart = null;
-                    return;
-                }
-                const touch = e.changedTouches[0];
-                const dx = touch.clientX - swipeStart.x;
-                const dy = touch.clientY - swipeStart.y;
-                const absDx = Math.abs(dx);
-                const absDy = Math.abs(dy);
-                if (Math.max(absDx, absDy) > 20) {
-                    if (absDx > absDy) {
-                        if (dx > 0 && dir !== 'left') nextDir = 'right';
-                        else if (dx < 0 && dir !== 'right') nextDir = 'left';
-                    } else {
-                        if (dy > 0 && dir !== 'up') nextDir = 'down';
-                        else if (dy < 0 && dir !== 'down') nextDir = 'up';
-                    }
-                }
-                swipeStart = null;
-            });
-
-            // ---------- Инициализация ----------
-            function initAll() {
-                loadData();
-                updateBestScoreUI();
+                closeBtn.style.display = 'inline-block';
                 updateCoinsUI();
-                fullReset();
+                updateCaseUI();
+                renderSkinInventory();
+                return;
+            }
+            clearInterval(timer);
+            timer = setInterval(step, delay);
+        }
+        let timer = setInterval(step, delay);
+        closeBtn.addEventListener('click', function() { clearInterval(timer); overlay.remove(); caseResult.innerHTML = ''; });
+    }
+
+    // ===================== ИНВЕНТАРЬ СКИНОВ С ЗМЕЙКАМИ =====================
+    function renderSkinInventory() {
+        skinInventory.innerHTML = allSkins.map(s => {
+            const owned = ownedSkins.includes(s.key);
+            const selected = activeSkin === s.key;
+            let rarityClass = '';
+            if (s.rarity === 'rare') rarityClass = 'rarity-rare';
+            else if (s.rarity === 'superrare') rarityClass = 'rarity-superrare';
+            else if (s.rarity === 'legendary') rarityClass = 'rarity-legendary';
+            else if (s.rarity === 'secret') rarityClass = 'rarity-secret';
+            const secretEmoji = s.rarity === 'secret' ? '⭐' : '';
+            return `<div class="skin-item ${selected?'selected':''} ${!owned?'locked':''}" style="background:${s.bodyColor};${!owned?'filter:grayscale(0.5);':''}" title="${s.name} (${s.rarity})" data-skin="${s.key}">
+                <div class="mini-snake">${!owned ? '🔒' : '🐍'}</div>
+                <span class="rarity-dot ${rarityClass}"></span>
+                ${selected ? '<span style="position:absolute;top:-6px;right:-6px;font-size:12px;">✅</span>' : ''}
+            </div>`;
+        }).join('');
+        document.querySelectorAll('.skin-item:not(.locked)').forEach(el => {
+            el.addEventListener('click', () => {
+                const key = el.getAttribute('data-skin');
+                if (ownedSkins.includes(key)) {
+                    activeSkin = key;
+                    saveData();
+                    renderSkinInventory();
+                    draw();
+                }
+            });
+        });
+    }
+
+    // ===================== ИГРОВАЯ ЛОГИКА (без изменений) =====================
+    function randomFreeCell() {
+        let free = [];
+        for (let i=0; i<GRID_SIZE; i++) for (let j=0; j<GRID_SIZE; j++) {
+            let ok = true;
+            for (let s of snake) if (s[0]===i && s[1]===j) { ok=false; break; }
+            if (food && food[0]===i && food[1]===j) ok=false;
+            if (coin && coin[0]===i && coin[1]===j) ok=false;
+            if (ok) free.push([i,j]);
+        }
+        return free.length ? free[Math.floor(Math.random()*free.length)] : null;
+    }
+    function spawnFood() { const c = randomFreeCell(); food = c || null; }
+    function spawnCoin() { if (Math.random()<0.67) { const c = randomFreeCell(); coin = c || null; } else coin = null; }
+    function initialSpawn() { food=null; coin=null; spawnFood(); spawnCoin(); }
+
+    function draw() {
+        const skin = getSkinData(activeSkin);
+        ctx.fillStyle='#111'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.strokeStyle='#202030'; ctx.lineWidth=0.5;
+        for (let i=0; i<=GRID_SIZE; i++) {
+            ctx.beginPath(); ctx.moveTo(i*CELL_SIZE,0); ctx.lineTo(i*CELL_SIZE,canvas.height); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0,i*CELL_SIZE); ctx.lineTo(canvas.width,i*CELL_SIZE); ctx.stroke();
+        }
+        for (let i=0; i<snake.length; i++) {
+            let x=snake[i][0]*CELL_SIZE, y=snake[i][1]*CELL_SIZE;
+            const isHead = (i===0);
+            let color = isHead ? skin.headColor : skin.bodyColor;
+            if (skin.key==='rainbow') { const hue=(i/snake.length*360+Date.now()/20)%360; color=`hsl(${hue},80%,60%)`; }
+            ctx.fillStyle=color;
+            ctx.shadowColor = skin.rarity==='secret' ? '#f9ca24' : 'transparent';
+            ctx.shadowBlur = skin.rarity==='secret' ? 8 : 0;
+            ctx.fillRect(x+1, y+1, CELL_SIZE-2, CELL_SIZE-2);
+            ctx.shadowBlur=0;
+            ctx.strokeStyle=skin.rarityColor||'#555';
+            ctx.lineWidth=1.2;
+            ctx.strokeRect(x+1, y+1, CELL_SIZE-2, CELL_SIZE-2);
+            if (isHead) {
+                ctx.fillStyle='#ffffff';
+                let es=3;
+                if (dir==='right') { ctx.fillRect(x+CELL_SIZE-7, y+5, es, es); ctx.fillRect(x+CELL_SIZE-7, y+CELL_SIZE-9, es, es); }
+                else if (dir==='left') { ctx.fillRect(x+2, y+5, es, es); ctx.fillRect(x+2, y+CELL_SIZE-9, es, es); }
+                else if (dir==='up') { ctx.fillRect(x+5, y+2, es, es); ctx.fillRect(x+CELL_SIZE-9, y+2, es, es); }
+                else if (dir==='down') { ctx.fillRect(x+5, y+CELL_SIZE-7, es, es); ctx.fillRect(x+CELL_SIZE-9, y+CELL_SIZE-7, es, es); }
+            }
+        }
+        if (food) {
+            let fx=food[0]*CELL_SIZE, fy=food[1]*CELL_SIZE;
+            ctx.fillStyle='#e74c3c';
+            ctx.beginPath(); ctx.ellipse(fx+CELL_SIZE/2, fy+CELL_SIZE/2, CELL_SIZE*0.4, CELL_SIZE*0.4, 0,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle='#f1c40f';
+            ctx.beginPath(); ctx.moveTo(fx+CELL_SIZE-6, fy+3); ctx.lineTo(fx+CELL_SIZE-2, fy+8); ctx.lineTo(fx+CELL_SIZE-8, fy+8); ctx.fill();
+            ctx.fillStyle='#27ae60';
+            ctx.fillRect(fx+CELL_SIZE-4, fy+1, 2, 5);
+        }
+        if (coin) {
+            let cx=coin[0]*CELL_SIZE+CELL_SIZE/2, cy=coin[1]*CELL_SIZE+CELL_SIZE/2;
+            ctx.fillStyle='#f1c40f';
+            ctx.beginPath(); ctx.arc(cx,cy,CELL_SIZE*0.35,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle='#f9ca24';
+            ctx.beginPath(); ctx.arc(cx,cy,CELL_SIZE*0.2,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle='#000';
+            ctx.font='bold 8px monospace';
+            ctx.textAlign='center';
+            ctx.fillText('🪙', cx, cy+3);
+        }
+        if (gameOver) {
+            ctx.fillStyle='rgba(0,0,0,0.85)';
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle='#e94560';
+            ctx.font='bold 18px monospace';
+            ctx.textAlign='center';
+            ctx.fillText('GAME OVER',150,130);
+            ctx.font='11px monospace';
+            ctx.fillStyle='#dddddd';
+            ctx.fillText('нажми "НОВАЯ ИГРА"',150,165);
+            ctx.fillStyle='#f9ca24';
+            ctx.font='bold 10px monospace';
+            ctx.fillText(`🏆 ЛУЧШИЙ: ${loadBestScore()}`,150,190);
+            ctx.textAlign='start';
+        }
+    }
+
+    function setPause(state) {
+        if (gameOver || !isGameActive) return;
+        isPaused = state;
+        if (isPaused) {
+            pauseIndicator.classList.remove('hide-pause');
+            if (interval) clearInterval(interval);
+            interval = null;
+            pauseGameBtn.innerHTML = '▶️';
+        } else {
+            pauseIndicator.classList.add('hide-pause');
+            if (interval) clearInterval(interval);
+            interval = setInterval(update, gameSpeed);
+            pauseGameBtn.innerHTML = '⏸️';
+        }
+    }
+    function togglePause() { if (!isGameActive || gameOver) return; setPause(!isPaused); }
+
+    function update() {
+        if (gameOver || !isGameActive || isPaused) return;
+        dir = nextDir;
+        let head = [snake[0][0], snake[0][1]];
+        if (dir==='right') head[0]++;
+        if (dir==='left') head[0]--;
+        if (dir==='up') head[1]--;
+        if (dir==='down') head[1]++;
+        let eatFood = food && head[0]===food[0] && head[1]===food[1];
+        let eatCoin = coin && head[0]===coin[0] && head[1]===coin[1];
+        snake.unshift([head[0], head[1]]);
+        if (!eatFood && !eatCoin) snake.pop();
+        if (eatFood) {
+            score++;
+            scoreSpan.innerText = score;
+            food = null;
+            spawnFood();
+            spawnCoin();
+            updateQuestProgress('eat');
+        }
+        if (eatCoin) {
+            addCoins(1);
+            coin = null;
+            updateQuestProgress('collect');
+        }
+        if (head[0] < 0 || head[0] >= GRID_SIZE || head[1] < 0 || head[1] >= GRID_SIZE) { endGame(); return; }
+        for (let i=1; i<snake.length; i++) {
+            if (snake[i][0]===head[0] && snake[i][1]===head[1]) { endGame(); return; }
+        }
+        draw();
+    }
+
+    function endGame() {
+        gameOver = true;
+        stopGameLoop();
+        checkAndUpdateRecord(score);
+        // обновляем прогресс заданий "набрать очки"
+        updateQuestProgress('score', score);
+        updateQuestProgress('play');
+        draw();
+    }
+
+    function stopGameLoop() {
+        if (interval) { clearInterval(interval); interval = null; }
+        isGameActive = false;
+        isPaused = false;
+        pauseIndicator.classList.add('hide-pause');
+        pauseGameBtn.innerHTML = '⏸️';
+    }
+    function startGameLoop() {
+        if (interval) clearInterval(interval);
+        isGameActive = true;
+        gameOver = false;
+        isPaused = false;
+        pauseIndicator.classList.add('hide-pause');
+        interval = setInterval(update, gameSpeed);
+        pauseGameBtn.innerHTML = '⏸️';
+    }
+    function fullReset() {
+        if (interval) clearInterval(interval);
+        isGameActive = false; gameOver = false; isPaused = false;
+        pauseIndicator.classList.add('hide-pause');
+        pauseGameBtn.innerHTML = '⏸️';
+        snake = [[10,10],[9,10],[8,10],[7,10]];
+        dir = 'right'; nextDir = 'right';
+        score = 0;
+        scoreSpan.innerText = '0';
+        food = null; coin = null;
+        initialSpawn();
+        draw();
+    }
+    function launchGame() { fullReset(); startGameLoop(); startOverlay.classList.add('hide-overlay'); }
+    function restartWithMenu() { if (interval) clearInterval(interval); isGameActive=false; gameOver=false; isPaused=false; pauseIndicator.classList.add('hide-pause'); pauseGameBtn.innerHTML='⏸️'; fullReset(); startOverlay.classList.remove('hide-overlay'); }
+
+    // ===================== НАСТРОЙКИ =====================
+    function applyControlMode() {
+        dpadContainer.style.display = controlMode==='dpad' ? 'flex' : 'none';
+        joystickZone.style.display = controlMode==='joystick' ? 'block' : 'none';
+        hintText.innerHTML = controlMode==='swipe' ? '👆 Свайп' : controlMode==='joystick' ? '🕹 Джойстик' : '▲ ▼ ◀ ▶';
+        saveData();
+    }
+    function setSpeed(ms) {
+        gameSpeed = ms;
+        const sliderValue = Math.round((300 - ms) / 250 * 100);
+        speedSlider.value = Math.min(100, Math.max(0, sliderValue));
+        if (isGameActive && !gameOver && !isPaused && interval) {
+            clearInterval(interval);
+            interval = setInterval(update, gameSpeed);
+        }
+        saveData();
+    }
+    function setControlMode(mode) {
+        controlMode = mode;
+        document.querySelectorAll('.control-mode-btn').forEach(b => b.classList.remove('active-mode'));
+        document.querySelector(`.control-mode-btn[data-mode="${mode}"]`)?.classList.add('active-mode');
+        applyControlMode();
+    }
+
+    // ===================== ДЖОЙСТИК И СВАЙПЫ =====================
+    let joystickActive = false, joystickCenter = {x:0,y:0}, joystickRadius = 40;
+    function initJoystick() {
+        joystickZone.addEventListener('touchstart', (e) => {
+            if (controlMode !== 'joystick' || !isGameActive || gameOver || isPaused) return;
+            e.preventDefault();
+            joystickActive = true;
+            joystickZone.classList.add('active');
+            const rect = joystickZone.getBoundingClientRect();
+            joystickCenter.x = rect.left + rect.width/2;
+            joystickCenter.y = rect.top + rect.height/2;
+            updateJoystickFromTouch(e.touches[0]);
+        });
+        joystickZone.addEventListener('touchmove', (e) => { if (!joystickActive) return; e.preventDefault(); updateJoystickFromTouch(e.touches[0]); });
+        joystickZone.addEventListener('touchend', () => { joystickActive=false; joystickZone.classList.remove('active'); joystickKnob.style.left='35px'; joystickKnob.style.top='35px'; });
+        joystickZone.addEventListener('mousedown', (e) => {
+            if (controlMode !== 'joystick' || !isGameActive || gameOver || isPaused) return;
+            joystickActive = true;
+            joystickZone.classList.add('active');
+            const rect = joystickZone.getBoundingClientRect();
+            joystickCenter.x = rect.left + rect.width/2;
+            joystickCenter.y = rect.top + rect.height/2;
+            updateJoystickFromMouse(e);
+        });
+        window.addEventListener('mousemove', (e) => { if (!joystickActive) return; updateJoystickFromMouse(e); });
+        window.addEventListener('mouseup', () => { if (joystickActive) { joystickActive=false; joystickZone.classList.remove('active'); joystickKnob.style.left='35px'; joystickKnob.style.top='35px'; } });
+    }
+    function updateJoystickFromTouch(touch) { applyJoystick(touch.clientX - joystickCenter.x, touch.clientY - joystickCenter.y); }
+    function updateJoystickFromMouse(e) { applyJoystick(e.clientX - joystickCenter.x, e.clientY - joystickCenter.y); }
+    function applyJoystick(dx, dy) {
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        const maxDist = joystickRadius;
+        let clampedDx = dx, clampedDy = dy;
+        if (dist > maxDist) { clampedDx = (dx/dist)*maxDist; clampedDy = (dy/dist)*maxDist; }
+        joystickKnob.style.left = (35 + clampedDx) + 'px';
+        joystickKnob.style.top = (35 + clampedDy) + 'px';
+        if (dist > 15) {
+            const angle = Math.atan2(dy, dx);
+            let newDir = null;
+            if (angle > -Math.PI/4 && angle <= Math.PI/4) newDir = 'right';
+            else if (angle > Math.PI/4 && angle <= 3*Math.PI/4) newDir = 'down';
+            else if (angle > -3*Math.PI/4 && angle <= -Math.PI/4) newDir = 'up';
+            else newDir = 'left';
+            if (newDir === 'up' && dir !== 'down') nextDir = 'up';
+            else if (newDir === 'down' && dir !== 'up') nextDir = 'down';
+            else if (newDir === 'left' && dir !== 'right') nextDir = 'left';
+            else if (newDir === 'right' && dir !== 'left') nextDir = 'right';
+        }
+    }
+    let swipeStart = null;
+    canvas.addEventListener('touchstart', (e) => {
+        if (controlMode !== 'swipe' || !isGameActive || gameOver || isPaused) return;
+        e.preventDefault();
+        swipeStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    });
+    canvas.addEventListener('touchmove', (e) => { if (!swipeStart || controlMode !== 'swipe') return; e.preventDefault(); });
+    canvas.addEventListener('touchend', (e) => {
+        if (!swipeStart || controlMode !== 'swipe' || !isGameActive || gameOver || isPaused) { swipeStart=null; return; }
+        const touch = e.changedTouches[0];
+        const dx = touch.clientX - swipeStart.x, dy = touch.clientY - swipeStart.y;
+        if (Math.max(Math.abs(dx), Math.abs(dy)) > 20) {
+            if (Math.abs(dx) > Math.abs(dy)) { if (dx>0 && dir!=='left') nextDir='right'; else if (dx<0 && dir!=='right') nextDir='left'; }
+            else { if (dy>0 && dir!=='up') nextDir='down'; else if (dy<0 && dir!=='down') nextDir='up'; }
+        }
+        swipeStart=null;
+    });
+
+    // ===================== ПАСХАЛКА (клик по счёту) =====================
+    let scoreClickCount = 0;
+    document.getElementById('scoreDisplay').addEventListener('click', function() {
+        if (!startOverlay.classList.contains('hide-overlay')) return;
+        scoreClickCount++;
+        if (scoreClickCount >= 5) {
+            scoreClickCount = 0;
+            const secretSkin = 'neon';
+            if (!ownedSkins.includes(secretSkin)) {
+                ownedSkins.push(secretSkin);
+                activeSkin = secretSkin;
+                saveData();
+                renderSkinInventory();
                 draw();
-                startOverlay.classList.remove('hide-overlay');
-                shopOverlay.classList.add('hide-overlay');
-                settingsOverlay.classList.add('hide-overlay');
-                applyControlMode();
-                setSpeed(gameSpeed);
-                setControlMode(controlMode);
-                renderSkinInventory();
-                initJoystick();
+                this.classList.add('secret-glow');
+                setTimeout(() => this.classList.remove('secret-glow'), 1500);
+                const notif = document.createElement('div');
+                notif.textContent = '🎉 Ты нашёл секретный скин "Неоновый"!';
+                notif.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#1a1a2e;padding:16px 24px;border-radius:16px;border:2px solid #f9ca24;color:#f9ca24;font-weight:bold;z-index:50;font-size:16px;text-align:center;pointer-events:none;';
+                mainContainer.appendChild(notif);
+                setTimeout(() => notif.remove(), 3000);
+            } else {
+                addCoins(20);
+                this.classList.add('secret-glow');
+                setTimeout(() => this.classList.remove('secret-glow'), 1500);
+                const notif = document.createElement('div');
+                notif.textContent = '🪙 +20 монет (пасхалка)!';
+                notif.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#1a1a2e;padding:16px 24px;border-radius:16px;border:2px solid #f9ca24;color:#f9ca24;font-weight:bold;z-index:50;font-size:16px;text-align:center;pointer-events:none;';
+                mainContainer.appendChild(notif);
+                setTimeout(() => notif.remove(), 3000);
             }
+        }
+    });
 
-            // Кнопки
-            startBtn.addEventListener('click', (e) => { e.preventDefault();
-                launchGame(); });
-            pauseGameBtn.addEventListener('click', () => {
-                if (startOverlay.classList.contains('hide-overlay') && isGameActive && !gameOver) togglePause();
-            });
-            document.getElementById('restart').addEventListener('click', restartWithMenu);
-            document.getElementById('shopBtn').addEventListener('click', () => {
-                if (!startOverlay.classList.contains('hide-overlay')) return;
-                setPause(true);
-                shopOverlay.classList.remove('hide-overlay');
-                updateCoinsUI();
-                renderSkinInventory();
-                caseResult.innerHTML = '';
-            });
-            document.getElementById('closeShopBtn').addEventListener('click', () => {
-                shopOverlay.classList.add('hide-overlay');
-                setPause(false);
-            });
-            document.getElementById('buyCaseBtn').addEventListener('click', openCase);
-            document.getElementById('settingsBtn').addEventListener('click', () => {
-                if (!startOverlay.classList.contains('hide-overlay')) return;
-                setPause(true);
-                settingsOverlay.classList.remove('hide-overlay');
-                document.querySelectorAll('.speed-btn').forEach(b => {
-                    b.classList.toggle('active-speed', parseInt(b.getAttribute('data-speed')) === gameSpeed);
-                });
-                document.querySelectorAll('.control-mode-btn').forEach(b => {
-                    b.classList.toggle('active-mode', b.getAttribute('data-mode') === controlMode);
-                });
-            });
-            document.getElementById('closeSettingsBtn').addEventListener('click', () => {
-                settingsOverlay.classList.add('hide-overlay');
-                setPause(false);
-            });
+    // ===================== ПРОМОКОДЫ (без изменений) =====================
+    function getDevPromos() { const raw = localStorage.getItem('devPromos'); return raw ? JSON.parse(raw) : []; }
+    function saveDevPromos(promos) { localStorage.setItem('devPromos', JSON.stringify(promos)); }
+    function getUsedPromos() { const raw = localStorage.getItem('usedPromos'); return raw ? JSON.parse(raw) : []; }
+    function saveUsedPromos(used) { localStorage.setItem('usedPromos', JSON.stringify(used)); }
+    function deletePromo(code) { let promos = getDevPromos(); promos = promos.filter(p => p.code !== code); saveDevPromos(promos); renderExistingPromos(); devMessage.innerHTML = `<span style="color:#f39c12;">Промокод "${code}" удалён</span>`; }
+    function renderExistingPromos() {
+        const promos = getDevPromos();
+        if (!promos.length) { existingPromos.innerHTML = '<span style="color:#555;">Нет активных промокодов</span>'; return; }
+        existingPromos.innerHTML = promos.map(p => {
+            const rewardStr = p.reward.type === 'coins' ? `${p.reward.amount} 🪙` : `Скин: ${p.reward.skinName || p.reward.skinKey}`;
+            return `<div class="promo-entry"><span><span class="promo-code">${p.code}</span> → <span class="promo-reward">${rewardStr}</span></span><button class="delete-promo" data-code="${p.code}">🗑️</button></div>`;
+        }).join('');
+        document.querySelectorAll('.delete-promo').forEach(btn => btn.addEventListener('click', function(e) { e.stopPropagation(); const code = this.getAttribute('data-code'); if (confirm(`Удалить промокод "${code}"?`)) deletePromo(code); }));
+    }
+    function populateSkinSelect() {
+        const secretSkins = allSkins.filter(s => s.rarity === 'secret');
+        const normalSkins = allSkins.filter(s => s.rarity !== 'secret' && s.key !== 'default');
+        const options = [...normalSkins, ...secretSkins].map(s => `<option value="${s.key}">${s.name} (${s.rarity})</option>`).join('');
+        promoSkinKey.innerHTML = options;
+    }
+    promoRewardType.addEventListener('change', () => {
+        if (promoRewardType.value === 'coins') { promoCoinAmount.style.display = 'block'; promoSkinSelect.style.display = 'none'; }
+        else { promoCoinAmount.style.display = 'none'; promoSkinSelect.style.display = 'block'; }
+    });
+    createPromoBtn.addEventListener('click', () => {
+        const code = newPromoCode.value.trim().toUpperCase();
+        if (!code) { devMessage.innerHTML = '<span style="color:#e74c3c;">Введи код!</span>'; return; }
+        const promos = getDevPromos();
+        if (promos.some(p => p.code === code)) { devMessage.innerHTML = '<span style="color:#e74c3c;">Такой код уже существует!</span>'; return; }
+        const type = promoRewardType.value;
+        let reward;
+        if (type === 'coins') { const amount = parseInt(promoCoinValue.value) || 100; reward = { type: 'coins', amount: amount }; }
+        else { const skinKey = promoSkinKey.value; const skin = allSkins.find(s => s.key === skinKey); reward = { type: 'skin', skinKey: skinKey, skinName: skin ? skin.name : skinKey }; }
+        promos.push({ code, reward });
+        saveDevPromos(promos);
+        devMessage.innerHTML = '<span style="color:#2ecc71;">Промокод создан!</span>';
+        newPromoCode.value = '';
+        renderExistingPromos();
+    });
+    function activatePromo(code) {
+        const promos = getDevPromos();
+        const promo = promos.find(p => p.code === code);
+        const secretCodes = { 'GOLDEN': { type: 'skin', skinKey: 'golden' }, 'RAINBOW': { type: 'skin', skinKey: 'rainbow' }, 'NEON': { type: 'skin', skinKey: 'neon' }, 'SECRET': { type: 'coins', amount: 100 }, 'SNAKEIO': { type: 'coins', amount: 50 } };
+        if (secretCodes[code]) {
+            const secret = secretCodes[code];
+            const used = getUsedPromos();
+            if (used.includes(code)) { promoResult.innerHTML = '<span style="color:#f39c12;">Уже использован</span>'; return false; }
+            if (secret.type === 'coins') { addCoins(secret.amount); promoResult.innerHTML = `<span style="color:#2ecc71;">🎉 +${secret.amount} 🪙</span>`; }
+            else {
+                const skinKey = secret.skinKey;
+                if (!ownedSkins.includes(skinKey)) { ownedSkins.push(skinKey); activeSkin = skinKey; saveData(); renderSkinInventory(); draw(); promoResult.innerHTML = `<span style="color:#2ecc71;">🌟 Секретный скин получен!</span>`; }
+                else { promoResult.innerHTML = '<span style="color:#f39c12;">Скин уже есть</span>'; }
+            }
+            used.push(code); saveUsedPromos(used); updateCoinsUI(); return true;
+        }
+        if (!promo) { promoResult.innerHTML = '<span style="color:#e74c3c;">Неверный код</span>'; return false; }
+        const used = getUsedPromos();
+        if (used.includes(code)) { promoResult.innerHTML = '<span style="color:#f39c12;">Уже использован</span>'; return false; }
+        if (promo.reward.type === 'coins') { addCoins(promo.reward.amount); promoResult.innerHTML = `<span style="color:#2ecc71;">+${promo.reward.amount} 🪙</span>`; }
+        else {
+            const skinKey = promo.reward.skinKey;
+            if (!ownedSkins.includes(skinKey)) { ownedSkins.push(skinKey); if (activeSkin === 'default') activeSkin = skinKey; saveData(); renderSkinInventory(); draw(); promoResult.innerHTML = `<span style="color:#2ecc71;">Скин получен!</span>`; }
+            else { promoResult.innerHTML = '<span style="color:#f39c12;">Скин уже есть</span>'; }
+        }
+        used.push(code); saveUsedPromos(used); updateCoinsUI(); return true;
+    }
+    activatePromoBtn.addEventListener('click', () => { const code = promoInput.value.trim().toUpperCase(); if (code) activatePromo(code); promoInput.value = ''; });
 
-            // Кнопки скорости
-            document.querySelectorAll('.speed-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const ms = parseInt(btn.getAttribute('data-speed'));
-                    setSpeed(ms);
-                });
-            });
-            // Кнопки режима управления
-            document.querySelectorAll('.control-mode-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const mode = btn.getAttribute('data-mode');
-                    setControlMode(mode);
-                });
-            });
+    // ===================== ИНИЦИАЛИЗАЦИЯ =====================
+    function initAll() {
+        loadData();
+        updateBestScoreUI();
+        updateCoinsUI();
+        updateCaseUI();
+        initQuests();
+        initAchievements();
+        renderQuests();
+        renderAchievements();
+        fullReset();
+        draw();
+        startOverlay.classList.remove('hide-overlay');
+        shopOverlay.classList.add('hide-overlay');
+        questOverlay.classList.add('hide-overlay');
+        settingsOverlay.classList.add('hide-overlay');
+        devOverlay.classList.add('hide-overlay');
+        applyControlMode();
+        setSpeed(gameSpeed);
+        setControlMode(controlMode);
+        renderSkinInventory();
+        initJoystick();
+        populateSkinSelect();
+        renderExistingPromos();
+        promoRewardType.dispatchEvent(new Event('change'));
 
-            // Клавиатура
-            document.addEventListener('keydown', (e) => {
-                if (!startOverlay.classList.contains('hide-overlay')) {
-                    if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault();
-                        launchGame(); }
-                    return;
-                }
-                if (e.code === 'Space') {
-                    e.preventDefault();
-                    if (isGameActive && !gameOver) togglePause();
-                    else if (gameOver) restartWithMenu();
-                    return;
-                }
-                if (!isGameActive || gameOver || isPaused) return;
-                let k = e.key;
-                if (k === 'ArrowUp' && dir !== 'down') { nextDir = 'up';
-                    e.preventDefault(); } else if (k === 'ArrowDown' && dir !== 'up') { nextDir = 'down';
-                    e.preventDefault(); } else if (k === 'ArrowLeft' && dir !== 'right') { nextDir = 'left';
-                    e.preventDefault(); } else if (k === 'ArrowRight' && dir !== 'left') { nextDir = 'right';
-                    e.preventDefault(); }
-            });
+        speedSlider.addEventListener('input', function() { const value = parseInt(this.value); const speed = 300 - (value/100)*250; setSpeed(Math.round(speed)); });
+        buyCaseBtn.addEventListener('click', buyCase);
+        openCaseBtn.addEventListener('click', openCase);
+        questBtn.addEventListener('click', () => {
+            if (!startOverlay.classList.contains('hide-overlay')) return;
+            setPause(true);
+            questOverlay.classList.remove('hide-overlay');
+            renderQuests();
+            renderAchievements();
+        });
+        closeQuestBtn.addEventListener('click', () => { questOverlay.classList.add('hide-overlay'); setPause(false); });
+    }
 
-            // Крестовый геймпад
-            document.querySelectorAll('.ctrl-btn').forEach(btn => {
-                const handler = (e) => {
-                    e.preventDefault();
-                    if (controlMode !== 'dpad') return;
-                    if (!startOverlay.classList.contains('hide-overlay')) return;
-                    if (!isGameActive || gameOver || isPaused) return;
-                    const ndir = btn.getAttribute('data-dir');
-                    if (ndir === 'up' && dir !== 'down') nextDir = 'up';
-                    else if (ndir === 'down' && dir !== 'up') nextDir = 'down';
-                    else if (ndir === 'left' && dir !== 'right') nextDir = 'left';
-                    else if (ndir === 'right' && dir !== 'left') nextDir = 'right';
-                };
-                btn.addEventListener('click', handler);
-                btn.addEventListener('touchstart', handler, { passive: false });
-            });
+    // Обработчики кнопок
+    startBtn.addEventListener('click', (e) => { e.preventDefault(); launchGame(); });
+    pauseGameBtn.addEventListener('click', () => { if (startOverlay.classList.contains('hide-overlay') && isGameActive && !gameOver) togglePause(); });
+    document.getElementById('restart').addEventListener('click', restartWithMenu);
+    document.getElementById('shopBtn').addEventListener('click', () => {
+        if (!startOverlay.classList.contains('hide-overlay')) return;
+        setPause(true);
+        shopOverlay.classList.remove('hide-overlay');
+        updateCoinsUI();
+        updateCaseUI();
+        renderSkinInventory();
+        caseResult.innerHTML = '';
+        promoResult.innerHTML = '';
+    });
+    document.getElementById('closeShopBtn').addEventListener('click', () => { shopOverlay.classList.add('hide-overlay'); setPause(false); });
+    document.getElementById('settingsBtn').addEventListener('click', () => {
+        if (!startOverlay.classList.contains('hide-overlay')) return;
+        setPause(true);
+        settingsOverlay.classList.remove('hide-overlay');
+        document.querySelectorAll('.control-mode-btn').forEach(b => b.classList.toggle('active-mode', b.getAttribute('data-mode') === controlMode));
+    });
+    document.getElementById('closeSettingsBtn').addEventListener('click', () => { settingsOverlay.classList.add('hide-overlay'); setPause(false); });
+    document.querySelectorAll('.control-mode-btn').forEach(btn => btn.addEventListener('click', () => setControlMode(btn.getAttribute('data-mode'))));
 
-            startOverlay.addEventListener('click', (e) => e.stopPropagation());
+    devBtn.addEventListener('click', () => {
+        const password = prompt('Введите пароль разработчика:');
+        if (password === '31052013макс') { setPause(true); devOverlay.classList.remove('hide-overlay'); renderExistingPromos(); devMessage.innerHTML = ''; }
+        else if (password !== null) alert('Неверный пароль!');
+    });
+    closeDevBtn.addEventListener('click', () => { devOverlay.classList.add('hide-overlay'); setPause(false); });
 
-            // Запуск
-            initAll();
-        })();
-    </script>
+    document.addEventListener('keydown', (e) => {
+        if (!startOverlay.classList.contains('hide-overlay')) { if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); launchGame(); } return; }
+        if (e.code === 'Space') { e.preventDefault(); if (isGameActive && !gameOver) togglePause(); else if (gameOver) restartWithMenu(); return; }
+        if (!isGameActive || gameOver || isPaused) return;
+        if (e.key === 'ArrowUp' && dir !== 'down') { nextDir = 'up'; e.preventDefault(); }
+        else if (e.key === 'ArrowDown' && dir !== 'up') { nextDir = 'down'; e.preventDefault(); }
+        else if (e.key === 'ArrowLeft' && dir !== 'right') { nextDir = 'left'; e.preventDefault(); }
+        else if (e.key === 'ArrowRight' && dir !== 'left') { nextDir = 'right'; e.preventDefault(); }
+    });
+
+    document.querySelectorAll('.ctrl-btn').forEach(btn => {
+        const handler = (e) => {
+            e.preventDefault();
+            if (controlMode !== 'dpad') return;
+            if (!startOverlay.classList.contains('hide-overlay')) return;
+            if (!isGameActive || gameOver || isPaused) return;
+            const ndir = btn.getAttribute('data-dir');
+            if (ndir === 'up' && dir !== 'down') nextDir = 'up';
+            else if (ndir === 'down' && dir !== 'up') nextDir = 'down';
+            else if (ndir === 'left' && dir !== 'right') nextDir = 'left';
+            else if (ndir === 'right' && dir !== 'left') nextDir = 'right';
+        };
+        btn.addEventListener('click', handler);
+        btn.addEventListener('touchstart', handler, { passive: false });
+    });
+
+    startOverlay.addEventListener('click', (e) => e.stopPropagation());
+
+    initAll();
+})();
+</script>
 </body>
-    </html>
+                                                                                                                            </html>
