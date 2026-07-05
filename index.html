@@ -4,6 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Змейка — скины, кейсы, задания</title>
+    
+    <!-- ===== FIREBASE SDK ===== -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    
+    <script>
+        // Ваш Firebase конфиг
+        const firebaseConfig = {
+            apiKey: "AIzaSyDHevWAesdZuHsF0vq3ENkVRNMllASkNrA",
+            authDomain: "snakepromo-c6f57.firebaseapp.com",
+            projectId: "snakepromo-c6f57",
+            storageBucket: "snakepromo-c6f57.firebasestorage.app",
+            messagingSenderId: "953301622443",
+            appId: "1:953301622443:web:9e4e7169af16d3885ee1ee"
+        };
+        
+        // Инициализация Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // Включаем оффлайн-режим (кеширование)
+        db.enablePersistence().catch(err => console.warn('Offline mode:', err));
+        
+        console.log('🔥 Firebase подключён!');
+    </script>
+    
     <style>
         * { user-select: none; touch-action: manipulation; box-sizing: border-box; }
         body { background: #0a0a1a; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px; font-family: monospace; }
@@ -65,8 +92,6 @@
         .promo-entry .promo-reward { color: #aaa; }
         .promo-entry .delete-promo { background: #c0392b; border: none; color: white; border-radius: 12px; padding: 1px 8px; font-size: 11px; cursor: pointer; }
         .promo-entry .delete-promo:hover { background: #e74c3c; }
-
-        /* Задания */
         .quest-item { background: #1a1a2e; border-radius: 12px; padding: 8px; margin: 6px 0; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
         .quest-item .quest-info { text-align: left; color: #ddd; font-size: 12px; }
         .quest-item .quest-info .quest-name { color: #f9ca24; font-weight: bold; }
@@ -75,7 +100,6 @@
         .quest-item .quest-btn { background: #27ae60; border: none; color: white; border-radius: 20px; padding: 2px 12px; font-size: 11px; cursor: pointer; }
         .quest-item .quest-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .quest-item .quest-btn.claimed { background: #555; }
-
         .achievement { background: #1a1a2e; border-radius: 12px; padding: 6px; margin: 4px 0; border: 1px solid #f9ca24; display: flex; justify-content: space-between; align-items: center; }
         .achievement .ach-name { color: #f9ca24; font-size: 12px; }
         .achievement .ach-status { color: #aaa; font-size: 11px; }
@@ -228,7 +252,6 @@
     const mainContainer = document.getElementById('mainContainer');
     const speedSlider = document.getElementById('speedSlider');
 
-    // Кнопки
     const devBtn = document.getElementById('devBtn');
     const devOverlay = document.getElementById('devOverlay');
     const closeDevBtn = document.getElementById('closeDevBtn');
@@ -331,7 +354,6 @@
     let totalQuestsCompleted = 0;
 
     function initQuests() {
-        // Ежедневные задания (сброс в полночь)
         const today = new Date().toDateString();
         const saved = localStorage.getItem('questsData');
         if (saved) {
@@ -344,7 +366,6 @@
                 }
             } catch(e) {}
         }
-        // Создаём новые задания на сегодня
         const questTemplates = [
             { id: 'eat10', name: 'Съесть 10 яблок', target: 10, reward: 5, progress: 0, completed: false },
             { id: 'eat25', name: 'Съесть 25 яблок', target: 25, reward: 10, progress: 0, completed: false },
@@ -354,7 +375,6 @@
             { id: 'play3', name: 'Сыграть 3 игры', target: 3, reward: 12, progress: 0, completed: false },
             { id: 'play5', name: 'Сыграть 5 игр', target: 5, reward: 20, progress: 0, completed: false }
         ];
-        // Берём первые 5 для ежедневных
         quests = questTemplates.slice(0,5).map(q => ({ ...q, progress: 0, completed: false }));
         totalQuestsCompleted = 0;
         saveQuests();
@@ -397,7 +417,7 @@
         const q = quests[index];
         if (!q || !q.completed) return;
         addCoins(q.reward);
-        q.completed = true; // уже true, но помечаем как забранное
+        q.completed = true;
         q.claimed = true;
         saveQuests();
         renderQuests();
@@ -422,7 +442,6 @@
                 </div>
             </div>`;
         }).join('');
-        // Обработчики для кнопок "Забрать"
         document.querySelectorAll('.quest-btn:not([disabled])').forEach(btn => {
             btn.addEventListener('click', function() {
                 const idx = parseInt(this.getAttribute('data-index'));
@@ -454,7 +473,6 @@
                 a.unlocked = true;
                 addCoins(a.reward);
                 changed = true;
-                // уведомление
                 const notif = document.createElement('div');
                 notif.textContent = `🏆 Достижение "${a.name}"! +${a.reward} 🪙`;
                 notif.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#1a1a2e;padding:16px 24px;border-radius:16px;border:2px solid #f9ca24;color:#f9ca24;font-weight:bold;z-index:70;font-size:16px;text-align:center;pointer-events:none;';
@@ -477,7 +495,7 @@
         }).join('');
     }
 
-    // ===================== ОТКРЫТИЕ КЕЙСА (с анимацией) =====================
+    // ===================== ОТКРЫТИЕ КЕЙСА =====================
     function openCase() {
         if (cases <= 0) {
             caseResult.innerHTML = '<span style="color:#e74c3c;">У вас нет кейсов!</span>';
@@ -502,7 +520,6 @@
         overlay.style.cssText = `position:absolute;top:0;left:0;width:100%;height:100%;border-radius:20px;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:60;backdrop-filter:blur(6px);`;
         mainContainer.appendChild(overlay);
 
-        // Стрелка сверху
         const arrow = document.createElement('div');
         arrow.className = 'case-arrow';
         arrow.textContent = '▲';
@@ -569,7 +586,6 @@
                     slots[finalIndex].slot.style.border = '2px solid #f9ca24';
                     slots[finalIndex].slot.style.boxShadow = '0 0 20px gold';
                     slots[finalIndex].preview.style.borderColor = '#f9ca24';
-                    // перемещаем стрелку над этим слотом
                     const slotWidth = 37;
                     const offset = finalIndex * slotWidth + slotWidth/2 - 10;
                     arrow.style.left = `calc(50% + ${offset - 130}px)`;
@@ -600,7 +616,7 @@
         closeBtn.addEventListener('click', function() { clearInterval(timer); overlay.remove(); caseResult.innerHTML = ''; });
     }
 
-    // ===================== ИНВЕНТАРЬ СКИНОВ С ЗМЕЙКАМИ =====================
+    // ===================== ИНВЕНТАРЬ СКИНОВ =====================
     function renderSkinInventory() {
         skinInventory.innerHTML = allSkins.map(s => {
             const owned = ownedSkins.includes(s.key);
@@ -610,7 +626,6 @@
             else if (s.rarity === 'superrare') rarityClass = 'rarity-superrare';
             else if (s.rarity === 'legendary') rarityClass = 'rarity-legendary';
             else if (s.rarity === 'secret') rarityClass = 'rarity-secret';
-            const secretEmoji = s.rarity === 'secret' ? '⭐' : '';
             return `<div class="skin-item ${selected?'selected':''} ${!owned?'locked':''}" style="background:${s.bodyColor};${!owned?'filter:grayscale(0.5);':''}" title="${s.name} (${s.rarity})" data-skin="${s.key}">
                 <div class="mini-snake">${!owned ? '🔒' : '🐍'}</div>
                 <span class="rarity-dot ${rarityClass}"></span>
@@ -630,7 +645,7 @@
         });
     }
 
-    // ===================== ИГРОВАЯ ЛОГИКА (без изменений) =====================
+    // ===================== ИГРОВАЯ ЛОГИКА =====================
     function randomFreeCell() {
         let free = [];
         for (let i=0; i<GRID_SIZE; i++) for (let j=0; j<GRID_SIZE; j++) {
@@ -766,7 +781,6 @@
         gameOver = true;
         stopGameLoop();
         checkAndUpdateRecord(score);
-        // обновляем прогресс заданий "набрать очки"
         updateQuestProgress('score', score);
         updateQuestProgress('play');
         draw();
@@ -895,7 +909,7 @@
         swipeStart=null;
     });
 
-    // ===================== ПАСХАЛКА (клик по счёту) =====================
+    // ===================== ПАСХАЛКА =====================
     let scoreClickCount = 0;
     document.getElementById('scoreDisplay').addEventListener('click', function() {
         if (!startOverlay.classList.contains('hide-overlay')) return;
@@ -929,75 +943,191 @@
         }
     });
 
-    // ===================== ПРОМОКОДЫ (без изменений) =====================
-    function getDevPromos() { const raw = localStorage.getItem('devPromos'); return raw ? JSON.parse(raw) : []; }
-    function saveDevPromos(promos) { localStorage.setItem('devPromos', JSON.stringify(promos)); }
-    function getUsedPromos() { const raw = localStorage.getItem('usedPromos'); return raw ? JSON.parse(raw) : []; }
-    function saveUsedPromos(used) { localStorage.setItem('usedPromos', JSON.stringify(used)); }
-    function deletePromo(code) { let promos = getDevPromos(); promos = promos.filter(p => p.code !== code); saveDevPromos(promos); renderExistingPromos(); devMessage.innerHTML = `<span style="color:#f39c12;">Промокод "${code}" удалён</span>`; }
-    function renderExistingPromos() {
-        const promos = getDevPromos();
-        if (!promos.length) { existingPromos.innerHTML = '<span style="color:#555;">Нет активных промокодов</span>'; return; }
-        existingPromos.innerHTML = promos.map(p => {
-            const rewardStr = p.reward.type === 'coins' ? `${p.reward.amount} 🪙` : `Скин: ${p.reward.skinName || p.reward.skinKey}`;
-            return `<div class="promo-entry"><span><span class="promo-code">${p.code}</span> → <span class="promo-reward">${rewardStr}</span></span><button class="delete-promo" data-code="${p.code}">🗑️</button></div>`;
-        }).join('');
-        document.querySelectorAll('.delete-promo').forEach(btn => btn.addEventListener('click', function(e) { e.stopPropagation(); const code = this.getAttribute('data-code'); if (confirm(`Удалить промокод "${code}"?`)) deletePromo(code); }));
+    // ===================== FIRESTORE ПРОМОКОДЫ =====================
+    
+    // Получение ID игрока
+    function getPlayerId() {
+        let id = localStorage.getItem('playerId');
+        if (!id) {
+            id = 'player_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+            localStorage.setItem('playerId', id);
+        }
+        return id;
     }
+    
+    // Активация промокода через Firebase
+    async function activatePromoFirebase(code) {
+        try {
+            const docRef = db.collection('promocodes').doc(code);
+            const doc = await docRef.get();
+            
+            if (!doc.exists) {
+                promoResult.innerHTML = '<span style="color:#e74c3c;">❌ Код не найден</span>';
+                return false;
+            }
+            
+            const data = doc.data();
+            
+            if (data.used) {
+                promoResult.innerHTML = '<span style="color:#f39c12;">⚠️ Код уже использован</span>';
+                return false;
+            }
+            
+            if (data.expires && data.expires.toDate() < new Date()) {
+                promoResult.innerHTML = '<span style="color:#e74c3c;">⏰ Срок действия истёк</span>';
+                return false;
+            }
+            
+            const playerId = getPlayerId();
+            const usedBy = data.usedBy || [];
+            if (usedBy.includes(playerId)) {
+                promoResult.innerHTML = '<span style="color:#f39c12;">⚠️ Вы уже использовали этот код</span>';
+                return false;
+            }
+            
+            // Выдача награды
+            if (data.reward_type === 'coins') {
+                addCoins(data.reward_amount || 100);
+                promoResult.innerHTML = `<span style="color:#2ecc71;">🎉 +${data.reward_amount || 100} 🪙</span>`;
+            } else if (data.reward_type === 'skin') {
+                const skinKey = data.reward_skin;
+                if (!ownedSkins.includes(skinKey)) {
+                    ownedSkins.push(skinKey);
+                    activeSkin = skinKey;
+                    saveData();
+                    renderSkinInventory();
+                    draw();
+                    promoResult.innerHTML = `<span style="color:#2ecc71;">🌟 Скин "${getSkinData(skinKey).name}" получен!</span>`;
+                } else {
+                    addCoins(10);
+                    promoResult.innerHTML = `<span style="color:#f39c12;">Скин уже есть, +10 🪙</span>`;
+                }
+            }
+            
+            // Помечаем как использованный
+            await docRef.update({
+                used: true,
+                usedBy: firebase.firestore.FieldValue.arrayUnion(playerId),
+                usedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            updateCoinsUI();
+            return true;
+            
+        } catch (error) {
+            console.error('Ошибка активации:', error);
+            promoResult.innerHTML = '<span style="color:#e74c3c;">❌ Ошибка сервера</span>';
+            return false;
+        }
+    }
+    
+    // Создание промокода в Firestore
+    async function createPromoFirebase() {
+        const code = newPromoCode.value.trim().toUpperCase();
+        if (!code) {
+            devMessage.innerHTML = '<span style="color:#e74c3c;">Введите код!</span>';
+            return;
+        }
+        
+        try {
+            const docRef = db.collection('promocodes').doc(code);
+            const doc = await docRef.get();
+            if (doc.exists) {
+                devMessage.innerHTML = '<span style="color:#e74c3c;">Такой код уже существует!</span>';
+                return;
+            }
+            
+            const type = promoRewardType.value;
+            let data = {
+                used: false,
+                created_by: 'admin',
+                created_at: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            if (type === 'coins') {
+                data.reward_type = 'coins';
+                data.reward_amount = parseInt(promoCoinValue.value) || 100;
+            } else {
+                const skinKey = promoSkinKey.value;
+                data.reward_type = 'skin';
+                data.reward_skin = skinKey;
+            }
+            
+            // Срок действия 7 дней
+            const expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + 7);
+            data.expires = firebase.firestore.Timestamp.fromDate(expiryDate);
+            
+            await docRef.set(data);
+            devMessage.innerHTML = `<span style="color:#2ecc71;">✅ Промокод "${code}" создан!</span>`;
+            newPromoCode.value = '';
+            renderExistingPromosFirebase();
+            
+        } catch (error) {
+            devMessage.innerHTML = `<span style="color:#e74c3c;">❌ Ошибка: ${error.message}</span>`;
+        }
+    }
+    
+    // Показать все промокоды из Firestore
+    async function renderExistingPromosFirebase() {
+        try {
+            const snapshot = await db.collection('promocodes')
+                .where('used', '==', false)
+                .orderBy('created_at', 'desc')
+                .limit(20)
+                .get();
+            
+            if (snapshot.empty) {
+                existingPromos.innerHTML = '<span style="color:#555;">Нет активных промокодов</span>';
+                return;
+            }
+            
+            let html = '';
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const rewardStr = data.reward_type === 'coins' 
+                    ? `${data.reward_amount || 0} 🪙` 
+                    : `Скин: ${data.reward_skin || '?'}`;
+                html += `<div class="promo-entry">
+                    <span><span class="promo-code">${doc.id}</span> → <span class="promo-reward">${rewardStr}</span></span>
+                    <button class="delete-promo" data-code="${doc.id}">🗑️</button>
+                </div>`;
+            });
+            
+            existingPromos.innerHTML = html;
+            
+            document.querySelectorAll('.delete-promo').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const code = this.getAttribute('data-code');
+                    if (confirm(`Удалить промокод "${code}"?`)) {
+                        try {
+                            await db.collection('promocodes').doc(code).delete();
+                            renderExistingPromosFirebase();
+                            devMessage.innerHTML = `<span style="color:#f39c12;">Промокод "${code}" удалён</span>`;
+                        } catch (error) {
+                            devMessage.innerHTML = `<span style="color:#e74c3c;">Ошибка удаления: ${error.message}</span>`;
+                        }
+                    }
+                });
+            });
+        } catch (error) {
+            console.error('Ошибка загрузки промокодов:', error);
+            existingPromos.innerHTML = '<span style="color:#e74c3c;">Ошибка загрузки</span>';
+        }
+    }
+    
     function populateSkinSelect() {
         const secretSkins = allSkins.filter(s => s.rarity === 'secret');
         const normalSkins = allSkins.filter(s => s.rarity !== 'secret' && s.key !== 'default');
         const options = [...normalSkins, ...secretSkins].map(s => `<option value="${s.key}">${s.name} (${s.rarity})</option>`).join('');
         promoSkinKey.innerHTML = options;
     }
+    
     promoRewardType.addEventListener('change', () => {
         if (promoRewardType.value === 'coins') { promoCoinAmount.style.display = 'block'; promoSkinSelect.style.display = 'none'; }
         else { promoCoinAmount.style.display = 'none'; promoSkinSelect.style.display = 'block'; }
     });
-    createPromoBtn.addEventListener('click', () => {
-        const code = newPromoCode.value.trim().toUpperCase();
-        if (!code) { devMessage.innerHTML = '<span style="color:#e74c3c;">Введи код!</span>'; return; }
-        const promos = getDevPromos();
-        if (promos.some(p => p.code === code)) { devMessage.innerHTML = '<span style="color:#e74c3c;">Такой код уже существует!</span>'; return; }
-        const type = promoRewardType.value;
-        let reward;
-        if (type === 'coins') { const amount = parseInt(promoCoinValue.value) || 100; reward = { type: 'coins', amount: amount }; }
-        else { const skinKey = promoSkinKey.value; const skin = allSkins.find(s => s.key === skinKey); reward = { type: 'skin', skinKey: skinKey, skinName: skin ? skin.name : skinKey }; }
-        promos.push({ code, reward });
-        saveDevPromos(promos);
-        devMessage.innerHTML = '<span style="color:#2ecc71;">Промокод создан!</span>';
-        newPromoCode.value = '';
-        renderExistingPromos();
-    });
-    function activatePromo(code) {
-        const promos = getDevPromos();
-        const promo = promos.find(p => p.code === code);
-        const secretCodes = { 'GOLDEN': { type: 'skin', skinKey: 'golden' }, 'RAINBOW': { type: 'skin', skinKey: 'rainbow' }, 'NEON': { type: 'skin', skinKey: 'neon' }, 'SECRET': { type: 'coins', amount: 100 }, 'SNAKEIO': { type: 'coins', amount: 50 } };
-        if (secretCodes[code]) {
-            const secret = secretCodes[code];
-            const used = getUsedPromos();
-            if (used.includes(code)) { promoResult.innerHTML = '<span style="color:#f39c12;">Уже использован</span>'; return false; }
-            if (secret.type === 'coins') { addCoins(secret.amount); promoResult.innerHTML = `<span style="color:#2ecc71;">🎉 +${secret.amount} 🪙</span>`; }
-            else {
-                const skinKey = secret.skinKey;
-                if (!ownedSkins.includes(skinKey)) { ownedSkins.push(skinKey); activeSkin = skinKey; saveData(); renderSkinInventory(); draw(); promoResult.innerHTML = `<span style="color:#2ecc71;">🌟 Секретный скин получен!</span>`; }
-                else { promoResult.innerHTML = '<span style="color:#f39c12;">Скин уже есть</span>'; }
-            }
-            used.push(code); saveUsedPromos(used); updateCoinsUI(); return true;
-        }
-        if (!promo) { promoResult.innerHTML = '<span style="color:#e74c3c;">Неверный код</span>'; return false; }
-        const used = getUsedPromos();
-        if (used.includes(code)) { promoResult.innerHTML = '<span style="color:#f39c12;">Уже использован</span>'; return false; }
-        if (promo.reward.type === 'coins') { addCoins(promo.reward.amount); promoResult.innerHTML = `<span style="color:#2ecc71;">+${promo.reward.amount} 🪙</span>`; }
-        else {
-            const skinKey = promo.reward.skinKey;
-            if (!ownedSkins.includes(skinKey)) { ownedSkins.push(skinKey); if (activeSkin === 'default') activeSkin = skinKey; saveData(); renderSkinInventory(); draw(); promoResult.innerHTML = `<span style="color:#2ecc71;">Скин получен!</span>`; }
-            else { promoResult.innerHTML = '<span style="color:#f39c12;">Скин уже есть</span>'; }
-        }
-        used.push(code); saveUsedPromos(used); updateCoinsUI(); return true;
-    }
-    activatePromoBtn.addEventListener('click', () => { const code = promoInput.value.trim().toUpperCase(); if (code) activatePromo(code); promoInput.value = ''; });
-
+    
     // ===================== ИНИЦИАЛИЗАЦИЯ =====================
     function initAll() {
         loadData();
@@ -1021,7 +1151,7 @@
         renderSkinInventory();
         initJoystick();
         populateSkinSelect();
-        renderExistingPromos();
+        renderExistingPromosFirebase();
         promoRewardType.dispatchEvent(new Event('change'));
 
         speedSlider.addEventListener('input', function() { const value = parseInt(this.value); const speed = 300 - (value/100)*250; setSpeed(Math.round(speed)); });
@@ -1037,7 +1167,7 @@
         closeQuestBtn.addEventListener('click', () => { questOverlay.classList.add('hide-overlay'); setPause(false); });
     }
 
-    // Обработчики кнопок
+    // ===================== ОБРАБОТЧИКИ =====================
     startBtn.addEventListener('click', (e) => { e.preventDefault(); launchGame(); });
     pauseGameBtn.addEventListener('click', () => { if (startOverlay.classList.contains('hide-overlay') && isGameActive && !gameOver) togglePause(); });
     document.getElementById('restart').addEventListener('click', restartWithMenu);
@@ -1063,7 +1193,7 @@
 
     devBtn.addEventListener('click', () => {
         const password = prompt('Введите пароль разработчика:');
-        if (password === '31052013макс') { setPause(true); devOverlay.classList.remove('hide-overlay'); renderExistingPromos(); devMessage.innerHTML = ''; }
+        if (password === '31052013макс') { setPause(true); devOverlay.classList.remove('hide-overlay'); renderExistingPromosFirebase(); devMessage.innerHTML = ''; }
         else if (password !== null) alert('Неверный пароль!');
     });
     closeDevBtn.addEventListener('click', () => { devOverlay.classList.add('hide-overlay'); setPause(false); });
@@ -1096,8 +1226,18 @@
 
     startOverlay.addEventListener('click', (e) => e.stopPropagation());
 
+    // ===== ПЕРЕОПРЕДЕЛЯЕМ АКТИВАЦИЮ ПРОМОКОДА НА FIRESTORE =====
+    activatePromoBtn.addEventListener('click', () => { 
+        const code = promoInput.value.trim().toUpperCase(); 
+        if (code) activatePromoFirebase(code); 
+        promoInput.value = ''; 
+    });
+    
+    // ===== ПЕРЕОПРЕДЕЛЯЕМ СОЗДАНИЕ ПРОМОКОДА =====
+    createPromoBtn.addEventListener('click', createPromoFirebase);
+
     initAll();
 })();
 </script>
 </body>
-                                                                                                                            </html>
+                    </html>
