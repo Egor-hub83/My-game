@@ -84,6 +84,16 @@
         .rarity-legendary { background: #f1c40f; }
         .rarity-secret { background: #ff6b6b; box-shadow: 0 0 10px #ff6b6b; }
         
+        /* АВАТАРКИ */
+        .avatar-container { display: flex; align-items: center; gap: 10px; margin: 8px 0; flex-wrap: wrap; justify-content: center; }
+        .avatar-preview { width: 60px; height: 60px; border-radius: 50%; border: 3px solid #f9ca24; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #1a1a2e; flex-shrink: 0; }
+        .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-preview .default-avatar { font-size: 30px; }
+        .avatar-upload-btn { background: #2c3e66; color: white; padding: 6px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; border: none; font-family: monospace; display: inline-block; }
+        .avatar-upload-btn:hover { background: #3e5099; }
+        .avatar-input { display: none; }
+        .avatar-btns { display: flex; flex-direction: column; gap: 4px; }
+        
         .case-shop { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 6px 0; }
         .speed-slider-wrapper { display: flex; flex-direction: column; align-items: center; margin: 6px 0; }
         .speed-slider-wrapper input[type="range"] { width: 100%; max-width: 200px; background: #2c3e66; height: 4px; border-radius: 4px; -webkit-appearance: none; appearance: none; outline: none; }
@@ -137,16 +147,21 @@
         .online-player .name { color: #2ecc71; }
         .online-player .status { color: #888; font-size: 10px; }
         
-        .leaderboard-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; margin: 4px 0; border-radius: 10px; background: #1a1a2e; border-left: 3px solid #f9ca24; }
-        .leaderboard-item .rank { color: #f9ca24; font-weight: bold; font-size: 14px; width: 30px; }
-        .leaderboard-item .name { color: #ddd; font-size: 13px; flex: 1; }
+        .leaderboard-item { display: flex; align-items: center; padding: 6px 12px; margin: 4px 0; border-radius: 10px; background: #1a1a2e; border-left: 3px solid #f9ca24; gap: 8px; }
+        .leaderboard-item .rank { color: #f9ca24; font-weight: bold; font-size: 14px; min-width: 30px; }
+        .leaderboard-item .name { color: #ddd; font-size: 13px; flex: 1; display: flex; align-items: center; gap: 6px; }
         .leaderboard-item .score { color: #e94560; font-size: 13px; font-weight: bold; }
-        .leaderboard-item .wins { color: #2ecc71; font-size: 13px; font-weight: bold; margin-left: 10px; }
+        .leaderboard-item .wins { color: #2ecc71; font-size: 13px; font-weight: bold; }
         .leaderboard-item.top1 { border-left-color: #ffd700; background: #1a1a1a; }
         .leaderboard-item.top2 { border-left-color: #c0c0c0; background: #1a1a1a; }
         .leaderboard-item.top3 { border-left-color: #cd7f32; background: #1a1a1a; }
-        .leaderboard-item .crown { font-size: 18px; margin-right: 5px; }
+        .leaderboard-item .crown { font-size: 18px; }
         .leaderboard-item.me { border: 2px solid #f9ca24 !important; background: #1a2a1a !important; }
+        .leaderboard-item .avatar-small { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        
+        .player-list-item { display: flex; align-items: center; gap: 8px; padding: 4px 8px; margin: 2px 0; border-radius: 8px; background: #0a0a1a; font-size: 11px; color: #ddd; border-left: 3px solid #2ecc71; }
+        .player-list-item .pid { color: #888; font-size: 9px; word-break: break-all; }
+        .player-list-item .pavatar { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
     </style>
 </head>
 <body>
@@ -197,6 +212,17 @@
                 <div id="userInfo" style="display:none;">
                     <p style="color:#2ecc71;">✅ Вы вошли как <b id="userNameDisplay"></b></p>
                     <p style="color:#888;font-size:10px;">ID: <span id="userIdDisplay"></span></p>
+                    <div class="avatar-container">
+                        <div class="avatar-preview" id="avatarPreview">
+                            <span class="default-avatar" id="avatarEmoji">🐍</span>
+                        </div>
+                        <div class="avatar-btns">
+                            <label class="avatar-upload-btn">📷 Загрузить аватарку
+                                <input type="file" id="avatarInput" class="avatar-input" accept="image/*">
+                            </label>
+                            <button id="changeNickBtn" class="btn" style="font-size:10px;padding:3px 10px;">✏️ Сменить ник</button>
+                        </div>
+                    </div>
                     <p style="font-size:10px;">Статус: <span id="userStatusDisplay" class="pvp-status-online">🟢 Онлайн</span></p>
                     <button id="logoutBtn" class="btn red" style="font-size:11px;">Выйти</button>
                 </div>
@@ -342,6 +368,10 @@
             </div>
             
             <hr style="border-color:#333;margin:8px 0;">
+            <p style="color:#aaa;font-size:12px;">👥 Все игроки:</p>
+            <div id="allPlayersList" style="font-size:11px;max-height:120px;overflow-y:auto;text-align:left;margin:6px 0;"></div>
+            
+            <hr style="border-color:#333;margin:8px 0;">
             <p style="color:#aaa;font-size:12px;">💰 Управление аккаунтом</p>
             
             <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
@@ -428,6 +458,10 @@
     const mainContainer = document.getElementById('mainContainer');
     const speedSlider = document.getElementById('speedSlider');
     const godModeIndicator = document.getElementById('godModeIndicator');
+    const avatarPreview = document.getElementById('avatarPreview');
+    const avatarEmoji = document.getElementById('avatarEmoji');
+    const avatarInput = document.getElementById('avatarInput');
+    const changeNickBtn = document.getElementById('changeNickBtn');
 
     const leaderboardBtn = document.getElementById('leaderboardBtn');
     const leaderboardOverlay = document.getElementById('leaderboardOverlay');
@@ -437,6 +471,7 @@
     const devBtn = document.getElementById('devBtn');
     const devOverlay = document.getElementById('devOverlay');
     const closeDevBtn = document.getElementById('closeDevBtn');
+    const allPlayersList = document.getElementById('allPlayersList');
     const newPromoCode = document.getElementById('newPromoCode');
     const promoRewardType = document.getElementById('promoRewardType');
     const promoCoinAmount = document.getElementById('promoCoinAmount');
@@ -516,6 +551,7 @@
     let bannedPlayers = [];
     let currentUser = null;
     let wins = 0;
+    let avatarData = null;
 
     let isPvpMode = false;
     let pvpSearching = false;
@@ -555,6 +591,46 @@
 
     function getSkinData(key) { return allSkins.find(s => s.key === key) || allSkins[0]; }
 
+    // ===================== АВАТАРКИ =====================
+    function updateAvatarPreview() {
+        if (avatarData) {
+            avatarPreview.innerHTML = '<img src="' + avatarData + '" style="width:100%;height:100%;object-fit:cover;">';
+        } else {
+            avatarPreview.innerHTML = '<span class="default-avatar" id="avatarEmoji">🐍</span>';
+        }
+    }
+
+    avatarInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                avatarData = event.target.result;
+                updateAvatarPreview();
+                saveUserData();
+                rtdb.ref('leaderboard/' + currentUser.uid + '/avatar').set(avatarData);
+                updateAllPlayersList();
+            };
+            reader.readAsDataURL(file);
+        }
+        avatarInput.value = '';
+    });
+
+    changeNickBtn.addEventListener('click', function() {
+        const newNick = prompt('Введите новый ник:', currentUser?.displayName || currentUser?.email || 'Игрок');
+        if (newNick && newNick.trim()) {
+            currentUser.updateProfile({ displayName: newNick.trim() }).then(() => {
+                userNameDisplay.textContent = newNick.trim();
+                settingsUserDisplay.textContent = newNick.trim();
+                saveUserData();
+                updateLeaderboard();
+                updateAllPlayersList();
+                alert('✅ Ник изменён!');
+            }).catch(err => alert('Ошибка: ' + err.message));
+        }
+    });
+
+    // ===================== БАНЫ =====================
     function loadBans() {
         const saved = localStorage.getItem('bannedPlayers');
         if (saved) {
@@ -575,17 +651,14 @@
             return;
         }
         banList.innerHTML = bannedPlayers.map(id => 
-            `<div class="ban-item">
-                <span class="ban-id">🚫 ${id}</span>
-                <button class="ban-unban" data-id="${id}">Разбанить</button>
-            </div>`
+            '<div class="ban-item"><span class="ban-id">🚫 ' + id + '</span><button class="ban-unban" data-id="' + id + '">Разбанить</button></div>'
         ).join('');
         document.querySelectorAll('.ban-unban').forEach(btn => {
             btn.addEventListener('click', function() {
                 const id = this.getAttribute('data-id');
                 bannedPlayers = bannedPlayers.filter(p => p !== id);
                 saveBans();
-                devMessage.innerHTML = `<span style="color:#2ecc71;">✅ Игрок ${id} разбанен</span>`;
+                devMessage.innerHTML = '<span style="color:#2ecc71;">✅ Игрок ' + id + ' разбанен</span>';
             });
         });
     }
@@ -593,20 +666,18 @@
     function banPlayer(id) {
         if (!id) return;
         if (bannedPlayers.includes(id)) {
-            devMessage.innerHTML = `<span style="color:#f39c12;">⚠️ Игрок уже забанен</span>`;
+            devMessage.innerHTML = '<span style="color:#f39c12;">⚠️ Игрок уже забанен</span>';
             return;
         }
         bannedPlayers.push(id);
         saveBans();
-        devMessage.innerHTML = `<span style="color:#e74c3c;">🚫 Игрок ${id} забанен</span>`;
+        devMessage.innerHTML = '<span style="color:#e74c3c;">🚫 Игрок ' + id + ' забанен</span>';
         devBanInput.value = '';
     }
 
-    function isPlayerBanned(id) {
-        return bannedPlayers.includes(id);
-    }
+    function isPlayerBanned(id) { return bannedPlayers.includes(id); }
 
-    // ===================== АВТОРИЗАЦИЯ С СОХРАНЕНИЕМ СЕССИИ =====================
+    // ===================== АВТОРИЗАЦИЯ =====================
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
         .then(() => {
             auth.onAuthStateChanged(async (user) => {
@@ -614,9 +685,10 @@
                     currentUser = user;
                     userInfo.style.display = 'block';
                     loginForm.style.display = 'none';
-                    userNameDisplay.textContent = user.displayName || user.email || user.uid;
+                    const displayName = user.displayName || user.email || user.uid;
+                    userNameDisplay.textContent = displayName;
                     userIdDisplay.textContent = user.uid;
-                    settingsUserDisplay.textContent = user.displayName || user.email || user.uid;
+                    settingsUserDisplay.textContent = displayName;
                     settingsUserId.textContent = user.uid;
                     
                     if (isPlayerBanned(user.uid)) {
@@ -626,9 +698,11 @@
                     }
                     
                     await loadUserData(user.uid);
+                    await loadAvatar(user.uid);
                     updateOnlineStatus(true);
                     updateLeaderboard();
                     updateBetSelects();
+                    updateAllPlayersList();
                 } else {
                     currentUser = null;
                     userInfo.style.display = 'none';
@@ -641,6 +715,16 @@
             });
         })
         .catch(err => console.error('Ошибка настройки persistence:', err));
+
+    async function loadAvatar(uid) {
+        try {
+            const snapshot = await rtdb.ref('leaderboard/' + uid + '/avatar').once('value');
+            if (snapshot.exists()) {
+                avatarData = snapshot.val();
+                updateAvatarPreview();
+            }
+        } catch(e) {}
+    }
 
     loginBtn.addEventListener('click', async () => {
         const username = loginUsername.value.trim();
@@ -684,7 +768,7 @@
         } catch(e) { alert('Ошибка выхода: ' + e.message); }
     });
 
-    // ===================== ЗАГРУЗКА ДАННЫХ =====================
+    // ===================== ЗАГРУЗКА И СОХРАНЕНИЕ ДАННЫХ =====================
     async function loadUserData(uid) {
         try {
             const doc = await db.collection('users').doc(uid).get();
@@ -700,6 +784,10 @@
                 gameSpeed = data.gameSpeed || 100;
                 controlMode = data.controlMode || 'dpad';
                 godMode = data.godMode || false;
+                if (data.avatar) {
+                    avatarData = data.avatar;
+                    updateAvatarPreview();
+                }
                 updateCoinsUI();
                 updateCaseUI();
                 updateBestScoreUI();
@@ -719,12 +807,9 @@
         } catch(e) { console.error('Ошибка загрузки данных:', e); }
     }
 
-    // ===================== СОХРАНЕНИЕ ДАННЫХ (В Firestore И Realtime Database) =====================
     async function saveUserData() {
         if (!currentUser) return;
-        
         try {
-            // 1. Сохраняем в Firestore (все данные аккаунта)
             await db.collection('users').doc(currentUser.uid).set({
                 coins: coins,
                 cases: cases,
@@ -735,22 +820,38 @@
                 gameSpeed: gameSpeed,
                 controlMode: controlMode,
                 godMode: godMode,
+                avatar: avatarData || null,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
             
-            // 2. Сохраняем в Realtime Database (для таблицы лидеров)
             await rtdb.ref('leaderboard/' + currentUser.uid).set({
                 username: currentUser.displayName || currentUser.email || currentUser.uid,
                 bestScore: loadBestScore(),
                 wins: wins,
+                avatar: avatarData || null,
                 updatedAt: Date.now()
             });
-            
-            // 3. Обновляем таблицу лидеров
             updateLeaderboard();
-        } catch(e) { 
-            console.error('Ошибка сохранения данных:', e); 
-        }
+            updateAllPlayersList();
+        } catch(e) { console.error('Ошибка сохранения данных:', e); }
+    }
+
+    // ===================== ВСЕ ИГРОКИ В DEV =====================
+    function updateAllPlayersList() {
+        rtdb.ref('leaderboard').once('value', (snapshot) => {
+            const data = snapshot.val();
+            if (!data) {
+                allPlayersList.innerHTML = '<span style="color:#555;">Нет игроков</span>';
+                return;
+            }
+            let html = '';
+            Object.keys(data).forEach(id => {
+                const p = data[id];
+                const avatarHtml = p.avatar ? '<img src="' + p.avatar + '" class="pavatar">' : '🐍';
+                html += '<div class="player-list-item">' + avatarHtml + '<span>' + (p.username || 'Аноним') + '</span><span class="pid">(' + id + ')</span></div>';
+            });
+            allPlayersList.innerHTML = html;
+        });
     }
 
     // ===================== ТАБЛИЦА ЛИДЕРОВ =====================
@@ -761,33 +862,25 @@
                 leaderboardList.innerHTML = '<p style="color:#888;font-size:12px;">Нет данных</p>';
                 return;
             }
-            
             const sorted = Object.keys(data).map(key => ({ id: key, ...data[key] }))
                 .sort((a, b) => (b.bestScore || 0) - (a.bestScore || 0));
-            
             let html = '';
             sorted.forEach((player, index) => {
                 const rank = index + 1;
-                let rankClass = '';
-                let crown = '';
+                let rankClass = '', crown = '';
                 if (rank === 1) { rankClass = 'top1'; crown = '👑'; }
                 else if (rank === 2) { rankClass = 'top2'; crown = '🥈'; }
                 else if (rank === 3) { rankClass = 'top3'; crown = '🥉'; }
-                
                 const isCurrentUser = player.id === currentUser?.uid;
                 const meClass = isCurrentUser ? 'me' : '';
-                const userName = player.username || 'Аноним';
-                const userScore = player.bestScore || 0;
-                const userWins = player.wins || 0;
-                
-                html += `<div class="leaderboard-item ${rankClass} ${meClass}">
-                    <span class="rank">${crown || '#' + rank}</span>
-                    <span class="name">${userName} ${isCurrentUser ? '⭐' : ''}</span>
-                    <span class="score">${userScore}</span>
-                    <span class="wins">⚔️ ${userWins}</span>
-                </div>`;
+                const avatarHtml = player.avatar ? '<img src="' + player.avatar + '" class="avatar-small">' : '🐍';
+                html += '<div class="leaderboard-item ' + rankClass + ' ' + meClass + '">' +
+                    '<span class="rank">' + (crown || '#' + rank) + '</span>' +
+                    '<span class="name">' + avatarHtml + ' ' + (player.username || 'Аноним') + (isCurrentUser ? ' ⭐' : '') + '</span>' +
+                    '<span class="score">' + (player.bestScore || 0) + '</span>' +
+                    '<span class="wins">⚔️ ' + (player.wins || 0) + '</span>' +
+                '</div>';
             });
-            
             leaderboardList.innerHTML = html;
         });
     }
@@ -798,14 +891,12 @@
         statusRef.on('value', (snap) => {
             if (snap.val() === true && isOnline) {
                 const userRef = rtdb.ref('players/' + currentUser.uid);
-                userRef.onDisconnect().update({
-                    status: 'offline',
-                    lastSeen: Date.now()
-                });
+                userRef.onDisconnect().update({ status: 'offline', lastSeen: Date.now() });
                 userRef.update({
                     username: currentUser.displayName || currentUser.email || currentUser.uid,
                     status: 'online',
-                    lastSeen: Date.now()
+                    lastSeen: Date.now(),
+                    avatar: avatarData || null
                 });
                 if (userStatusDisplay) {
                     userStatusDisplay.textContent = '🟢 Онлайн';
@@ -815,7 +906,7 @@
         });
     }
 
-    // ===================== СОХРАНЕНИЕ В LOCALSTORAGE =====================
+    // ===================== ОСТАЛЬНЫЕ ФУНКЦИИ =====================
     function saveData() {
         const data = { bestScore: loadBestScore(), coins, cases, ownedSkins, activeSkin, gameSpeed, controlMode };
         localStorage.setItem('snakeFullData', JSON.stringify(data));
@@ -857,7 +948,6 @@
         return false;
     }
 
-    // ===================== МОНЕТЫ И КЕЙСЫ =====================
     function updateCoinsUI() { 
         coinsDisplay.innerText = coins; 
         shopCoinsSpan.innerText = coins; 
@@ -882,9 +972,7 @@
     }
 
     // ===================== ЗАДАНИЯ =====================
-    let quests = [];
-    let achievements = [];
-    let totalQuestsCompleted = 0;
+    let quests = [], achievements = [], totalQuestsCompleted = 0;
 
     function initQuests() {
         const today = new Date().toDateString();
@@ -966,16 +1054,10 @@
             const claimed = q.claimed || false;
             const btnText = claimed ? '✅' : (done ? 'Забрать' : 'Выполняется');
             const disabled = !done || claimed;
-            return `<div class="quest-item">
-                <div class="quest-info">
-                    <div class="quest-name">${q.name}</div>
-                    <div class="quest-progress">${progress}/${q.target}</div>
-                </div>
-                <div style="display:flex;align-items:center;gap:6px;">
-                    <span class="quest-reward">+${q.reward} 🪙</span>
-                    <button class="quest-btn ${claimed?'claimed':''}" data-index="${i}" ${disabled?'disabled':''}>${btnText}</button>
-                </div>
-            </div>`;
+            return '<div class="quest-item">' +
+                '<div class="quest-info"><div class="quest-name">' + q.name + '</div><div class="quest-progress">' + progress + '/' + q.target + '</div></div>' +
+                '<div style="display:flex;align-items:center;gap:6px;"><span class="quest-reward">+' + q.reward + ' 🪙</span>' +
+                '<button class="quest-btn ' + (claimed ? 'claimed' : '') + '" data-index="' + i + '" ' + (disabled ? 'disabled' : '') + '>' + btnText + '</button></div></div>';
         }).join('');
         document.querySelectorAll('.quest-btn:not([disabled])').forEach(btn => {
             btn.addEventListener('click', function() {
@@ -1011,7 +1093,7 @@
                 addCoins(a.reward);
                 changed = true;
                 const notif = document.createElement('div');
-                notif.textContent = `🏆 Достижение "${a.name}"! +${a.reward} 🪙`;
+                notif.textContent = '🏆 Достижение "' + a.name + '"! +' + a.reward + ' 🪙';
                 notif.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#1a1a2e;padding:16px 24px;border-radius:16px;border:2px solid #f9ca24;color:#f9ca24;font-weight:bold;z-index:70;font-size:16px;text-align:center;pointer-events:none;';
                 mainContainer.appendChild(notif);
                 setTimeout(() => notif.remove(), 4000);
@@ -1022,13 +1104,9 @@
     function renderAchievements() {
         if (!achievementList) return;
         achievementList.innerHTML = achievements.map(a => {
-            const status = a.unlocked ? '✅' : `${a.progress}/${a.target}`;
+            const status = a.unlocked ? '✅' : a.progress + '/' + a.target;
             const color = a.unlocked ? '#2ecc71' : '#aaa';
-            return `<div class="achievement">
-                <span class="ach-name">${a.name}</span>
-                <span class="ach-status" style="color:${color}">${status}</span>
-                <span class="ach-reward">+${a.reward} 🪙</span>
-            </div>`;
+            return '<div class="achievement"><span class="ach-name">' + a.name + '</span><span class="ach-status" style="color:' + color + '">' + status + '</span><span class="ach-reward">+' + a.reward + ' 🪙</span></div>';
         }).join('');
     }
 
@@ -1038,13 +1116,11 @@
             caseResult.innerHTML = '<span style="color:#e74c3c;">❌ У вас нет кейсов!</span>';
             return;
         }
-        
         const availableSkins = allSkins.filter(s => s.key !== 'default');
         if (availableSkins.length === 0) {
             caseResult.innerHTML = '<span style="color:#e74c3c;">❌ Нет доступных скинов!</span>';
             return;
         }
-        
         let weightedPool = [];
         availableSkins.forEach(s => {
             let weight = 0;
@@ -1056,15 +1132,13 @@
             else weight = 10;
             for (let i = 0; i < weight; i++) weightedPool.push(s);
         });
-        
         if (weightedPool.length === 0) weightedPool = availableSkins.slice();
-        
         const finalSkin = weightedPool[Math.floor(Math.random() * weightedPool.length)];
         cases--;
         updateCaseUI();
 
         const overlay = document.createElement('div');
-        overlay.style.cssText = `position:absolute;top:0;left:0;width:100%;height:100%;border-radius:20px;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:60;backdrop-filter:blur(6px);padding:10px;`;
+        overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border-radius:20px;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:60;backdrop-filter:blur(6px);padding:10px;';
         mainContainer.appendChild(overlay);
 
         const container = document.createElement('div');
@@ -1072,28 +1146,25 @@
         overlay.appendChild(container);
 
         const arrow = document.createElement('div');
-        arrow.style.cssText = `position:absolute;top:-24px;left:50%;transform:translateX(-50%);font-size:24px;color:#f9ca24;text-shadow:0 0 15px gold;z-index:10;pointer-events:none;transition:left 0.3s ease;`;
+        arrow.style.cssText = 'position:absolute;top:-24px;left:50%;transform:translateX(-50%);font-size:24px;color:#f9ca24;text-shadow:0 0 15px gold;z-index:10;pointer-events:none;transition:left 0.3s ease;';
         arrow.textContent = '▲';
         container.appendChild(arrow);
 
         const slotsDiv = document.createElement('div');
-        slotsDiv.style.cssText = `display:flex;background:#0a0a1a;border:3px solid #f9ca24;border-radius:14px;overflow:hidden;box-shadow:0 0 30px rgba(249,202,36,0.2);`;
+        slotsDiv.style.cssText = 'display:flex;background:#0a0a1a;border:3px solid #f9ca24;border-radius:14px;overflow:hidden;box-shadow:0 0 30px rgba(249,202,36,0.2);';
         container.appendChild(slotsDiv);
 
         const slots = [];
         const slotCount = 7;
         for (let i = 0; i < slotCount; i++) {
             const slot = document.createElement('div');
-            slot.style.cssText = `width:42px;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a1a2e;border-right:${i < slotCount-1 ? '1px solid #333' : 'none'};flex-shrink:0;transition:all 0.2s ease;`;
-            
+            slot.style.cssText = 'width:42px;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a1a2e;border-right:' + (i < slotCount-1 ? '1px solid #333' : 'none') + ';flex-shrink:0;transition:all 0.2s ease;';
             const preview = document.createElement('div');
-            preview.style.cssText = `width:32px;height:32px;border-radius:6px;border:2px solid #555;margin-bottom:3px;display:flex;align-items:center;justify-content:center;font-size:20px;transition:all 0.2s ease;`;
+            preview.style.cssText = 'width:32px;height:32px;border-radius:6px;border:2px solid #555;margin-bottom:3px;display:flex;align-items:center;justify-content:center;font-size:20px;transition:all 0.2s ease;';
             preview.textContent = '🐍';
-            
             const label = document.createElement('div');
-            label.style.cssText = `font-size:7px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:38px;text-align:center;`;
+            label.style.cssText = 'font-size:7px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:38px;text-align:center;';
             label.textContent = '---';
-            
             slot.appendChild(preview);
             slot.appendChild(label);
             slotsDiv.appendChild(slot);
@@ -1106,7 +1177,7 @@
 
         const closeBtn = document.createElement('button');
         closeBtn.textContent = 'Закрыть';
-        closeBtn.style.cssText = `margin-top:15px;background:#e94560;border:none;color:white;padding:10px 24px;border-radius:30px;font-weight:bold;cursor:pointer;font-size:14px;display:none;transition:0.2s;`;
+        closeBtn.style.cssText = 'margin-top:15px;background:#e94560;border:none;color:white;padding:10px 24px;border-radius:30px;font-weight:bold;cursor:pointer;font-size:14px;display:none;transition:0.2s;';
         overlay.appendChild(closeBtn);
 
         function fillSlots(startIndex) {
@@ -1118,50 +1189,38 @@
                 slots[i].label.textContent = skin.name.substring(0, 6);
             }
         }
-        
         let currentIndex = 0;
         fillSlots(currentIndex);
-
         let totalSteps = 25 + Math.floor(Math.random() * 15);
         let stepCount = 0;
         let delay = 60;
         let timer = null;
-        
         function step() {
             currentIndex = (currentIndex + 1) % weightedPool.length;
             fillSlots(currentIndex);
             stepCount++;
-            
             if (stepCount >= totalSteps - 10) delay += 80;
             else if (stepCount >= totalSteps - 20) delay += 20;
             else if (stepCount % 3 === 0) delay += 5;
-            
             if (stepCount >= totalSteps) {
                 clearInterval(timer);
                 timer = null;
-                
                 let finalIndex = -1;
                 for (let i = 0; i < slotCount; i++) {
                     const idx = (currentIndex + i) % weightedPool.length;
-                    if (weightedPool[idx].key === finalSkin.key) {
-                        finalIndex = i;
-                        break;
-                    }
+                    if (weightedPool[idx].key === finalSkin.key) { finalIndex = i; break; }
                 }
-                
                 if (finalIndex !== -1) {
                     slots[finalIndex].slot.style.border = '2px solid #f9ca24';
                     slots[finalIndex].slot.style.boxShadow = '0 0 20px gold';
                     slots[finalIndex].preview.style.borderColor = '#f9ca24';
-                    
                     const slotWidth = 42;
                     const containerWidth = slotCount * slotWidth;
                     const arrowOffset = finalIndex * slotWidth + slotWidth/2 - containerWidth/2 + 10;
-                    arrow.style.left = `calc(50% + ${arrowOffset}px)`;
+                    arrow.style.left = 'calc(50% + ' + arrowOffset + 'px)';
                     arrow.style.top = '-24px';
                     arrow.textContent = '▲';
                 }
-                
                 const alreadyOwned = ownedSkins.includes(finalSkin.key);
                 if (!alreadyOwned) {
                     ownedSkins.push(finalSkin.key);
@@ -1169,14 +1228,13 @@
                     saveData();
                     renderSkinInventory();
                     draw();
-                    resultText.innerHTML = `🎉 <b>${finalSkin.name}</b> (${finalSkin.rarity})`;
+                    resultText.innerHTML = '🎉 <b>' + finalSkin.name + '</b> (' + finalSkin.rarity + ')';
                     resultText.style.color = '#2ecc71';
                 } else {
                     addCoins(20);
-                    resultText.innerHTML = `🔄 <b>${finalSkin.name}</b> (уже был) +20 🪙`;
+                    resultText.innerHTML = '🔄 <b>' + finalSkin.name + '</b> (уже был) +20 🪙';
                     resultText.style.color = '#f9ca24';
                 }
-                
                 closeBtn.style.display = 'inline-block';
                 updateCoinsUI();
                 updateCaseUI();
@@ -1184,18 +1242,12 @@
                 saveUserData();
                 return;
             }
-            
             clearInterval(timer);
             timer = setInterval(step, delay);
         }
-        
         timer = setInterval(step, delay);
-        
         closeBtn.addEventListener('click', function() {
-            if (timer) {
-                clearInterval(timer);
-                timer = null;
-            }
+            if (timer) { clearInterval(timer); timer = null; }
             overlay.remove();
             caseResult.innerHTML = '';
         });
@@ -1211,12 +1263,12 @@
             else if (s.rarity === 'superrare') rarityClass = 'rarity-superrare';
             else if (s.rarity === 'legendary') rarityClass = 'rarity-legendary';
             else if (s.rarity === 'secret') rarityClass = 'rarity-secret';
-            return `<div class="skin-item ${selected?'selected':''} ${!owned?'locked':''}" data-skin="${s.key}">
-                <div class="skin-preview" style="background:${s.bodyColor};${!owned?'filter:grayscale(0.5);':''}">${!owned ? '🔒' : '🐍'}</div>
-                <span class="skin-name">${s.name}</span>
-                <span class="rarity-dot ${rarityClass}"></span>
-                ${selected ? '<span style="position:absolute;top:-4px;right:-4px;font-size:10px;">✅</span>' : ''}
-            </div>`;
+            return '<div class="skin-item ' + (selected?'selected':'') + ' ' + (!owned?'locked':'') + '" data-skin="' + s.key + '">' +
+                '<div class="skin-preview" style="background:' + s.bodyColor + ';' + (!owned?'filter:grayscale(0.5);':'') + '">' + (!owned ? '🔒' : '🐍') + '</div>' +
+                '<span class="skin-name">' + s.name + '</span>' +
+                '<span class="rarity-dot ' + rarityClass + '"></span>' +
+                (selected ? '<span style="position:absolute;top:-4px;right:-4px;font-size:10px;">✅</span>' : '') +
+            '</div>';
         }).join('');
         document.querySelectorAll('.skin-item:not(.locked)').forEach(el => {
             el.addEventListener('click', () => {
@@ -1236,9 +1288,9 @@
     function updateBetSelects() {
         const options = ownedSkins.map(s => {
             const skin = getSkinData(s);
-            return `<option value="${s}">${skin.name} (${skin.rarity})</option>`;
+            return '<option value="' + s + '">' + skin.name + ' (' + skin.rarity + ')</option>';
         }).join('');
-        betSkinSelect.innerHTML = `<option value="">Нет</option>` + options;
+        betSkinSelect.innerHTML = '<option value="">Нет</option>' + options;
         betSkinSelect.value = '';
         betSkinDisplay.textContent = 'Нет';
         betCoinsDisplay.textContent = coins;
@@ -1267,12 +1319,10 @@
             alert('⚠️ Сначала войдите в аккаунт!');
             return;
         }
-        
         isRealPvp = false;
         pvpType = 'bot';
         pvpOpponent = { id: 'bot_' + Date.now(), name: 'Бот', isBot: true };
         isPvpMode = true;
-        
         const betAmount = parseInt(betCoinsInput.value) || 0;
         if (betAmount > 0 && betAmount <= coins) {
             betCoins = betAmount;
@@ -1280,14 +1330,8 @@
             updateCoinsUI();
         }
         betSkin = betSkinSelect.value || null;
-        
         pvpRoomInfo.style.display = 'block';
-        pvpRoomInfo.innerHTML = `
-            <span class="label">🤖 Режим:</span> Против бота<br>
-            <span class="label">👤 Вы:</span> ${currentUser.displayName || currentUser.email}<br>
-            <span class="label">💰 Ставка:</span> ${betCoins > 0 ? betCoins + ' 🪙' : 'Нет'} ${betSkin ? '🎨 ' + getSkinData(betSkin).name : ''}
-        `;
-        
+        pvpRoomInfo.innerHTML = '<span class="label">🤖 Режим:</span> Против бота<br><span class="label">👤 Вы:</span> ' + (currentUser.displayName || currentUser.email) + '<br><span class="label">💰 Ставка:</span> ' + (betCoins > 0 ? betCoins + ' 🪙' : 'Нет') + (betSkin ? ' 🎨 ' + getSkinData(betSkin).name : '');
         pvpSnake1 = [[10,10],[10,11],[10,12]];
         pvpSnake2 = [[10,10],[10,11],[10,12]];
         pvpDir1 = 'up';
@@ -1296,12 +1340,10 @@
         pvpWinner = null;
         pvpFood = [5,5];
         pvpCoin = [15,15];
-        
         pvpBotBtn.style.display = 'none';
         pvpRealBtn.style.display = 'none';
         pvpFindBtn.style.display = 'none';
         pvpCancelBtn.style.display = 'none';
-        
         pvpOverlay.classList.add('hide-overlay');
         setPause(false);
         fullReset();
@@ -1318,15 +1360,11 @@
                 playersList.innerHTML = '<span style="color:#555;">Нет игроков онлайн</span>';
                 return;
             }
-            
             let html = '';
             Object.keys(players).forEach(id => {
                 const p = players[id];
                 if (id !== currentUser?.uid) {
-                    html += `<div class="online-player">
-                        <span class="name">🟢 ${p.username || 'Игрок'}</span>
-                        <span class="status">${p.status === 'searching' ? '🔍 Ищет бой' : '🎮 В игре'}</span>
-                    </div>`;
+                    html += '<div class="online-player"><span class="name">🟢 ' + (p.username || 'Игрок') + '</span><span class="status">' + (p.status === 'searching' ? '🔍 Ищет бой' : '🎮 В игре') + '</span></div>';
                 }
             });
             playersList.innerHTML = html || '<span style="color:#555;">Нет других игроков онлайн</span>';
@@ -1339,12 +1377,10 @@
             alert('⚠️ Сначала войдите в аккаунт!');
             return;
         }
-        
         if (!navigator.onLine) {
             alert('❌ Нет интернета! Для игры с реальным игроком нужен интернет.');
             return;
         }
-        
         isRealPvp = true;
         pvpType = 'real';
         pvpSearching = true;
@@ -1354,52 +1390,43 @@
         pvpCancelBtn.style.display = 'inline-block';
         pvpBotBtn.style.display = 'none';
         pvpRealBtn.style.display = 'none';
-        
         const searchRef = rtdb.ref('pvp_players/' + currentUser.uid);
         searchRef.update({
             username: currentUser.displayName || currentUser.email || currentUser.uid,
             status: 'searching',
             timestamp: Date.now(),
             betCoins: parseInt(betCoinsInput.value) || 0,
-            betSkin: betSkinSelect.value || null
+            betSkin: betSkinSelect.value || null,
+            avatar: avatarData || null
         });
-        
         const playersRef = rtdb.ref('pvp_players');
         const listener = playersRef.on('value', (snapshot) => {
             const players = snapshot.val();
             if (!players || !pvpSearching) return;
-            
-            const opponentId = Object.keys(players).find(id => 
-                id !== currentUser.uid && players[id].status === 'searching'
-            );
-            
+            const opponentId = Object.keys(players).find(id => id !== currentUser.uid && players[id].status === 'searching');
             if (opponentId) {
                 pvpSearching = false;
                 const opponentData = players[opponentId];
-                
                 const roomId = 'pvp_room_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
                 const roomRef = rtdb.ref('pvp_rooms/' + roomId);
-                
                 const myBetCoins = parseInt(betCoinsInput.value) || 0;
                 const oppBetCoins = opponentData.betCoins || 0;
                 const totalBetCoins = myBetCoins + oppBetCoins;
-                
                 const myBetSkin = betSkinSelect.value || null;
                 const oppBetSkin = opponentData.betSkin || null;
-                
                 if (myBetCoins > 0) {
                     coins -= myBetCoins;
                     updateCoinsUI();
                 }
-                
                 betCoins = totalBetCoins;
                 betSkin = myBetSkin || oppBetSkin;
-                
                 roomRef.set({
                     player1: currentUser.uid,
                     player1Name: currentUser.displayName || currentUser.email || currentUser.uid,
+                    player1Avatar: avatarData || null,
                     player2: opponentId,
                     player2Name: opponentData.username || 'Игрок',
+                    player2Avatar: opponentData.avatar || null,
                     status: 'waiting',
                     startTime: Date.now(),
                     betCoins: totalBetCoins,
@@ -1413,39 +1440,23 @@
                     countdown: 5,
                     timestamp: Date.now()
                 });
-                
                 rtdb.ref('pvp_players/' + currentUser.uid).remove();
                 rtdb.ref('pvp_players/' + opponentId).remove();
                 playersRef.off();
-                
                 pvpStatus.textContent = '✅ Соперник найден!';
-                pvpResult.innerHTML = `<span style="color:#2ecc71;">✅ Найден игрок: ${opponentData.username || 'Игрок'}! Начинаем битву...</span>`;
+                pvpResult.innerHTML = '<span style="color:#2ecc71;">✅ Найден игрок: ' + (opponentData.username || 'Игрок') + '! Начинаем битву...</span>';
                 pvpCancelBtn.style.display = 'none';
                 isPvpMode = true;
-                pvpOpponent = { 
-                    id: opponentId, 
-                    name: opponentData.username || 'Игрок', 
-                    isBot: false 
-                };
+                pvpOpponent = { id: opponentId, name: opponentData.username || 'Игрок', isBot: false };
                 currentPvpRoom = roomId;
                 pvpRoomRef = roomRef;
                 pvpRoomListener = roomRef;
-                
                 pvpRoomInfo.style.display = 'block';
-                pvpRoomInfo.innerHTML = `
-                    <span class="label">🏠 Комната:</span> ${roomId}<br>
-                    <span class="label">👤 Вы:</span> ${currentUser.displayName || currentUser.email}<br>
-                    <span class="label">👤 Соперник:</span> ${opponentData.username || 'Игрок'}<br>
-                    <span class="label">💰 Общая ставка:</span> ${totalBetCoins} 🪙 ${betSkin ? '🎨 ' + getSkinData(betSkin).name : ''}
-                `;
-                
+                pvpRoomInfo.innerHTML = '<span class="label">🏠 Комната:</span> ' + roomId + '<br><span class="label">👤 Вы:</span> ' + (currentUser.displayName || currentUser.email) + '<br><span class="label">👤 Соперник:</span> ' + (opponentData.username || 'Игрок') + '<br><span class="label">💰 Общая ставка:</span> ' + totalBetCoins + ' 🪙 ' + (betSkin ? '🎨 ' + getSkinData(betSkin).name : '');
                 roomRef.on('value', (snap) => {
                     const data = snap.val();
-                    if (data) {
-                        updateRealPvpGame(data);
-                    }
+                    if (data) { updateRealPvpGame(data); }
                 });
-                
                 pvpOverlay.classList.add('hide-overlay');
                 setPause(false);
                 fullReset();
@@ -1454,7 +1465,6 @@
                 startPvpCountdown();
             }
         });
-        
         if (pvpTimeout) clearTimeout(pvpTimeout);
         pvpTimeout = setTimeout(() => {
             if (pvpSearching) {
@@ -1488,11 +1498,9 @@
 
     function updateRealPvpGame(data) {
         if (!data || pvpGameOver) return;
-        
         const isPlayer1 = data.player1 === currentUser.uid;
         const opponentSnake = isPlayer1 ? data.snake2 : data.snake1;
         const opponentDir = isPlayer1 ? data.dir2 : data.dir1;
-        
         if (opponentSnake && Array.isArray(opponentSnake)) {
             if (isPlayer1) {
                 pvpSnake2 = opponentSnake.slice();
@@ -1502,22 +1510,18 @@
                 pvpDir1 = opponentDir || 'up';
             }
         }
-        
         if (data.food) pvpFood = data.food;
         if (data.coin) pvpCoin = data.coin;
-        
         if (data.winner) {
             pvpGameOver = true;
             pvpWinner = data.winner === currentUser.uid ? 'Вы' : 'Соперник';
             handlePvpWin(pvpWinner);
         }
-        
         draw();
     }
 
     function sendRealPvpMove() {
         if (!currentPvpRoom || !currentUser || pvpGameOver) return;
-        
         const updates = {
             snake1: pvpSnake1,
             dir1: pvpDir1,
@@ -1527,7 +1531,6 @@
             coin: pvpCoin,
             timestamp: Date.now()
         };
-        
         rtdb.ref('pvp_rooms/' + currentPvpRoom).update(updates);
     }
 
@@ -1542,10 +1545,7 @@
                 pvpCountdownInterval = null;
                 pvpStartTime = Date.now();
                 if (isRealPvp && currentPvpRoom) {
-                    rtdb.ref('pvp_rooms/' + currentPvpRoom).update({
-                        status: 'active',
-                        startTime: Date.now()
-                    });
+                    rtdb.ref('pvp_rooms/' + currentPvpRoom).update({ status: 'active', startTime: Date.now() });
                 }
             }
         }, 1000);
@@ -1572,7 +1572,6 @@
     function handlePvpWin(winner) {
         pvpGameOver = true;
         pvpWinner = winner;
-        
         if (winner === 'Вы') {
             wins++;
             const winCoins = betCoins * 2;
@@ -1586,13 +1585,11 @@
         } else {
             alert('😢 Вы проиграли! Ставка потеряна.');
         }
-        
         saveUserData();
         updateLeaderboard();
         updateCoinsUI();
         renderSkinInventory();
         draw();
-        
         setTimeout(() => {
             isPvpMode = false;
             pvpOpponent = null;
@@ -1631,7 +1628,6 @@
             ctx.beginPath(); ctx.moveTo(i*CELL_SIZE,0); ctx.lineTo(i*CELL_SIZE,canvas.height); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(0,i*CELL_SIZE); ctx.lineTo(canvas.width,i*CELL_SIZE); ctx.stroke();
         }
-        
         if (isPvpMode && pvpOpponent) {
             for (let i=0; i<pvpSnake1.length; i++) {
                 let x=pvpSnake1[i][0]*CELL_SIZE, y=pvpSnake1[i][1]*CELL_SIZE;
@@ -1641,7 +1637,6 @@
                 ctx.lineWidth=1.2;
                 ctx.strokeRect(x+1, y+1, CELL_SIZE-2, CELL_SIZE-2);
             }
-            
             for (let i=0; i<pvpSnake2.length; i++) {
                 let x=pvpSnake2[i][0]*CELL_SIZE, y=pvpSnake2[i][1]*CELL_SIZE;
                 ctx.fillStyle = i===0 ? '#e74c3c' : '#8a1a1a';
@@ -1650,7 +1645,6 @@
                 ctx.lineWidth=1.2;
                 ctx.strokeRect(x+1, y+1, CELL_SIZE-2, CELL_SIZE-2);
             }
-            
             if (pvpFood) {
                 let fx=pvpFood[0]*CELL_SIZE, fy=pvpFood[1]*CELL_SIZE;
                 ctx.fillStyle='#f1c40f';
@@ -1665,7 +1659,6 @@
                 ctx.textAlign='center';
                 ctx.fillText('🪙', cx, cy+2);
             }
-            
             ctx.fillStyle = 'rgba(0,0,0,0.7)';
             ctx.fillRect(5, 5, 180, 50);
             ctx.fillStyle = '#2ecc71';
@@ -1680,7 +1673,6 @@
                 ctx.fillStyle = '#f9ca24';
                 ctx.fillText('🌐', 160, 18);
             }
-            
             if (pvpGameOver && pvpWinner) {
                 ctx.fillStyle = 'rgba(0,0,0,0.85)';
                 ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -1694,12 +1686,11 @@
             }
             return;
         }
-        
         for (let i=0; i<snake.length; i++) {
             let x=snake[i][0]*CELL_SIZE, y=snake[i][1]*CELL_SIZE;
             const isHead = (i===0);
             let color = isHead ? skin.headColor : skin.bodyColor;
-            if (skin.key==='rainbow') { const hue=(i/snake.length*360+Date.now()/20)%360; color=`hsl(${hue},80%,60%)`; }
+            if (skin.key==='rainbow') { const hue=(i/snake.length*360+Date.now()/20)%360; color='hsl('+hue+',80%,60%)'; }
             ctx.fillStyle=color;
             if (godMode) {
                 ctx.shadowColor = '#f1c40f';
@@ -1754,7 +1745,7 @@
             ctx.fillText('нажми "НОВАЯ ИГРА"',150,165);
             ctx.fillStyle='#f9ca24';
             ctx.font='bold 10px monospace';
-            ctx.fillText(`🏆 ЛУЧШИЙ: ${loadBestScore()}`,150,190);
+            ctx.fillText('🏆 ЛУЧШИЙ: ' + loadBestScore(),150,190);
             ctx.textAlign='start';
         }
     }
@@ -1778,23 +1769,20 @@
 
     function update() {
         if (gameOver || !isGameActive || isPaused) return;
-        
         if (isPvpMode && pvpCountdown > 0) {
             drawPvpCountdown();
             return;
         }
-        
         if (isPvpMode && pvpOpponent) {
             updatePvp();
             return;
         }
-        
         dir = nextDir;
         let head = [snake[0][0], snake[0][1]];
         if (dir==='right') head[0]++;
-        if (dir==='left') head[0]--;
-        if (dir==='up') head[1]--;
-        if (dir==='down') head[1]++;
+        else if (dir==='left') head[0]--;
+        else if (dir==='up') head[1]--;
+        else if (dir==='down') head[1]++;
         let eatFood = food && head[0]===food[0] && head[1]===food[1];
         let eatCoin = coin && head[0]===coin[0] && head[1]===coin[1];
         snake.unshift([head[0], head[1]]);
@@ -1812,13 +1800,11 @@
             coin = null;
             updateQuestProgress('collect');
         }
-        
         let hitWall = head[0] < 0 || head[0] >= GRID_SIZE || head[1] < 0 || head[1] >= GRID_SIZE;
         let hitSelf = false;
         for (let i=1; i<snake.length; i++) {
             if (snake[i][0]===head[0] && snake[i][1]===head[1]) { hitSelf = true; break; }
         }
-        
         if ((hitWall || hitSelf) && !godMode) {
             endGame();
             return;
@@ -1836,26 +1822,22 @@
 
     function updatePvp() {
         if (pvpGameOver) return;
-        
         let head1 = [pvpSnake1[0][0], pvpSnake1[0][1]];
         if (pvpDir1==='right') head1[0]++;
         else if (pvpDir1==='left') head1[0]--;
         else if (pvpDir1==='up') head1[1]--;
         else if (pvpDir1==='down') head1[1]++;
-        
         if (pvpOpponent && pvpOpponent.isBot && pvpFood) {
             if (pvpFood[0] > pvpSnake2[0][0] && pvpDir2 !== 'left') pvpDir2 = 'right';
             else if (pvpFood[0] < pvpSnake2[0][0] && pvpDir2 !== 'right') pvpDir2 = 'left';
             else if (pvpFood[1] > pvpSnake2[0][1] && pvpDir2 !== 'up') pvpDir2 = 'down';
             else if (pvpFood[1] < pvpSnake2[0][1] && pvpDir2 !== 'down') pvpDir2 = 'up';
         }
-        
         let head2 = [pvpSnake2[0][0], pvpSnake2[0][1]];
         if (pvpDir2==='right') head2[0]++;
         else if (pvpDir2==='left') head2[0]--;
         else if (pvpDir2==='up') head2[1]--;
         else if (pvpDir2==='down') head2[1]++;
-        
         if (head1[0] < 0 || head1[0] >= GRID_SIZE || head1[1] < 0 || head1[1] >= GRID_SIZE) {
             pvpGameOver = true;
             pvpWinner = 'Соперник';
@@ -1868,7 +1850,6 @@
             handlePvpWin('Вы');
             return;
         }
-        
         for (let i=1; i<pvpSnake1.length; i++) {
             if (pvpSnake1[i][0]===head1[0] && pvpSnake1[i][1]===head1[1]) {
                 pvpGameOver = true;
@@ -1901,18 +1882,14 @@
                 return;
             }
         }
-        
         let eatFood1 = pvpFood && head1[0]===pvpFood[0] && head1[1]===pvpFood[1];
         let eatFood2 = pvpFood && head2[0]===pvpFood[0] && head2[1]===pvpFood[1];
         let eatCoin1 = pvpCoin && head1[0]===pvpCoin[0] && head1[1]===pvpCoin[1];
         let eatCoin2 = pvpCoin && head2[0]===pvpCoin[0] && head2[1]===pvpCoin[1];
-        
         pvpSnake1.unshift([head1[0], head1[1]]);
         pvpSnake2.unshift([head2[0], head2[1]]);
-        
         if (!eatFood1 && !eatCoin1) pvpSnake1.pop();
         if (!eatFood2 && !eatCoin2) pvpSnake2.pop();
-        
         if (eatFood1 || eatFood2) {
             pvpFood = null;
             let free = [];
@@ -1926,7 +1903,6 @@
             }
             if (free.length) pvpFood = free[Math.floor(Math.random()*free.length)];
         }
-        
         if (eatCoin1) {
             addCoins(1);
             pvpCoin = null;
@@ -1944,11 +1920,9 @@
         if (eatCoin2) {
             pvpCoin = null;
         }
-        
         if (isRealPvp && currentPvpRoom) {
             sendRealPvpMove();
         }
-        
         draw();
     }
 
@@ -1992,20 +1966,13 @@
         initialSpawn();
         draw();
     }
-    function launchGame() { 
-        fullReset(); 
-        startGameLoop(); 
-        startOverlay.classList.add('hide-overlay');
-        if (!isPvpMode) {
-            pvpOpponent = null;
-        }
-    }
-    function restartWithMenu() { 
-        if (interval) clearInterval(interval); 
-        isGameActive=false; gameOver=false; isPaused=false; 
-        pauseIndicator.classList.add('hide-pause'); 
-        pauseGameBtn.innerHTML='⏸️'; 
-        fullReset(); 
+    function launchGame() { fullReset(); startGameLoop(); startOverlay.classList.add('hide-overlay'); if (!isPvpMode) { pvpOpponent = null; } }
+    function restartWithMenu() {
+        if (interval) clearInterval(interval);
+        isGameActive=false; gameOver=false; isPaused=false;
+        pauseIndicator.classList.add('hide-pause');
+        pauseGameBtn.innerHTML='⏸️';
+        fullReset();
         startOverlay.classList.remove('hide-overlay');
         isPvpMode = false;
         pvpOpponent = null;
@@ -2049,7 +2016,7 @@
     function setControlMode(mode) {
         controlMode = mode;
         document.querySelectorAll('.control-mode-btn').forEach(b => b.classList.remove('active-mode'));
-        document.querySelector(`.control-mode-btn[data-mode="${mode}"]`)?.classList.add('active-mode');
+        document.querySelector('.control-mode-btn[data-mode="' + mode + '"]')?.classList.add('active-mode');
         applyControlMode();
     }
 
@@ -2155,183 +2122,93 @@
         }
     });
 
-    // ===================== FIRESTORE ПРОМОКОДЫ =====================
-    function getPlayerId() {
-        let id = localStorage.getItem('playerId');
-        if (!id) {
-            id = 'player_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-            localStorage.setItem('playerId', id);
+    // ===================== ПРОМОКОДЫ =====================
+    let promoCodes = [];
+    function loadPromoCodes() {
+        const saved = localStorage.getItem('promoCodes');
+        if (saved) {
+            try { promoCodes = JSON.parse(saved); } catch(e) { promoCodes = []; }
         }
-        return id;
+        renderExistingPromos();
     }
-    
-    async function activatePromoFirebase(code) {
-        try {
-            const docRef = db.collection('promocodes').doc(code);
-            const doc = await docRef.get();
-            
-            if (!doc.exists) {
-                promoResult.innerHTML = '<span style="color:#e74c3c;">❌ Код не найден</span>';
-                return false;
-            }
-            
-            const data = doc.data();
-            
-            if (data.used) {
-                promoResult.innerHTML = '<span style="color:#f39c12;">⚠️ Код уже использован</span>';
-                return false;
-            }
-            
-            if (data.expires && data.expires.toDate() < new Date()) {
-                promoResult.innerHTML = '<span style="color:#e74c3c;">⏰ Срок действия истёк</span>';
-                return false;
-            }
-            
-            const playerId = getPlayerId();
-            const usedBy = data.usedBy || [];
-            if (usedBy.includes(playerId)) {
-                promoResult.innerHTML = '<span style="color:#f39c12;">⚠️ Вы уже использовали этот код</span>';
-                return false;
-            }
-            
-            if (data.reward_type === 'coins') {
-                addCoins(data.reward_amount || 100);
-                promoResult.innerHTML = `<span style="color:#2ecc71;">🎉 +${data.reward_amount || 100} 🪙</span>`;
-            } else if (data.reward_type === 'skin') {
-                const skinKey = data.reward_skin;
-                if (!ownedSkins.includes(skinKey)) {
-                    ownedSkins.push(skinKey);
-                    activeSkin = skinKey;
-                    saveData();
-                    renderSkinInventory();
-                    draw();
-                    promoResult.innerHTML = `<span style="color:#2ecc71;">🌟 Скин "${getSkinData(skinKey).name}" получен!</span>`;
-                } else {
-                    addCoins(10);
-                    promoResult.innerHTML = `<span style="color:#f39c12;">Скин уже есть, +10 🪙</span>`;
-                }
-            }
-            
-            await docRef.update({
-                used: true,
-                usedBy: firebase.firestore.FieldValue.arrayUnion(playerId),
-                usedAt: firebase.firestore.FieldValue.serverTimestamp()
+    function savePromoCodes() {
+        localStorage.setItem('promoCodes', JSON.stringify(promoCodes));
+        renderExistingPromos();
+    }
+    function renderExistingPromos() {
+        if (!existingPromos) return;
+        if (promoCodes.length === 0) {
+            existingPromos.innerHTML = '<span style="color:#555;">Нет активных промокодов</span>';
+            return;
+        }
+        let html = '';
+        promoCodes.forEach((p, i) => {
+            const rewardStr = p.type === 'coins' ? (p.amount || 0) + ' 🪙' : 'Скин: ' + (p.skin || '?');
+            html += '<div class="promo-entry"><span><span class="promo-code">' + p.code + '</span> → <span class="promo-reward">' + rewardStr + '</span></span><button class="delete-promo" data-index="' + i + '">🗑️</button></div>';
+        });
+        existingPromos.innerHTML = html;
+        document.querySelectorAll('.delete-promo').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const idx = parseInt(this.getAttribute('data-index'));
+                promoCodes.splice(idx, 1);
+                savePromoCodes();
+                devMessage.innerHTML = '<span style="color:#f39c12;">Промокод удалён</span>';
             });
-            
-            updateCoinsUI();
-            return true;
-            
-        } catch (error) {
-            console.error('Ошибка активации:', error);
-            promoResult.innerHTML = '<span style="color:#e74c3c;">❌ Ошибка сервера</span>';
+        });
+    }
+    function activatePromoLocal(code) {
+        const promo = promoCodes.find(p => p.code === code && !p.used);
+        if (!promo) {
+            promoResult.innerHTML = '<span style="color:#e74c3c;">❌ Код не найден или уже использован</span>';
             return false;
         }
+        if (promo.type === 'coins') {
+            addCoins(promo.amount || 100);
+            promoResult.innerHTML = '<span style="color:#2ecc71;">🎉 +' + (promo.amount || 100) + ' 🪙</span>';
+        } else if (promo.type === 'skin') {
+            const skinKey = promo.skin;
+            if (!ownedSkins.includes(skinKey)) {
+                ownedSkins.push(skinKey);
+                activeSkin = skinKey;
+                saveData();
+                renderSkinInventory();
+                draw();
+                saveUserData();
+                promoResult.innerHTML = '<span style="color:#2ecc71;">🌟 Скин "' + getSkinData(skinKey).name + '" получен!</span>';
+            } else {
+                addCoins(10);
+                promoResult.innerHTML = '<span style="color:#f39c12;">Скин уже есть, +10 🪙</span>';
+            }
+        }
+        promo.used = true;
+        savePromoCodes();
+        updateCoinsUI();
+        return true;
     }
-    
-    async function createPromoFirebase() {
+    function createPromoLocal() {
         const code = newPromoCode.value.trim().toUpperCase();
         if (!code) {
             devMessage.innerHTML = '<span style="color:#e74c3c;">Введите код!</span>';
             return;
         }
-        
-        try {
-            const docRef = db.collection('promocodes').doc(code);
-            const doc = await docRef.get();
-            if (doc.exists) {
-                devMessage.innerHTML = '<span style="color:#e74c3c;">Такой код уже существует!</span>';
-                return;
-            }
-            
-            const type = promoRewardType.value;
-            let data = {
-                used: false,
-                created_by: 'admin',
-                created_at: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            if (type === 'coins') {
-                data.reward_type = 'coins';
-                data.reward_amount = parseInt(promoCoinValue.value) || 100;
-            } else {
-                const skinKey = promoSkinKey.value;
-                data.reward_type = 'skin';
-                data.reward_skin = skinKey;
-            }
-            
-            const expiryDate = new Date();
-            expiryDate.setDate(expiryDate.getDate() + 7);
-            data.expires = firebase.firestore.Timestamp.fromDate(expiryDate);
-            
-            await docRef.set(data);
-            devMessage.innerHTML = `<span style="color:#2ecc71;">✅ Промокод "${code}" создан!</span>`;
-            newPromoCode.value = '';
-            renderExistingPromosFirebase();
-            
-        } catch (error) {
-            devMessage.innerHTML = `<span style="color:#e74c3c;">❌ Ошибка: ${error.message}</span>`;
+        if (promoCodes.some(p => p.code === code)) {
+            devMessage.innerHTML = '<span style="color:#e74c3c;">Такой код уже существует!</span>';
+            return;
         }
-    }
-    
-    async function renderExistingPromosFirebase() {
-        try {
-            const snapshot = await db.collection('promocodes')
-                .where('used', '==', false)
-                .orderBy('created_at', 'desc')
-                .limit(20)
-                .get();
-            
-            if (snapshot.empty) {
-                existingPromos.innerHTML = '<span style="color:#555;">Нет активных промокодов</span>';
-                return;
-            }
-            
-            let html = '';
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                const rewardStr = data.reward_type === 'coins' 
-                    ? `${data.reward_amount || 0} 🪙` 
-                    : `Скин: ${data.reward_skin || '?'}`;
-                html += `<div class="promo-entry">
-                    <span><span class="promo-code">${doc.id}</span> → <span class="promo-reward">${rewardStr}</span></span>
-                    <button class="delete-promo" data-code="${doc.id}">🗑️</button>
-                </div>`;
-            });
-            
-            existingPromos.innerHTML = html;
-            
-            document.querySelectorAll('.delete-promo').forEach(btn => {
-                btn.addEventListener('click', async function() {
-                    const code = this.getAttribute('data-code');
-                    if (confirm(`Удалить промокод "${code}"?`)) {
-                        try {
-                            await db.collection('promocodes').doc(code).delete();
-                            renderExistingPromosFirebase();
-                            devMessage.innerHTML = `<span style="color:#f39c12;">Промокод "${code}" удалён</span>`;
-                        } catch (error) {
-                            devMessage.innerHTML = `<span style="color:#e74c3c;">Ошибка удаления: ${error.message}</span>`;
-                        }
-                    }
-                });
-            });
-        } catch (error) {
-            console.error('Ошибка загрузки промокодов:', error);
-            existingPromos.innerHTML = '<span style="color:#e74c3c;">Ошибка загрузки</span>';
+        const type = promoRewardType.value;
+        const promo = { code, used: false };
+        if (type === 'coins') {
+            promo.type = 'coins';
+            promo.amount = parseInt(promoCoinValue.value) || 100;
+        } else {
+            promo.type = 'skin';
+            promo.skin = promoSkinKey.value;
         }
+        promoCodes.push(promo);
+        savePromoCodes();
+        devMessage.innerHTML = '<span style="color:#2ecc71;">✅ Промокод "' + code + '" создан!</span>';
+        newPromoCode.value = '';
     }
-    
-    function populateSkinSelect() {
-        const secretSkins = allSkins.filter(s => s.rarity === 'secret');
-        const normalSkins = allSkins.filter(s => s.rarity !== 'secret' && s.key !== 'default');
-        const options = [...normalSkins, ...secretSkins].map(s => `<option value="${s.key}">${s.name} (${s.rarity})</option>`).join('');
-        promoSkinKey.innerHTML = options;
-        devSkinSelect.innerHTML = allSkins.map(s => `<option value="${s.key}">${s.name} (${s.rarity})</option>`).join('');
-    }
-    
-    promoRewardType.addEventListener('change', () => {
-        if (promoRewardType.value === 'coins') { promoCoinAmount.style.display = 'block'; promoSkinSelect.style.display = 'none'; }
-        else { promoCoinAmount.style.display = 'none'; promoSkinSelect.style.display = 'block'; }
-    });
 
     // ===================== DEV КОМАНДЫ =====================
     function toggleGodMode() {
@@ -2341,11 +2218,10 @@
         draw();
         const notif = document.createElement('div');
         notif.textContent = godMode ? '🛡️ GOD MODE ВКЛЮЧЕН!' : '🛡️ GOD MODE ВЫКЛЮЧЕН';
-        notif.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:${godMode ? '#f1c40f' : '#e94560'};color:#000;padding:16px 24px;border-radius:16px;font-weight:bold;z-index:50;font-size:16px;text-align:center;pointer-events:none;`;
+        notif.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:' + (godMode ? '#f1c40f' : '#e94560') + ';color:#000;padding:16px 24px;border-radius:16px;font-weight:bold;z-index:50;font-size:16px;text-align:center;pointer-events:none;';
         mainContainer.appendChild(notif);
         setTimeout(() => notif.remove(), 2000);
     }
-
     function updateGodModeUI() {
         if (godMode) {
             godModeToggle.textContent = '🟢 Бессмертие: ВКЛ';
@@ -2359,6 +2235,13 @@
             godModeIndicator.style.display = 'none';
         }
     }
+    function populateSkinSelect() {
+        const secretSkins = allSkins.filter(s => s.rarity === 'secret');
+        const normalSkins = allSkins.filter(s => s.rarity !== 'secret' && s.key !== 'default');
+        const options = [...normalSkins, ...secretSkins].map(s => '<option value="' + s.key + '">' + s.name + ' (' + s.rarity + ')</option>').join('');
+        promoSkinKey.innerHTML = options;
+        devSkinSelect.innerHTML = allSkins.map(s => '<option value="' + s.key + '">' + s.name + ' (' + s.rarity + ')</option>').join('');
+    }
 
     godModeToggle.addEventListener('click', toggleGodMode);
 
@@ -2368,7 +2251,7 @@
             coins = val;
             updateCoinsUI();
             saveUserData();
-            devMessage.innerHTML = `<span style="color:#2ecc71;">✅ Монеты установлены: ${coins}</span>`;
+            devMessage.innerHTML = '<span style="color:#2ecc71;">✅ Монеты установлены: ' + coins + '</span>';
         } else {
             devMessage.innerHTML = '<span style="color:#e74c3c;">Введите корректное число</span>';
         }
@@ -2380,7 +2263,7 @@
             coins += val;
             updateCoinsUI();
             saveUserData();
-            devMessage.innerHTML = `<span style="color:#2ecc71;">✅ Добавлено ${val} монет. Всего: ${coins}</span>`;
+            devMessage.innerHTML = '<span style="color:#2ecc71;">✅ Добавлено ' + val + ' монет. Всего: ' + coins + '</span>';
         } else {
             devMessage.innerHTML = '<span style="color:#e74c3c;">Введите корректное число</span>';
         }
@@ -2393,7 +2276,7 @@
             updateBestScoreUI();
             saveUserData();
             updateLeaderboard();
-            devMessage.innerHTML = `<span style="color:#2ecc71;">✅ Рекорд установлен: ${val}</span>`;
+            devMessage.innerHTML = '<span style="color:#2ecc71;">✅ Рекорд установлен: ' + val + '</span>';
         } else {
             devMessage.innerHTML = '<span style="color:#e74c3c;">Введите корректное число</span>';
         }
@@ -2405,7 +2288,7 @@
             wins = val;
             saveUserData();
             updateLeaderboard();
-            devMessage.innerHTML = `<span style="color:#2ecc71;">✅ Победы установлены: ${wins}</span>`;
+            devMessage.innerHTML = '<span style="color:#2ecc71;">✅ Победы установлены: ' + wins + '</span>';
         } else {
             devMessage.innerHTML = '<span style="color:#e74c3c;">Введите корректное число</span>';
         }
@@ -2417,7 +2300,7 @@
             cases = val;
             updateCaseUI();
             saveUserData();
-            devMessage.innerHTML = `<span style="color:#2ecc71;">✅ Кейсы установлены: ${cases}</span>`;
+            devMessage.innerHTML = '<span style="color:#2ecc71;">✅ Кейсы установлены: ' + cases + '</span>';
         } else {
             devMessage.innerHTML = '<span style="color:#e74c3c;">Введите корректное число</span>';
         }
@@ -2432,9 +2315,9 @@
             renderSkinInventory();
             draw();
             saveUserData();
-            devMessage.innerHTML = `<span style="color:#2ecc71;">✅ Скин "${getSkinData(skinKey).name}" выдан!</span>`;
+            devMessage.innerHTML = '<span style="color:#2ecc71;">✅ Скин "' + getSkinData(skinKey).name + '" выдан!</span>';
         } else {
-            devMessage.innerHTML = `<span style="color:#f39c12;">Скин уже есть у пользователя</span>`;
+            devMessage.innerHTML = '<span style="color:#f39c12;">Скин уже есть у пользователя</span>';
         }
     });
 
@@ -2459,7 +2342,6 @@
         }
     });
 
-    // ===== БАН ИГРОКОВ =====
     devBanBtn.addEventListener('click', () => {
         const id = devBanInput.value.trim();
         if (!id) {
@@ -2491,18 +2373,15 @@
         updateBetSelects();
         betCoinsInput.value = Math.min(10, coins);
         betCoinsDisplay.textContent = betCoinsInput.value;
-        
         watchOnlinePlayers();
     }
 
     pvpBtn.addEventListener('click', openPvpMode);
-    
     pvpBotBtn.addEventListener('click', () => {
         pvpBotBtn.style.display = 'none';
         pvpRealBtn.style.display = 'none';
         startBotGame();
     });
-    
     pvpRealBtn.addEventListener('click', () => {
         if (!navigator.onLine) {
             alert('❌ Нет интернета! Для игры с реальным игроком нужен интернет.');
@@ -2512,13 +2391,9 @@
         pvpRealBtn.style.display = 'none';
         startRealPvpSearch();
     });
-    
     pvpCancelBtn.addEventListener('click', cancelPvpSearch);
-    
     pvpCloseBtn.addEventListener('click', () => {
-        if (pvpSearching) {
-            cancelPvpSearch();
-        }
+        if (pvpSearching) { cancelPvpSearch(); }
         pvpOverlay.classList.add('hide-overlay');
         setPause(false);
         pvpBotBtn.style.display = 'inline-block';
@@ -2537,11 +2412,155 @@
         leaderboardOverlay.classList.remove('hide-overlay');
         updateLeaderboard();
     });
-
     closeLeaderboardBtn.addEventListener('click', () => {
         leaderboardOverlay.classList.add('hide-overlay');
         setPause(false);
     });
+
+    // ===== ПРОМОКОДЫ FIREBASE =====
+    function getPlayerId() {
+        let id = localStorage.getItem('playerId');
+        if (!id) {
+            id = 'player_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+            localStorage.setItem('playerId', id);
+        }
+        return id;
+    }
+    
+    async function activatePromoFirebase(code) {
+        try {
+            const docRef = db.collection('promocodes').doc(code);
+            const doc = await docRef.get();
+            if (!doc.exists) {
+                promoResult.innerHTML = '<span style="color:#e74c3c;">❌ Код не найден</span>';
+                return false;
+            }
+            const data = doc.data();
+            if (data.used) {
+                promoResult.innerHTML = '<span style="color:#f39c12;">⚠️ Код уже использован</span>';
+                return false;
+            }
+            if (data.expires && data.expires.toDate() < new Date()) {
+                promoResult.innerHTML = '<span style="color:#e74c3c;">⏰ Срок действия истёк</span>';
+                return false;
+            }
+            const playerId = getPlayerId();
+            const usedBy = data.usedBy || [];
+            if (usedBy.includes(playerId)) {
+                promoResult.innerHTML = '<span style="color:#f39c12;">⚠️ Вы уже использовали этот код</span>';
+                return false;
+            }
+            if (data.reward_type === 'coins') {
+                addCoins(data.reward_amount || 100);
+                promoResult.innerHTML = '<span style="color:#2ecc71;">🎉 +' + (data.reward_amount || 100) + ' 🪙</span>';
+            } else if (data.reward_type === 'skin') {
+                const skinKey = data.reward_skin;
+                if (!ownedSkins.includes(skinKey)) {
+                    ownedSkins.push(skinKey);
+                    activeSkin = skinKey;
+                    saveData();
+                    renderSkinInventory();
+                    draw();
+                    promoResult.innerHTML = '<span style="color:#2ecc71;">🌟 Скин "' + getSkinData(skinKey).name + '" получен!</span>';
+                } else {
+                    addCoins(10);
+                    promoResult.innerHTML = '<span style="color:#f39c12;">Скин уже есть, +10 🪙</span>';
+                }
+            }
+            await docRef.update({
+                used: true,
+                usedBy: firebase.firestore.FieldValue.arrayUnion(playerId),
+                usedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            updateCoinsUI();
+            return true;
+        } catch (error) {
+            console.error('Ошибка активации:', error);
+            promoResult.innerHTML = '<span style="color:#e74c3c;">❌ Ошибка сервера</span>';
+            return false;
+        }
+    }
+    
+    async function createPromoFirebase() {
+        const code = newPromoCode.value.trim().toUpperCase();
+        if (!code) {
+            devMessage.innerHTML = '<span style="color:#e74c3c;">Введите код!</span>';
+            return;
+        }
+        try {
+            const docRef = db.collection('promocodes').doc(code);
+            const doc = await docRef.get();
+            if (doc.exists) {
+                devMessage.innerHTML = '<span style="color:#e74c3c;">Такой код уже существует!</span>';
+                return;
+            }
+            const type = promoRewardType.value;
+            let data = { used: false, created_by: 'admin', created_at: firebase.firestore.FieldValue.serverTimestamp() };
+            if (type === 'coins') {
+                data.reward_type = 'coins';
+                data.reward_amount = parseInt(promoCoinValue.value) || 100;
+            } else {
+                const skinKey = promoSkinKey.value;
+                data.reward_type = 'skin';
+                data.reward_skin = skinKey;
+            }
+            const expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + 7);
+            data.expires = firebase.firestore.Timestamp.fromDate(expiryDate);
+            await docRef.set(data);
+            devMessage.innerHTML = '<span style="color:#2ecc71;">✅ Промокод "' + code + '" создан!</span>';
+            newPromoCode.value = '';
+            renderExistingPromosFirebase();
+        } catch (error) {
+            devMessage.innerHTML = '<span style="color:#e74c3c;">❌ Ошибка: ' + error.message + '</span>';
+        }
+    }
+    
+    async function renderExistingPromosFirebase() {
+        try {
+            const snapshot = await db.collection('promocodes').where('used', '==', false).orderBy('created_at', 'desc').limit(20).get();
+            if (snapshot.empty) {
+                existingPromos.innerHTML = '<span style="color:#555;">Нет активных промокодов</span>';
+                return;
+            }
+            let html = '';
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const rewardStr = data.reward_type === 'coins' ? (data.reward_amount || 0) + ' 🪙' : 'Скин: ' + (data.reward_skin || '?');
+                html += '<div class="promo-entry"><span><span class="promo-code">' + doc.id + '</span> → <span class="promo-reward">' + rewardStr + '</span></span><button class="delete-promo" data-code="' + doc.id + '">🗑️</button></div>';
+            });
+            existingPromos.innerHTML = html;
+            document.querySelectorAll('.delete-promo').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const code = this.getAttribute('data-code');
+                    if (confirm('Удалить промокод "' + code + '"?')) {
+                        try {
+                            await db.collection('promocodes').doc(code).delete();
+                            renderExistingPromosFirebase();
+                            devMessage.innerHTML = '<span style="color:#f39c12;">Промокод "' + code + '" удалён</span>';
+                        } catch (error) {
+                            devMessage.innerHTML = '<span style="color:#e74c3c;">Ошибка удаления: ' + error.message + '</span>';
+                        }
+                    }
+                });
+            });
+        } catch (error) {
+            console.error('Ошибка загрузки промокодов:', error);
+            existingPromos.innerHTML = '<span style="color:#e74c3c;">Ошибка загрузки</span>';
+        }
+    }
+
+    promoRewardType.addEventListener('change', () => {
+        if (promoRewardType.value === 'coins') { promoCoinAmount.style.display = 'block'; promoSkinSelect.style.display = 'none'; }
+        else { promoCoinAmount.style.display = 'none'; promoSkinSelect.style.display = 'block'; }
+    });
+
+    activatePromoBtn.addEventListener('click', () => {
+        const code = promoInput.value.trim().toUpperCase();
+        if (code) activatePromoFirebase(code);
+        promoInput.value = '';
+    });
+    createPromoBtn.addEventListener('click', createPromoFirebase);
 
     // ===== ИНИЦИАЛИЗАЦИЯ =====
     function initAll() {
@@ -2573,6 +2592,7 @@
         promoRewardType.dispatchEvent(new Event('change'));
         updateGodModeUI();
         updateLeaderboard();
+        updateAllPlayersList();
 
         speedSlider.addEventListener('input', function() { const value = parseInt(this.value); const speed = 300 - (value/100)*250; setSpeed(Math.round(speed)); });
         buyCaseBtn.addEventListener('click', buyCase);
@@ -2588,19 +2608,19 @@
     }
 
     // ===================== ОБРАБОТЧИКИ =====================
-    startBtn.addEventListener('click', (e) => { 
-        e.preventDefault(); 
+    startBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         if (currentUser) {
             if (isPlayerBanned(currentUser.uid)) {
                 alert('🚫 Ваш аккаунт забанен!');
                 return;
             }
-            launchGame(); 
+            launchGame();
         } else {
             alert('⚠️ Сначала войдите в аккаунт!');
         }
     });
-    
+
     pauseGameBtn.addEventListener('click', () => { if (startOverlay.classList.contains('hide-overlay') && isGameActive && !gameOver) togglePause(); });
     document.getElementById('restart').addEventListener('click', restartWithMenu);
     document.getElementById('shopBtn').addEventListener('click', () => {
@@ -2625,33 +2645,33 @@
 
     devBtn.addEventListener('click', () => {
         const password = prompt('Введите пароль разработчика:');
-        if (password === '31052013макс') { 
-            setPause(true); 
-            devOverlay.classList.remove('hide-overlay'); 
-            renderExistingPromosFirebase(); 
+        if (password === '31052013макс') {
+            setPause(true);
+            devOverlay.classList.remove('hide-overlay');
+            renderExistingPromos();
             renderBanList();
-            devMessage.innerHTML = ''; 
+            updateAllPlayersList();
+            devMessage.innerHTML = '';
             updateGodModeUI();
         } else if (password !== null) alert('Неверный пароль!');
     });
     closeDevBtn.addEventListener('click', () => { devOverlay.classList.add('hide-overlay'); setPause(false); });
 
     document.addEventListener('keydown', (e) => {
-        if (!startOverlay.classList.contains('hide-overlay')) { 
-            if (e.code === 'Space' || e.code === 'Enter') { 
-                e.preventDefault(); 
-                if (currentUser) launchGame(); 
-            } 
-            return; 
+        if (!startOverlay.classList.contains('hide-overlay')) {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                e.preventDefault();
+                if (currentUser) launchGame();
+            }
+            return;
         }
-        if (e.code === 'Space') { 
-            e.preventDefault(); 
-            if (isGameActive && !gameOver) togglePause(); 
-            else if (gameOver) restartWithMenu(); 
-            return; 
+        if (e.code === 'Space') {
+            e.preventDefault();
+            if (isGameActive && !gameOver) togglePause();
+            else if (gameOver) restartWithMenu();
+            return;
         }
         if (!isGameActive || gameOver || isPaused) return;
-        
         if (isPvpMode) {
             if (e.key === 'ArrowUp' && pvpDir1 !== 'down') { pvpDir1 = 'up'; e.preventDefault(); }
             else if (e.key === 'ArrowDown' && pvpDir1 !== 'up') { pvpDir1 = 'down'; e.preventDefault(); }
@@ -2659,7 +2679,6 @@
             else if (e.key === 'ArrowRight' && pvpDir1 !== 'left') { pvpDir1 = 'right'; e.preventDefault(); }
             return;
         }
-        
         if (e.key === 'ArrowUp' && dir !== 'down') { nextDir = 'up'; e.preventDefault(); }
         else if (e.key === 'ArrowDown' && dir !== 'up') { nextDir = 'down'; e.preventDefault(); }
         else if (e.key === 'ArrowLeft' && dir !== 'right') { nextDir = 'left'; e.preventDefault(); }
@@ -2673,7 +2692,6 @@
             if (!startOverlay.classList.contains('hide-overlay')) return;
             if (!isGameActive || gameOver || isPaused) return;
             const ndir = btn.getAttribute('data-dir');
-            
             if (isPvpMode) {
                 if (ndir === 'up' && pvpDir1 !== 'down') { pvpDir1 = 'up'; }
                 else if (ndir === 'down' && pvpDir1 !== 'up') { pvpDir1 = 'down'; }
@@ -2681,7 +2699,6 @@
                 else if (ndir === 'right' && pvpDir1 !== 'left') { pvpDir1 = 'right'; }
                 return;
             }
-            
             if (ndir === 'up' && dir !== 'down') nextDir = 'up';
             else if (ndir === 'down' && dir !== 'up') nextDir = 'down';
             else if (ndir === 'left' && dir !== 'right') nextDir = 'left';
@@ -2693,18 +2710,9 @@
 
     startOverlay.addEventListener('click', (e) => e.stopPropagation());
 
-    activatePromoBtn.addEventListener('click', () => { 
-        const code = promoInput.value.trim().toUpperCase(); 
-        if (code) activatePromoFirebase(code); 
-        promoInput.value = ''; 
-    });
-    
-    createPromoBtn.addEventListener('click', createPromoFirebase);
-
     window.addEventListener('online', () => {
         if (currentUser) updateOnlineStatus(true);
     });
-    
     window.addEventListener('offline', () => {
         if (isRealPvp) {
             alert('⚠️ Интернет пропал! PvP режим прерван.');
@@ -2723,4 +2731,4 @@
 })();
 </script>
 </body>
-                </html>
+    </html>
