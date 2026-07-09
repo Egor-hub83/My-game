@@ -574,6 +574,7 @@
     let pvpCountdown = 0;
     let pvpCountdownInterval = null;
     let pvpRoomListener = null;
+    let pvpPlayerNumber = 1; // 1 или 2
 
     const allSkins = [
         { key: 'default', name: 'Классика', bodyColor: '#2ecc71', headColor: '#3cff7a', rarity: 'common', rarityColor: '#888' },
@@ -1323,6 +1324,8 @@
         pvpType = 'bot';
         pvpOpponent = { id: 'bot_' + Date.now(), name: 'Бот', isBot: true };
         isPvpMode = true;
+        pvpPlayerNumber = 1;
+        
         const betAmount = parseInt(betCoinsInput.value) || 0;
         if (betAmount > 0 && betAmount <= coins) {
             betCoins = betAmount;
@@ -1390,6 +1393,8 @@
         pvpCancelBtn.style.display = 'inline-block';
         pvpBotBtn.style.display = 'none';
         pvpRealBtn.style.display = 'none';
+        pvpPlayerNumber = 1;
+        
         const searchRef = rtdb.ref('pvp_players/' + currentUser.uid);
         searchRef.update({
             username: currentUser.displayName || currentUser.email || currentUser.uid,
@@ -1399,34 +1404,56 @@
             betSkin: betSkinSelect.value || null,
             avatar: avatarData || null
         });
+        
         const playersRef = rtdb.ref('pvp_players');
         const listener = playersRef.on('value', (snapshot) => {
             const players = snapshot.val();
             if (!players || !pvpSearching) return;
-            const opponentId = Object.keys(players).find(id => id !== currentUser.uid && players[id].status === 'searching');
+            
+            // Ищем другого игрока в статусе searching
+            const opponentId = Object.keys(players).find(id => 
+                id !== currentUser.uid && players[id].status === 'searching'
+            );
+            
             if (opponentId) {
                 pvpSearching = false;
                 const opponentData = players[opponentId];
+                
+                // Создаём комнату
                 const roomId = 'pvp_room_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
                 const roomRef = rtdb.ref('pvp_rooms/' + roomId);
+                
                 const myBetCoins = parseInt(betCoinsInput.value) || 0;
                 const oppBetCoins = opponentData.betCoins || 0;
                 const totalBetCoins = myBetCoins + oppBetCoins;
                 const myBetSkin = betSkinSelect.value || null;
                 const oppBetSkin = opponentData.betSkin || null;
+                
                 if (myBetCoins > 0) {
                     coins -= myBetCoins;
                     updateCoinsUI();
                 }
                 betCoins = totalBetCoins;
                 betSkin = myBetSkin || oppBetSkin;
+                
+                // Определяем кто игрок 1, а кто игрок 2
+                const isPlayer1 = currentUser.uid < opponentId;
+                pvpPlayerNumber = isPlayer1 ? 1 : 2;
+                
+                const player1Id = isPlayer1 ? currentUser.uid : opponentId;
+                const player1Name = isPlayer1 ? (currentUser.displayName || currentUser.email || currentUser.uid) : (opponentData.username || 'Игрок');
+                const player1Avatar = isPlayer1 ? (avatarData || null) : (opponentData.avatar || null);
+                const player2Id = isPlayer1 ? opponentId : currentUser.uid;
+                const player2Name = isPlayer1 ? (opponentData.username || 'Игрок') : (currentUser.displayName || currentUser.email || currentUser.uid);
+                const player2Avatar = isPlayer1 ? (opponentData.avatar || null) : (avatarData || null);
+                
                 roomRef.set({
-                    player1: currentUser.uid,
-                    player1Name: currentUser.displayName || currentUser.email || currentUser.uid,
-                    player1Avatar: avatarData || null,
-                    player2: opponentId,
-                    player2Name: opponentData.username || 'Игрок',
-                    player2Avatar: opponentData.avatar || null,
+                    player1: player1Id,
+                    player1Name: player1Name,
+                    player1Avatar: player1Avatar,
+                    player2: player2Id,
+                    player2Name: player2Name,
+                    player2Avatar: player2Avatar,
                     status: 'waiting',
                     startTime: Date.now(),
                     betCoins: totalBetCoins,
@@ -1440,9 +1467,11 @@
                     countdown: 5,
                     timestamp: Date.now()
                 });
+                
                 rtdb.ref('pvp_players/' + currentUser.uid).remove();
                 rtdb.ref('pvp_players/' + opponentId).remove();
                 playersRef.off();
+                
                 pvpStatus.textContent = '✅ Соперник найден!';
                 pvpResult.innerHTML = '<span style="color:#2ecc71;">✅ Найден игрок: ' + (opponentData.username || 'Игрок') + '! Начинаем битву...</span>';
                 pvpCancelBtn.style.display = 'none';
@@ -1451,12 +1480,21 @@
                 currentPvpRoom = roomId;
                 pvpRoomRef = roomRef;
                 pvpRoomListener = roomRef;
+                
                 pvpRoomInfo.style.display = 'block';
-                pvpRoomInfo.innerHTML = '<span class="label">🏠 Комната:</span> ' + roomId + '<br><span class="label">👤 Вы:</span> ' + (currentUser.displayName || currentUser.email) + '<br><span class="label">👤 Соперник:</span> ' + (opponentData.username || 'Игрок') + '<br><span class="label">💰 Общая ставка:</span> ' + totalBetCoins + ' 🪙 ' + (betSkin ? '🎨 ' + getSkinData(betSkin).name : '');
+                pvpRoomInfo.innerHTML = '<span class="label">🏠 Комната:</span> ' + roomId + 
+                    '<br><span class="label">👤 Вы:</span> ' + (currentUser.displayName || currentUser.email) + 
+                    '<br><span class="label">👤 Соперник:</span> ' + (opponentData.username || 'Игрок') + 
+                    '<br><span class="label">💰 Общая ставка:</span> ' + totalBetCoins + ' 🪙 ' + (betSkin ? '🎨 ' + getSkinData(betSkin).name : '');
+                
+                // Слушаем изменения комнаты
                 roomRef.on('value', (snap) => {
                     const data = snap.val();
-                    if (data) { updateRealPvpGame(data); }
+                    if (data) {
+                        updateRealPvpGame(data);
+                    }
                 });
+                
                 pvpOverlay.classList.add('hide-overlay');
                 setPause(false);
                 fullReset();
@@ -1465,6 +1503,7 @@
                 startPvpCountdown();
             }
         });
+        
         if (pvpTimeout) clearTimeout(pvpTimeout);
         pvpTimeout = setTimeout(() => {
             if (pvpSearching) {
@@ -1498,9 +1537,27 @@
 
     function updateRealPvpGame(data) {
         if (!data || pvpGameOver) return;
+        
+        // Определяем свои и чужие данные
         const isPlayer1 = data.player1 === currentUser.uid;
+        const mySnake = isPlayer1 ? data.snake1 : data.snake2;
+        const myDir = isPlayer1 ? data.dir1 : data.dir2;
         const opponentSnake = isPlayer1 ? data.snake2 : data.snake1;
         const opponentDir = isPlayer1 ? data.dir2 : data.dir1;
+        const opponentName = isPlayer1 ? data.player2Name : data.player1Name;
+        
+        // Обновляем свою змейку
+        if (mySnake && Array.isArray(mySnake)) {
+            if (isPlayer1) {
+                pvpSnake1 = mySnake.slice();
+                pvpDir1 = myDir || 'up';
+            } else {
+                pvpSnake2 = mySnake.slice();
+                pvpDir2 = myDir || 'up';
+            }
+        }
+        
+        // Обновляем змейку соперника
         if (opponentSnake && Array.isArray(opponentSnake)) {
             if (isPlayer1) {
                 pvpSnake2 = opponentSnake.slice();
@@ -1510,27 +1567,38 @@
                 pvpDir1 = opponentDir || 'up';
             }
         }
+        
+        // Обновляем еду и монету
         if (data.food) pvpFood = data.food;
         if (data.coin) pvpCoin = data.coin;
+        
+        // Проверка на победу
         if (data.winner) {
             pvpGameOver = true;
             pvpWinner = data.winner === currentUser.uid ? 'Вы' : 'Соперник';
             handlePvpWin(pvpWinner);
         }
+        
         draw();
     }
 
     function sendRealPvpMove() {
         if (!currentPvpRoom || !currentUser || pvpGameOver) return;
-        const updates = {
-            snake1: pvpSnake1,
-            dir1: pvpDir1,
-            snake2: pvpSnake2,
-            dir2: pvpDir2,
-            food: pvpFood,
-            coin: pvpCoin,
-            timestamp: Date.now()
-        };
+        
+        const isPlayer1 = pvpPlayerNumber === 1;
+        const updates = {};
+        
+        if (isPlayer1) {
+            updates.snake1 = pvpSnake1;
+            updates.dir1 = pvpDir1;
+        } else {
+            updates.snake2 = pvpSnake2;
+            updates.dir2 = pvpDir2;
+        }
+        updates.food = pvpFood;
+        updates.coin = pvpCoin;
+        updates.timestamp = Date.now();
+        
         rtdb.ref('pvp_rooms/' + currentPvpRoom).update(updates);
     }
 
@@ -1629,6 +1697,7 @@
             ctx.beginPath(); ctx.moveTo(0,i*CELL_SIZE); ctx.lineTo(canvas.width,i*CELL_SIZE); ctx.stroke();
         }
         if (isPvpMode && pvpOpponent) {
+            // Змейка игрока 1 (зелёная - вы или соперник)
             for (let i=0; i<pvpSnake1.length; i++) {
                 let x=pvpSnake1[i][0]*CELL_SIZE, y=pvpSnake1[i][1]*CELL_SIZE;
                 ctx.fillStyle = i===0 ? '#2ecc71' : '#1a8a4a';
@@ -1637,6 +1706,7 @@
                 ctx.lineWidth=1.2;
                 ctx.strokeRect(x+1, y+1, CELL_SIZE-2, CELL_SIZE-2);
             }
+            // Змейка игрока 2 (красная - вы или соперник)
             for (let i=0; i<pvpSnake2.length; i++) {
                 let x=pvpSnake2[i][0]*CELL_SIZE, y=pvpSnake2[i][1]*CELL_SIZE;
                 ctx.fillStyle = i===0 ? '#e74c3c' : '#8a1a1a';
@@ -1664,9 +1734,9 @@
             ctx.fillStyle = '#2ecc71';
             ctx.font = '9px monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('🟢 Вы: ' + pvpSnake1.length, 10, 18);
+            ctx.fillText('🟢 Игрок 1: ' + pvpSnake1.length, 10, 18);
             ctx.fillStyle = '#e74c3c';
-            ctx.fillText('🔴 Соперник: ' + pvpSnake2.length, 10, 33);
+            ctx.fillText('🔴 Игрок 2: ' + pvpSnake2.length, 10, 33);
             ctx.fillStyle = '#f9ca24';
             ctx.fillText('💰 ' + (betCoins > 0 ? betCoins + '🪙' : '0🪙') + (betSkin ? ' 🎨' : ''), 10, 48);
             if (isRealPvp) {
@@ -1822,38 +1892,47 @@
 
     function updatePvp() {
         if (pvpGameOver) return;
+        
+        // Движение игрока 1
         let head1 = [pvpSnake1[0][0], pvpSnake1[0][1]];
         if (pvpDir1==='right') head1[0]++;
         else if (pvpDir1==='left') head1[0]--;
         else if (pvpDir1==='up') head1[1]--;
         else if (pvpDir1==='down') head1[1]++;
+        
+        // Движение игрока 2 (бота или реального игрока)
         if (pvpOpponent && pvpOpponent.isBot && pvpFood) {
             if (pvpFood[0] > pvpSnake2[0][0] && pvpDir2 !== 'left') pvpDir2 = 'right';
             else if (pvpFood[0] < pvpSnake2[0][0] && pvpDir2 !== 'right') pvpDir2 = 'left';
             else if (pvpFood[1] > pvpSnake2[0][1] && pvpDir2 !== 'up') pvpDir2 = 'down';
             else if (pvpFood[1] < pvpSnake2[0][1] && pvpDir2 !== 'down') pvpDir2 = 'up';
         }
+        
         let head2 = [pvpSnake2[0][0], pvpSnake2[0][1]];
         if (pvpDir2==='right') head2[0]++;
         else if (pvpDir2==='left') head2[0]--;
         else if (pvpDir2==='up') head2[1]--;
         else if (pvpDir2==='down') head2[1]++;
+        
+        // Проверка столкновений
         if (head1[0] < 0 || head1[0] >= GRID_SIZE || head1[1] < 0 || head1[1] >= GRID_SIZE) {
             pvpGameOver = true;
-            pvpWinner = 'Соперник';
+            pvpWinner = 'Игрок 2';
             handlePvpWin('Соперник');
             return;
         }
         if (head2[0] < 0 || head2[0] >= GRID_SIZE || head2[1] < 0 || head2[1] >= GRID_SIZE) {
             pvpGameOver = true;
-            pvpWinner = 'Вы';
+            pvpWinner = 'Игрок 1';
             handlePvpWin('Вы');
             return;
         }
+        
+        // Столкновение с собой и соперником для игрока 1
         for (let i=1; i<pvpSnake1.length; i++) {
             if (pvpSnake1[i][0]===head1[0] && pvpSnake1[i][1]===head1[1]) {
                 pvpGameOver = true;
-                pvpWinner = 'Соперник';
+                pvpWinner = 'Игрок 2';
                 handlePvpWin('Соперник');
                 return;
             }
@@ -1861,15 +1940,17 @@
         for (let i=0; i<pvpSnake2.length; i++) {
             if (pvpSnake2[i][0]===head1[0] && pvpSnake2[i][1]===head1[1]) {
                 pvpGameOver = true;
-                pvpWinner = 'Соперник';
+                pvpWinner = 'Игрок 2';
                 handlePvpWin('Соперник');
                 return;
             }
         }
+        
+        // Столкновение с собой и соперником для игрока 2
         for (let i=1; i<pvpSnake2.length; i++) {
             if (pvpSnake2[i][0]===head2[0] && pvpSnake2[i][1]===head2[1]) {
                 pvpGameOver = true;
-                pvpWinner = 'Вы';
+                pvpWinner = 'Игрок 1';
                 handlePvpWin('Вы');
                 return;
             }
@@ -1877,19 +1958,24 @@
         for (let i=0; i<pvpSnake1.length; i++) {
             if (pvpSnake1[i][0]===head2[0] && pvpSnake1[i][1]===head2[1]) {
                 pvpGameOver = true;
-                pvpWinner = 'Вы';
+                pvpWinner = 'Игрок 1';
                 handlePvpWin('Вы');
                 return;
             }
         }
+        
+        // Еда
         let eatFood1 = pvpFood && head1[0]===pvpFood[0] && head1[1]===pvpFood[1];
         let eatFood2 = pvpFood && head2[0]===pvpFood[0] && head2[1]===pvpFood[1];
         let eatCoin1 = pvpCoin && head1[0]===pvpCoin[0] && head1[1]===pvpCoin[1];
         let eatCoin2 = pvpCoin && head2[0]===pvpCoin[0] && head2[1]===pvpCoin[1];
+        
         pvpSnake1.unshift([head1[0], head1[1]]);
         pvpSnake2.unshift([head2[0], head2[1]]);
+        
         if (!eatFood1 && !eatCoin1) pvpSnake1.pop();
         if (!eatFood2 && !eatCoin2) pvpSnake2.pop();
+        
         if (eatFood1 || eatFood2) {
             pvpFood = null;
             let free = [];
@@ -1903,6 +1989,7 @@
             }
             if (free.length) pvpFood = free[Math.floor(Math.random()*free.length)];
         }
+        
         if (eatCoin1) {
             addCoins(1);
             pvpCoin = null;
@@ -1920,9 +2007,12 @@
         if (eatCoin2) {
             pvpCoin = null;
         }
+        
+        // Отправляем ход в Firebase для реального PvP
         if (isRealPvp && currentPvpRoom) {
             sendRealPvpMove();
         }
+        
         draw();
     }
 
