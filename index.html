@@ -29,7 +29,6 @@
         .btn.pvp-bot { background: #2ecc71; color: #000; font-weight: bold; }
         .btn.pvp-real { background: #e67e22; color: #fff; font-weight: bold; }
         .btn.leaderboard { background: #f39c12; color: #000; font-weight: bold; }
-        .btn.copy { background: #2980b9; color: #fff; font-size: 9px; padding: 1px 6px; border-radius: 10px; }
         .promo-input { background: #1a1a2e; border: 1px solid #555; color: white; padding: 6px 10px; border-radius: 20px; font-family: monospace; width: 110px; text-align: center; outline: none; }
         .promo-input:focus { border-color: #f9ca24; }
         .dpad { display: flex; flex-direction: column; align-items: center; margin-top: 8px; }
@@ -140,8 +139,6 @@
         .player-list-item .pid:hover { text-decoration: underline; }
         .player-list-item .pavatar { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
         .player-list-item .ban-status { margin-left: auto; font-size: 10px; }
-        .player-list-item .copy-btn { background: #2980b9; border: none; color: white; border-radius: 10px; padding: 1px 6px; font-size: 8px; cursor: pointer; }
-        .player-list-item .copy-btn:hover { background: #3498db; }
         
         .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2ecc71; color: #000; padding: 8px 16px; border-radius: 20px; font-size: 12px; z-index: 100; font-weight: bold; animation: fadeInOut 2s ease; }
         @keyframes fadeInOut { 0% { opacity: 0; transform: translateX(-50%) translateY(20px); } 10% { opacity: 1; transform: translateX(-50%) translateY(0); } 90% { opacity: 1; transform: translateX(-50%) translateY(0); } 100% { opacity: 0; transform: translateX(-50%) translateY(20px); } }
@@ -753,21 +750,29 @@
         }
     }
 
+    // ===================== РЕГИСТРАЦИЯ (ИСПРАВЛЕННАЯ) =====================
     function registerLocal() {
         const username = loginUsername.value.trim();
         const password = loginPassword.value.trim();
         
         if (!username || password.length < 6) {
-            alert('Имя не может быть пустым, пароль минимум 6 символов!');
+            alert('❌ Имя не может быть пустым, пароль минимум 6 символов!');
             return;
         }
         
-        let users = JSON.parse(localStorage.getItem('snakeUsers') || '[]');
+        // Получаем список пользователей
+        let users = [];
+        try {
+            users = JSON.parse(localStorage.getItem('snakeUsers') || '[]');
+        } catch(e) { users = []; }
+        
+        // Проверяем, не занято ли имя
         if (users.some(u => u.username === username)) {
             alert('❌ Это имя уже занято!');
             return;
         }
         
+        // Создаём пользователя
         const user = {
             id: generateNumericId(),
             username: username,
@@ -800,6 +805,7 @@
         loginPassword.value = '';
     }
 
+    // ===================== ВХОД =====================
     function loginLocal() {
         const username = loginUsername.value.trim();
         const password = loginPassword.value.trim();
@@ -809,7 +815,11 @@
             return;
         }
         
-        let users = JSON.parse(localStorage.getItem('snakeUsers') || '[]');
+        let users = [];
+        try {
+            users = JSON.parse(localStorage.getItem('snakeUsers') || '[]');
+        } catch(e) { users = []; }
+        
         const user = users.find(u => u.username === username && u.password === password);
         
         if (!user) {
@@ -852,9 +862,21 @@
         showToast('👋 Вы вышли', '#e74c3c');
     }
 
-    loginBtn.addEventListener('click', loginLocal);
-    registerBtn.addEventListener('click', registerLocal);
-    logoutBtn.addEventListener('click', logoutLocal);
+    // ===================== ПОДКЛЮЧАЕМ КНОПКИ =====================
+    loginBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        loginLocal();
+    });
+
+    registerBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        registerLocal();
+    });
+
+    logoutBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        logoutLocal();
+    });
 
     // ===================== ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ =====================
     function loadLocalUserData(userId) {
@@ -957,7 +979,7 @@
         leaderboardList.innerHTML = html;
     }
 
-    // ===================== ВСЕ ИГРОКИ В DEV С КОПИРОВАНИЕМ ID =====================
+    // ===================== ВСЕ ИГРОКИ В DEV =====================
     function updateAllPlayersList() {
         const users = JSON.parse(localStorage.getItem('snakeUsers') || '[]');
         if (users.length === 0) {
@@ -1421,7 +1443,6 @@
         pvpRoomInfo.style.display = 'block';
         pvpRoomInfo.innerHTML = '<span class="label">🤖 Режим:</span> Против бота<br><span class="label">👤 Вы:</span> ' + (currentUser.username || 'Игрок') + '<br><span class="label">💰 Ставка:</span> ' + (betCoins > 0 ? betCoins + ' 🪙' : 'Нет') + (betSkin ? ' 🎨 ' + getSkinData(betSkin).name : '');
         
-        // Разводим змейки для бота
         pvpSnake1 = [[4, 10], [4, 11], [4, 12]];
         pvpSnake2 = [[15, 10], [15, 11], [15, 12]];
         pvpDir1 = 'up';
@@ -1462,7 +1483,7 @@
         return playersRef;
     }
 
-    // ===================== ИСПРАВЛЕННАЯ ФУНКЦИЯ PVP ПРОТИВ ИГРОКА =====================
+    // ===================== PVP ПРОТИВ ИГРОКА =====================
     function startRealPvpSearch() {
         if (!currentUser) {
             alert('⚠️ Сначала войдите в аккаунт!');
@@ -1522,9 +1543,6 @@
                 betCoins = totalBetCoins;
                 betSkin = myBetSkin || oppBetSkin;
                 
-                // РАЗВОДИМ ЗМЕЕК В РАЗНЫЕ СТОРОНЫ
-                // Игрок 1 - слева вверху (колонка 4)
-                // Игрок 2 - справа внизу (колонка 15)
                 const snake1 = [[4, 10], [4, 11], [4, 12]];
                 const snake2 = [[15, 10], [15, 11], [15, 12]];
                 
@@ -1572,7 +1590,6 @@
                 pvpRoomRef = roomRef;
                 pvpRoomListener = roomRef;
                 
-                // Инициализируем локальные змейки в зависимости от того, кто вы
                 if (isPlayer1) {
                     pvpSnake1 = snake1.slice();
                     pvpSnake2 = snake2.slice();
@@ -1796,7 +1813,6 @@
             ctx.beginPath(); ctx.moveTo(0,i*CELL_SIZE); ctx.lineTo(canvas.width,i*CELL_SIZE); ctx.stroke();
         }
         if (isPvpMode && pvpOpponent) {
-            // Змейка игрока 1 (зелёная)
             for (let i=0; i<pvpSnake1.length; i++) {
                 let x=pvpSnake1[i][0]*CELL_SIZE, y=pvpSnake1[i][1]*CELL_SIZE;
                 ctx.fillStyle = i===0 ? '#2ecc71' : '#1a8a4a';
@@ -1805,7 +1821,6 @@
                 ctx.lineWidth=1.2;
                 ctx.strokeRect(x+1, y+1, CELL_SIZE-2, CELL_SIZE-2);
             }
-            // Змейка игрока 2 (красная)
             for (let i=0; i<pvpSnake2.length; i++) {
                 let x=pvpSnake2[i][0]*CELL_SIZE, y=pvpSnake2[i][1]*CELL_SIZE;
                 ctx.fillStyle = i===0 ? '#e74c3c' : '#8a1a1a';
@@ -2763,4 +2778,4 @@
 })();
 </script>
 </body>
-    </html>
+                    </html>
