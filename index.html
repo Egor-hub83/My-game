@@ -5,30 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Змейка — скины, кейсы, задания, PvP</title>
     
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDHevWAesdZuHsF0vq3ENkVRNMllASkNrA",
-            authDomain: "snakepromo-c6f57.firebaseapp.com",
-            projectId: "snakepromo-c6f57",
-            storageBucket: "snakepromo-c6f57.firebasestorage.app",
-            messagingSenderId: "953301622443",
-            appId: "1:953301622443:web:9e4e7169af16d3885ee1ee",
-            databaseURL: "https://snakepromo-c6f57-default-rtdb.firebaseio.com"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-        const rtdb = firebase.database();
-        db.enablePersistence().catch(err => console.warn('Offline mode:', err));
-        console.log('🔥 Firebase подключён!');
-    </script>
-    
     <style>
         * { user-select: none; touch-action: manipulation; box-sizing: border-box; }
         body { background: #0a0a1a; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px; font-family: monospace; }
@@ -53,6 +29,7 @@
         .btn.pvp-bot { background: #2ecc71; color: #000; font-weight: bold; }
         .btn.pvp-real { background: #e67e22; color: #fff; font-weight: bold; }
         .btn.leaderboard { background: #f39c12; color: #000; font-weight: bold; }
+        .btn.copy { background: #2980b9; color: #fff; font-size: 9px; padding: 1px 6px; border-radius: 10px; }
         .promo-input { background: #1a1a2e; border: 1px solid #555; color: white; padding: 6px 10px; border-radius: 20px; font-family: monospace; width: 110px; text-align: center; outline: none; }
         .promo-input:focus { border-color: #f9ca24; }
         .dpad { display: flex; flex-direction: column; align-items: center; margin-top: 8px; }
@@ -84,7 +61,6 @@
         .rarity-legendary { background: #f1c40f; }
         .rarity-secret { background: #ff6b6b; box-shadow: 0 0 10px #ff6b6b; }
         
-        /* АВАТАРКИ */
         .avatar-container { display: flex; align-items: center; gap: 10px; margin: 8px 0; flex-wrap: wrap; justify-content: center; }
         .avatar-preview { width: 60px; height: 60px; border-radius: 50%; border: 3px solid #f9ca24; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #1a1a2e; flex-shrink: 0; }
         .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
@@ -160,8 +136,15 @@
         .leaderboard-item .avatar-small { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
         
         .player-list-item { display: flex; align-items: center; gap: 8px; padding: 4px 8px; margin: 2px 0; border-radius: 8px; background: #0a0a1a; font-size: 11px; color: #ddd; border-left: 3px solid #2ecc71; }
-        .player-list-item .pid { color: #888; font-size: 9px; word-break: break-all; }
+        .player-list-item .pid { color: #f9ca24; font-size: 9px; cursor: pointer; }
+        .player-list-item .pid:hover { text-decoration: underline; }
         .player-list-item .pavatar { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .player-list-item .ban-status { margin-left: auto; font-size: 10px; }
+        .player-list-item .copy-btn { background: #2980b9; border: none; color: white; border-radius: 10px; padding: 1px 6px; font-size: 8px; cursor: pointer; }
+        .player-list-item .copy-btn:hover { background: #3498db; }
+        
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2ecc71; color: #000; padding: 8px 16px; border-radius: 20px; font-size: 12px; z-index: 100; font-weight: bold; animation: fadeInOut 2s ease; }
+        @keyframes fadeInOut { 0% { opacity: 0; transform: translateX(-50%) translateY(20px); } 10% { opacity: 1; transform: translateX(-50%) translateY(0); } 90% { opacity: 1; transform: translateX(-50%) translateY(0); } 100% { opacity: 0; transform: translateX(-50%) translateY(20px); } }
     </style>
 </head>
 <body>
@@ -368,7 +351,7 @@
             </div>
             
             <hr style="border-color:#333;margin:8px 0;">
-            <p style="color:#aaa;font-size:12px;">👥 Все игроки:</p>
+            <p style="color:#aaa;font-size:12px;">👥 Все игроки (нажмите на ID для копирования):</p>
             <div id="allPlayersList" style="font-size:11px;max-height:120px;overflow-y:auto;text-align:left;margin:6px 0;"></div>
             
             <hr style="border-color:#333;margin:8px 0;">
@@ -574,7 +557,7 @@
     let pvpCountdown = 0;
     let pvpCountdownInterval = null;
     let pvpRoomListener = null;
-    let pvpPlayerNumber = 1; // 1 или 2
+    let pvpPlayerNumber = 1;
 
     const allSkins = [
         { key: 'default', name: 'Классика', bodyColor: '#2ecc71', headColor: '#3cff7a', rarity: 'common', rarityColor: '#888' },
@@ -592,6 +575,107 @@
 
     function getSkinData(key) { return allSkins.find(s => s.key === key) || allSkins[0]; }
 
+    // ===================== ГЕНЕРАЦИЯ ЦИФРОВОГО ID =====================
+    function generateNumericId() {
+        let id = '';
+        for (let i = 0; i < 10; i++) {
+            id += Math.floor(Math.random() * 10);
+        }
+        return id;
+    }
+
+    // ===================== ТОСТ-УВЕДОМЛЕНИЕ =====================
+    function showToast(message, color = '#2ecc71') {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.style.background = color;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+    }
+
+    // ===================== СИСТЕМА БАНОВ =====================
+    function loadBans() {
+        const saved = localStorage.getItem('bannedPlayers');
+        if (saved) {
+            try { bannedPlayers = JSON.parse(saved); } catch(e) { bannedPlayers = []; }
+        } else {
+            bannedPlayers = [];
+        }
+        renderBanList();
+    }
+
+    function saveBans() {
+        localStorage.setItem('bannedPlayers', JSON.stringify(bannedPlayers));
+        renderBanList();
+        updateAllPlayersList();
+    }
+
+    function renderBanList() {
+        if (!banList) return;
+        if (bannedPlayers.length === 0) {
+            banList.innerHTML = '<span style="color:#555;">Нет забаненных игроков</span>';
+            return;
+        }
+        banList.innerHTML = bannedPlayers.map(id => 
+            '<div class="ban-item"><span class="ban-id">🚫 ' + id + '</span><button class="ban-unban" data-id="' + id + '">Разбанить</button></div>'
+        ).join('');
+        
+        document.querySelectorAll('.ban-unban').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                bannedPlayers = bannedPlayers.filter(p => p !== id);
+                saveBans();
+                devMessage.innerHTML = '<span style="color:#2ecc71;">✅ Игрок ' + id + ' разбанен</span>';
+                if (currentUser && currentUser.uid === id) {
+                    loadBans();
+                }
+                updateAllPlayersList();
+            });
+        });
+    }
+
+    function banPlayer(id) {
+        if (!id) {
+            devMessage.innerHTML = '<span style="color:#e74c3c;">❌ Введите ID игрока!</span>';
+            return;
+        }
+        
+        const users = JSON.parse(localStorage.getItem('snakeUsers') || '[]');
+        const playerExists = users.some(u => u.id === id);
+        
+        if (!playerExists) {
+            devMessage.innerHTML = '<span style="color:#e74c3c;">❌ Игрок с ID ' + id + ' не найден!</span>';
+            return;
+        }
+        
+        if (bannedPlayers.includes(id)) {
+            devMessage.innerHTML = '<span style="color:#f39c12;">⚠️ Игрок уже забанен</span>';
+            return;
+        }
+        
+        bannedPlayers.push(id);
+        saveBans();
+        devMessage.innerHTML = '<span style="color:#e74c3c;">🚫 Игрок ' + id + ' забанен</span>';
+        devBanInput.value = '';
+        updateAllPlayersList();
+        
+        if (currentUser && currentUser.uid === id) {
+            alert('🚫 Ваш аккаунт был забанен!');
+            logoutLocal();
+        }
+    }
+
+    function isPlayerBanned(id) {
+        const isBanned = bannedPlayers.includes(id);
+        if (isBanned && currentUser && currentUser.uid === id) {
+            alert('🚫 Ваш аккаунт забанен!');
+            logoutLocal();
+            return true;
+        }
+        return isBanned;
+    }
+
     // ===================== АВАТАРКИ =====================
     function updateAvatarPreview() {
         if (avatarData) {
@@ -608,9 +692,9 @@
             reader.onload = function(event) {
                 avatarData = event.target.result;
                 updateAvatarPreview();
-                saveUserData();
-                rtdb.ref('leaderboard/' + currentUser.uid + '/avatar').set(avatarData);
+                saveLocalUserData();
                 updateAllPlayersList();
+                showToast('✅ Аватарка загружена!');
             };
             reader.readAsDataURL(file);
         }
@@ -618,175 +702,178 @@
     });
 
     changeNickBtn.addEventListener('click', function() {
-        const newNick = prompt('Введите новый ник:', currentUser?.displayName || currentUser?.email || 'Игрок');
+        const newNick = prompt('Введите новый ник:', currentUser?.username || 'Игрок');
         if (newNick && newNick.trim()) {
-            currentUser.updateProfile({ displayName: newNick.trim() }).then(() => {
+            const users = JSON.parse(localStorage.getItem('snakeUsers') || '[]');
+            const userIndex = users.findIndex(u => u.id === currentUser.uid);
+            if (userIndex !== -1) {
+                users[userIndex].username = newNick.trim();
+                localStorage.setItem('snakeUsers', JSON.stringify(users));
+                
+                const savedUser = JSON.parse(localStorage.getItem('snakeUser') || '{}');
+                savedUser.username = newNick.trim();
+                localStorage.setItem('snakeUser', JSON.stringify(savedUser));
+                
                 userNameDisplay.textContent = newNick.trim();
                 settingsUserDisplay.textContent = newNick.trim();
-                saveUserData();
+                saveLocalUserData();
                 updateLeaderboard();
                 updateAllPlayersList();
-                alert('✅ Ник изменён!');
-            }).catch(err => alert('Ошибка: ' + err.message));
+                showToast('✅ Ник изменён!');
+            }
         }
     });
-
-    // ===================== БАНЫ =====================
-    function loadBans() {
-        const saved = localStorage.getItem('bannedPlayers');
-        if (saved) {
-            try { bannedPlayers = JSON.parse(saved); } catch(e) { bannedPlayers = []; }
-        }
-        renderBanList();
-    }
-
-    function saveBans() {
-        localStorage.setItem('bannedPlayers', JSON.stringify(bannedPlayers));
-        renderBanList();
-    }
-
-    function renderBanList() {
-        if (!banList) return;
-        if (bannedPlayers.length === 0) {
-            banList.innerHTML = '<span style="color:#555;">Нет забаненных игроков</span>';
-            return;
-        }
-        banList.innerHTML = bannedPlayers.map(id => 
-            '<div class="ban-item"><span class="ban-id">🚫 ' + id + '</span><button class="ban-unban" data-id="' + id + '">Разбанить</button></div>'
-        ).join('');
-        document.querySelectorAll('.ban-unban').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const id = this.getAttribute('data-id');
-                bannedPlayers = bannedPlayers.filter(p => p !== id);
-                saveBans();
-                devMessage.innerHTML = '<span style="color:#2ecc71;">✅ Игрок ' + id + ' разбанен</span>';
-            });
-        });
-    }
-
-    function banPlayer(id) {
-        if (!id) return;
-        if (bannedPlayers.includes(id)) {
-            devMessage.innerHTML = '<span style="color:#f39c12;">⚠️ Игрок уже забанен</span>';
-            return;
-        }
-        bannedPlayers.push(id);
-        saveBans();
-        devMessage.innerHTML = '<span style="color:#e74c3c;">🚫 Игрок ' + id + ' забанен</span>';
-        devBanInput.value = '';
-    }
-
-    function isPlayerBanned(id) { return bannedPlayers.includes(id); }
 
     // ===================== АВТОРИЗАЦИЯ =====================
-    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-        .then(() => {
-            auth.onAuthStateChanged(async (user) => {
-                if (user) {
-                    currentUser = user;
-                    userInfo.style.display = 'block';
-                    loginForm.style.display = 'none';
-                    const displayName = user.displayName || user.email || user.uid;
-                    userNameDisplay.textContent = displayName;
-                    userIdDisplay.textContent = user.uid;
-                    settingsUserDisplay.textContent = displayName;
-                    settingsUserId.textContent = user.uid;
-                    
-                    if (isPlayerBanned(user.uid)) {
-                        alert('🚫 Ваш аккаунт забанен!');
-                        await auth.signOut();
-                        return;
-                    }
-                    
-                    await loadUserData(user.uid);
-                    await loadAvatar(user.uid);
-                    updateOnlineStatus(true);
-                    updateLeaderboard();
-                    updateBetSelects();
-                    updateAllPlayersList();
-                } else {
-                    currentUser = null;
-                    userInfo.style.display = 'none';
-                    loginForm.style.display = 'block';
-                    settingsUserDisplay.textContent = 'Не авторизован';
-                    settingsUserId.textContent = '-';
-                    fullReset();
-                    draw();
+    function loadUserSession() {
+        const savedUser = localStorage.getItem('snakeUser');
+        if (savedUser) {
+            try {
+                const user = JSON.parse(savedUser);
+                if (isPlayerBanned(user.id)) {
+                    localStorage.removeItem('snakeUser');
+                    return;
                 }
-            });
-        })
-        .catch(err => console.error('Ошибка настройки persistence:', err));
-
-    async function loadAvatar(uid) {
-        try {
-            const snapshot = await rtdb.ref('leaderboard/' + uid + '/avatar').once('value');
-            if (snapshot.exists()) {
-                avatarData = snapshot.val();
-                updateAvatarPreview();
-            }
-        } catch(e) {}
+                currentUser = {
+                    uid: user.id,
+                    username: user.username
+                };
+                userInfo.style.display = 'block';
+                loginForm.style.display = 'none';
+                userNameDisplay.textContent = user.username;
+                userIdDisplay.textContent = user.id;
+                settingsUserDisplay.textContent = user.username;
+                settingsUserId.textContent = user.id;
+                loadLocalUserData(user.id);
+                updateOnlineStatus(true);
+                updateLeaderboard();
+                updateBetSelects();
+                updateAllPlayersList();
+            } catch(e) { console.error('Ошибка загрузки сессии:', e); }
+        }
     }
 
-    loginBtn.addEventListener('click', async () => {
+    function registerLocal() {
         const username = loginUsername.value.trim();
         const password = loginPassword.value.trim();
+        
         if (!username || password.length < 6) {
             alert('Имя не может быть пустым, пароль минимум 6 символов!');
             return;
         }
-        try {
-            await auth.signInWithEmailAndPassword(username + '@snake.game', password);
-            alert('✅ Вход выполнен!');
-            loginUsername.value = '';
-            loginPassword.value = '';
-        } catch(e) {
-            alert('❌ Ошибка входа: ' + e.message);
-        }
-    });
-
-    registerBtn.addEventListener('click', async () => {
-        const username = loginUsername.value.trim();
-        const password = loginPassword.value.trim();
-        if (!username || password.length < 6) {
-            alert('Имя не может быть пустым, пароль минимум 6 символов!');
+        
+        let users = JSON.parse(localStorage.getItem('snakeUsers') || '[]');
+        if (users.some(u => u.username === username)) {
+            alert('❌ Это имя уже занято!');
             return;
         }
-        try {
-            const result = await auth.createUserWithEmailAndPassword(username + '@snake.game', password);
-            await result.user.updateProfile({ displayName: username });
-            alert('✅ Регистрация выполнена!');
-            loginUsername.value = '';
-            loginPassword.value = '';
-        } catch(e) {
-            alert('❌ Ошибка регистрации: ' + e.message);
+        
+        const user = {
+            id: generateNumericId(),
+            username: username,
+            password: password,
+            createdAt: Date.now()
+        };
+        
+        users.push(user);
+        localStorage.setItem('snakeUsers', JSON.stringify(users));
+        localStorage.setItem('snakeUser', JSON.stringify(user));
+        
+        currentUser = {
+            uid: user.id,
+            username: user.username
+        };
+        
+        userInfo.style.display = 'block';
+        loginForm.style.display = 'none';
+        userNameDisplay.textContent = username;
+        userIdDisplay.textContent = user.id;
+        settingsUserDisplay.textContent = username;
+        settingsUserId.textContent = user.id;
+        
+        showToast('✅ Регистрация выполнена! ID: ' + user.id);
+        loadLocalUserData(user.id);
+        updateOnlineStatus(true);
+        updateLeaderboard();
+        updateAllPlayersList();
+        loginUsername.value = '';
+        loginPassword.value = '';
+    }
+
+    function loginLocal() {
+        const username = loginUsername.value.trim();
+        const password = loginPassword.value.trim();
+        
+        if (!username || !password) {
+            alert('❌ Введите имя и пароль!');
+            return;
         }
-    });
+        
+        let users = JSON.parse(localStorage.getItem('snakeUsers') || '[]');
+        const user = users.find(u => u.username === username && u.password === password);
+        
+        if (!user) {
+            alert('❌ Неверное имя или пароль!');
+            return;
+        }
+        
+        if (isPlayerBanned(user.id)) {
+            alert('🚫 Ваш аккаунт забанен!');
+            return;
+        }
+        
+        localStorage.setItem('snakeUser', JSON.stringify(user));
+        currentUser = {
+            uid: user.id,
+            username: user.username
+        };
+        
+        userInfo.style.display = 'block';
+        loginForm.style.display = 'none';
+        userNameDisplay.textContent = username;
+        userIdDisplay.textContent = user.id;
+        settingsUserDisplay.textContent = username;
+        settingsUserId.textContent = user.id;
+        
+        showToast('✅ Вход выполнен! ID: ' + user.id);
+        loadLocalUserData(user.id);
+        updateOnlineStatus(true);
+        updateLeaderboard();
+        updateAllPlayersList();
+        loginUsername.value = '';
+        loginPassword.value = '';
+    }
 
-    logoutBtn.addEventListener('click', async () => {
-        try {
-            await auth.signOut();
-            alert('👋 Вы вышли');
-        } catch(e) { alert('Ошибка выхода: ' + e.message); }
-    });
+    function logoutLocal() {
+        localStorage.removeItem('snakeUser');
+        currentUser = null;
+        userInfo.style.display = 'none';
+        loginForm.style.display = 'block';
+        showToast('👋 Вы вышли', '#e74c3c');
+    }
 
-    // ===================== ЗАГРУЗКА И СОХРАНЕНИЕ ДАННЫХ =====================
-    async function loadUserData(uid) {
-        try {
-            const doc = await db.collection('users').doc(uid).get();
-            if (doc.exists) {
-                const data = doc.data();
-                coins = data.coins || 0;
-                cases = data.cases || 0;
-                ownedSkins = data.ownedSkins || ['default'];
-                activeSkin = data.activeSkin || 'default';
-                wins = data.wins || 0;
-                const bestScore = data.bestScore || 0;
+    loginBtn.addEventListener('click', loginLocal);
+    registerBtn.addEventListener('click', registerLocal);
+    logoutBtn.addEventListener('click', logoutLocal);
+
+    // ===================== ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ =====================
+    function loadLocalUserData(userId) {
+        const data = localStorage.getItem('userData_' + userId);
+        if (data) {
+            try {
+                const parsed = JSON.parse(data);
+                coins = parsed.coins || 0;
+                cases = parsed.cases || 0;
+                ownedSkins = parsed.ownedSkins || ['default'];
+                activeSkin = parsed.activeSkin || 'default';
+                wins = parsed.wins || 0;
+                const bestScore = parsed.bestScore || 0;
                 localStorage.setItem('snakeBestScore', bestScore.toString());
-                gameSpeed = data.gameSpeed || 100;
-                controlMode = data.controlMode || 'dpad';
-                godMode = data.godMode || false;
-                if (data.avatar) {
-                    avatarData = data.avatar;
+                gameSpeed = parsed.gameSpeed || 100;
+                controlMode = parsed.controlMode || 'dpad';
+                godMode = parsed.godMode || false;
+                if (parsed.avatar) {
+                    avatarData = parsed.avatar;
                     updateAvatarPreview();
                 }
                 updateCoinsUI();
@@ -804,114 +891,112 @@
                 renderAchievements();
                 updateBetSelects();
                 updateLeaderboard();
-            }
-        } catch(e) { console.error('Ошибка загрузки данных:', e); }
+                updateAllPlayersList();
+            } catch(e) { console.error('Ошибка загрузки данных:', e); }
+        }
     }
 
-    async function saveUserData() {
+    function saveLocalUserData() {
         if (!currentUser) return;
-        try {
-            await db.collection('users').doc(currentUser.uid).set({
-                coins: coins,
-                cases: cases,
-                ownedSkins: ownedSkins,
-                activeSkin: activeSkin,
-                wins: wins,
-                bestScore: loadBestScore(),
-                gameSpeed: gameSpeed,
-                controlMode: controlMode,
-                godMode: godMode,
-                avatar: avatarData || null,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
-            
-            await rtdb.ref('leaderboard/' + currentUser.uid).set({
-                username: currentUser.displayName || currentUser.email || currentUser.uid,
-                bestScore: loadBestScore(),
-                wins: wins,
-                avatar: avatarData || null,
-                updatedAt: Date.now()
-            });
-            updateLeaderboard();
-            updateAllPlayersList();
-        } catch(e) { console.error('Ошибка сохранения данных:', e); }
-    }
-
-    // ===================== ВСЕ ИГРОКИ В DEV =====================
-    function updateAllPlayersList() {
-        rtdb.ref('leaderboard').once('value', (snapshot) => {
-            const data = snapshot.val();
-            if (!data) {
-                allPlayersList.innerHTML = '<span style="color:#555;">Нет игроков</span>';
-                return;
-            }
-            let html = '';
-            Object.keys(data).forEach(id => {
-                const p = data[id];
-                const avatarHtml = p.avatar ? '<img src="' + p.avatar + '" class="pavatar">' : '🐍';
-                html += '<div class="player-list-item">' + avatarHtml + '<span>' + (p.username || 'Аноним') + '</span><span class="pid">(' + id + ')</span></div>';
-            });
-            allPlayersList.innerHTML = html;
-        });
+        const data = {
+            coins: coins,
+            cases: cases,
+            ownedSkins: ownedSkins,
+            activeSkin: activeSkin,
+            wins: wins,
+            bestScore: loadBestScore(),
+            gameSpeed: gameSpeed,
+            controlMode: controlMode,
+            godMode: godMode,
+            avatar: avatarData || null
+        };
+        localStorage.setItem('userData_' + currentUser.uid, JSON.stringify(data));
+        saveQuests();
+        saveAchievements();
+        updateLeaderboard();
+        updateAllPlayersList();
     }
 
     // ===================== ТАБЛИЦА ЛИДЕРОВ =====================
     function updateLeaderboard() {
-        rtdb.ref('leaderboard').orderByChild('bestScore').limitToLast(20).on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (!data) {
-                leaderboardList.innerHTML = '<p style="color:#888;font-size:12px;">Нет данных</p>';
-                return;
-            }
-            const sorted = Object.keys(data).map(key => ({ id: key, ...data[key] }))
-                .sort((a, b) => (b.bestScore || 0) - (a.bestScore || 0));
-            let html = '';
-            sorted.forEach((player, index) => {
-                const rank = index + 1;
-                let rankClass = '', crown = '';
-                if (rank === 1) { rankClass = 'top1'; crown = '👑'; }
-                else if (rank === 2) { rankClass = 'top2'; crown = '🥈'; }
-                else if (rank === 3) { rankClass = 'top3'; crown = '🥉'; }
-                const isCurrentUser = player.id === currentUser?.uid;
-                const meClass = isCurrentUser ? 'me' : '';
-                const avatarHtml = player.avatar ? '<img src="' + player.avatar + '" class="avatar-small">' : '🐍';
-                html += '<div class="leaderboard-item ' + rankClass + ' ' + meClass + '">' +
-                    '<span class="rank">' + (crown || '#' + rank) + '</span>' +
-                    '<span class="name">' + avatarHtml + ' ' + (player.username || 'Аноним') + (isCurrentUser ? ' ⭐' : '') + '</span>' +
-                    '<span class="score">' + (player.bestScore || 0) + '</span>' +
-                    '<span class="wins">⚔️ ' + (player.wins || 0) + '</span>' +
-                '</div>';
-            });
-            leaderboardList.innerHTML = html;
+        const users = JSON.parse(localStorage.getItem('snakeUsers') || '[]');
+        const leaderboardData = users.map(user => {
+            const userData = JSON.parse(localStorage.getItem('userData_' + user.id) || '{}');
+            return {
+                id: user.id,
+                username: user.username,
+                bestScore: userData.bestScore || 0,
+                wins: userData.wins || 0,
+                avatar: userData.avatar || null
+            };
+        }).sort((a, b) => (b.bestScore || 0) - (a.bestScore || 0));
+        
+        if (leaderboardData.length === 0) {
+            leaderboardList.innerHTML = '<p style="color:#888;font-size:12px;">Нет данных</p>';
+            return;
+        }
+        
+        let html = '';
+        leaderboardData.forEach((player, index) => {
+            const rank = index + 1;
+            let rankClass = '', crown = '';
+            if (rank === 1) { rankClass = 'top1'; crown = '👑'; }
+            else if (rank === 2) { rankClass = 'top2'; crown = '🥈'; }
+            else if (rank === 3) { rankClass = 'top3'; crown = '🥉'; }
+            
+            const isCurrentUser = player.id === currentUser?.uid;
+            const meClass = isCurrentUser ? 'me' : '';
+            const avatarHtml = player.avatar ? '<img src="' + player.avatar + '" class="avatar-small">' : '🐍';
+            html += '<div class="leaderboard-item ' + rankClass + ' ' + meClass + '">' +
+                '<span class="rank">' + (crown || '#' + rank) + '</span>' +
+                '<span class="name">' + avatarHtml + ' ' + (player.username || 'Аноним') + (isCurrentUser ? ' ⭐' : '') + '</span>' +
+                '<span class="score">' + (player.bestScore || 0) + '</span>' +
+                '<span class="wins">⚔️ ' + (player.wins || 0) + '</span>' +
+            '</div>';
         });
+        leaderboardList.innerHTML = html;
+    }
+
+    // ===================== ВСЕ ИГРОКИ В DEV С КОПИРОВАНИЕМ ID =====================
+    function updateAllPlayersList() {
+        const users = JSON.parse(localStorage.getItem('snakeUsers') || '[]');
+        if (users.length === 0) {
+            allPlayersList.innerHTML = '<span style="color:#555;">Нет игроков</span>';
+            return;
+        }
+        
+        let html = '';
+        users.forEach(user => {
+            const userData = JSON.parse(localStorage.getItem('userData_' + user.id) || '{}');
+            const avatarHtml = userData.avatar ? '<img src="' + userData.avatar + '" class="pavatar">' : '🐍';
+            const isBanned = bannedPlayers.includes(user.id);
+            const banStatus = isBanned ? '🚫 Забанен' : '✅ Активен';
+            const statusColor = isBanned ? '#e74c3c' : '#2ecc71';
+            const isCurrentUser = currentUser && currentUser.uid === user.id;
+            
+            html += '<div class="player-list-item" style="' + (isCurrentUser ? 'border-left-color:#f9ca24;' : '') + '">' + 
+                avatarHtml + 
+                '<span>' + user.username + (isCurrentUser ? ' ⭐' : '') + '</span>' + 
+                '<span class="pid" onclick="navigator.clipboard.writeText(\'' + user.id + '\'); showToast(\'✅ ID скопирован: ' + user.id + '\');" title="Нажмите для копирования ID">📋 ' + user.id + '</span>' +
+                '<span class="ban-status" style="color:' + statusColor + ';">' + banStatus + '</span>' +
+            '</div>';
+        });
+        allPlayersList.innerHTML = html;
     }
 
     function updateOnlineStatus(isOnline) {
         if (!currentUser) return;
-        const statusRef = rtdb.ref('.info/connected');
-        statusRef.on('value', (snap) => {
-            if (snap.val() === true && isOnline) {
-                const userRef = rtdb.ref('players/' + currentUser.uid);
-                userRef.onDisconnect().update({ status: 'offline', lastSeen: Date.now() });
-                userRef.update({
-                    username: currentUser.displayName || currentUser.email || currentUser.uid,
-                    status: 'online',
-                    lastSeen: Date.now(),
-                    avatar: avatarData || null
-                });
-                if (userStatusDisplay) {
-                    userStatusDisplay.textContent = '🟢 Онлайн';
-                    userStatusDisplay.className = 'pvp-status-online';
-                }
-            }
-        });
+        if (userStatusDisplay) {
+            userStatusDisplay.textContent = isOnline ? '🟢 Онлайн' : '🔴 Оффлайн';
+            userStatusDisplay.className = isOnline ? 'pvp-status-online' : 'pvp-status-offline';
+        }
     }
 
     // ===================== ОСТАЛЬНЫЕ ФУНКЦИИ =====================
     function saveData() {
         const data = { bestScore: loadBestScore(), coins, cases, ownedSkins, activeSkin, gameSpeed, controlMode };
         localStorage.setItem('snakeFullData', JSON.stringify(data));
-        saveUserData();
+        saveLocalUserData();
     }
     
     function loadData() {
@@ -942,7 +1027,7 @@
         if (currentScore > best) {
             localStorage.setItem('snakeBestScore', currentScore.toString());
             updateBestScoreUI();
-            saveUserData();
+            saveLocalUserData();
             updateLeaderboard();
             return true;
         }
@@ -1005,7 +1090,7 @@
     function saveQuests() {
         const data = { date: new Date().toDateString(), quests, totalCompleted: totalQuestsCompleted };
         localStorage.setItem('questsData', JSON.stringify(data));
-        saveUserData();
+        saveLocalUserData();
     }
 
     function updateQuestProgress(type, amount = 1) {
@@ -1033,7 +1118,7 @@
             saveQuests();
             renderQuests();
             checkAchievements();
-            saveUserData();
+            saveLocalUserData();
         }
     }
 
@@ -1044,7 +1129,7 @@
         q.claimed = true;
         saveQuests();
         renderQuests();
-        saveUserData();
+        saveLocalUserData();
     }
 
     function renderQuests() {
@@ -1083,7 +1168,7 @@
     }
     function saveAchievements() { 
         localStorage.setItem('achievementsData', JSON.stringify(achievements));
-        saveUserData();
+        saveLocalUserData();
     }
     function checkAchievements() {
         let changed = false;
@@ -1100,7 +1185,7 @@
                 setTimeout(() => notif.remove(), 4000);
             }
         });
-        if (changed) { saveAchievements(); renderAchievements(); saveUserData(); }
+        if (changed) { saveAchievements(); renderAchievements(); saveLocalUserData(); }
     }
     function renderAchievements() {
         if (!achievementList) return;
@@ -1240,7 +1325,7 @@
                 updateCoinsUI();
                 updateCaseUI();
                 renderSkinInventory();
-                saveUserData();
+                saveLocalUserData();
                 return;
             }
             clearInterval(timer);
@@ -1279,7 +1364,7 @@
                     saveData();
                     renderSkinInventory();
                     draw();
-                    saveUserData();
+                    saveLocalUserData();
                 }
             });
         });
@@ -1334,15 +1419,17 @@
         }
         betSkin = betSkinSelect.value || null;
         pvpRoomInfo.style.display = 'block';
-        pvpRoomInfo.innerHTML = '<span class="label">🤖 Режим:</span> Против бота<br><span class="label">👤 Вы:</span> ' + (currentUser.displayName || currentUser.email) + '<br><span class="label">💰 Ставка:</span> ' + (betCoins > 0 ? betCoins + ' 🪙' : 'Нет') + (betSkin ? ' 🎨 ' + getSkinData(betSkin).name : '');
-        pvpSnake1 = [[10,10],[10,11],[10,12]];
-        pvpSnake2 = [[10,10],[10,11],[10,12]];
+        pvpRoomInfo.innerHTML = '<span class="label">🤖 Режим:</span> Против бота<br><span class="label">👤 Вы:</span> ' + (currentUser.username || 'Игрок') + '<br><span class="label">💰 Ставка:</span> ' + (betCoins > 0 ? betCoins + ' 🪙' : 'Нет') + (betSkin ? ' 🎨 ' + getSkinData(betSkin).name : '');
+        
+        // Разводим змейки для бота
+        pvpSnake1 = [[4, 10], [4, 11], [4, 12]];
+        pvpSnake2 = [[15, 10], [15, 11], [15, 12]];
         pvpDir1 = 'up';
         pvpDir2 = 'up';
         pvpGameOver = false;
         pvpWinner = null;
-        pvpFood = [5,5];
-        pvpCoin = [15,15];
+        pvpFood = [10, 10];
+        pvpCoin = [5, 15];
         pvpBotBtn.style.display = 'none';
         pvpRealBtn.style.display = 'none';
         pvpFindBtn.style.display = 'none';
@@ -1375,6 +1462,7 @@
         return playersRef;
     }
 
+    // ===================== ИСПРАВЛЕННАЯ ФУНКЦИЯ PVP ПРОТИВ ИГРОКА =====================
     function startRealPvpSearch() {
         if (!currentUser) {
             alert('⚠️ Сначала войдите в аккаунт!');
@@ -1397,7 +1485,7 @@
         
         const searchRef = rtdb.ref('pvp_players/' + currentUser.uid);
         searchRef.update({
-            username: currentUser.displayName || currentUser.email || currentUser.uid,
+            username: currentUser.username || 'Игрок',
             status: 'searching',
             timestamp: Date.now(),
             betCoins: parseInt(betCoinsInput.value) || 0,
@@ -1410,7 +1498,6 @@
             const players = snapshot.val();
             if (!players || !pvpSearching) return;
             
-            // Ищем другого игрока в статусе searching
             const opponentId = Object.keys(players).find(id => 
                 id !== currentUser.uid && players[id].status === 'searching'
             );
@@ -1419,7 +1506,6 @@
                 pvpSearching = false;
                 const opponentData = players[opponentId];
                 
-                // Создаём комнату
                 const roomId = 'pvp_room_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
                 const roomRef = rtdb.ref('pvp_rooms/' + roomId);
                 
@@ -1436,15 +1522,20 @@
                 betCoins = totalBetCoins;
                 betSkin = myBetSkin || oppBetSkin;
                 
-                // Определяем кто игрок 1, а кто игрок 2
+                // РАЗВОДИМ ЗМЕЕК В РАЗНЫЕ СТОРОНЫ
+                // Игрок 1 - слева вверху (колонка 4)
+                // Игрок 2 - справа внизу (колонка 15)
+                const snake1 = [[4, 10], [4, 11], [4, 12]];
+                const snake2 = [[15, 10], [15, 11], [15, 12]];
+                
                 const isPlayer1 = currentUser.uid < opponentId;
                 pvpPlayerNumber = isPlayer1 ? 1 : 2;
                 
                 const player1Id = isPlayer1 ? currentUser.uid : opponentId;
-                const player1Name = isPlayer1 ? (currentUser.displayName || currentUser.email || currentUser.uid) : (opponentData.username || 'Игрок');
+                const player1Name = isPlayer1 ? (currentUser.username || 'Игрок') : (opponentData.username || 'Игрок');
                 const player1Avatar = isPlayer1 ? (avatarData || null) : (opponentData.avatar || null);
                 const player2Id = isPlayer1 ? opponentId : currentUser.uid;
-                const player2Name = isPlayer1 ? (opponentData.username || 'Игрок') : (currentUser.displayName || currentUser.email || currentUser.uid);
+                const player2Name = isPlayer1 ? (opponentData.username || 'Игрок') : (currentUser.username || 'Игрок');
                 const player2Avatar = isPlayer1 ? (opponentData.avatar || null) : (avatarData || null);
                 
                 roomRef.set({
@@ -1458,12 +1549,12 @@
                     startTime: Date.now(),
                     betCoins: totalBetCoins,
                     betSkin: betSkin || '',
-                    snake1: [[10,10],[10,11],[10,12]],
-                    snake2: [[10,10],[10,11],[10,12]],
+                    snake1: snake1,
+                    snake2: snake2,
                     dir1: 'up',
                     dir2: 'up',
-                    food: [5,5],
-                    coin: [15,15],
+                    food: [10, 10],
+                    coin: [5, 15],
                     countdown: 5,
                     timestamp: Date.now()
                 });
@@ -1481,13 +1572,27 @@
                 pvpRoomRef = roomRef;
                 pvpRoomListener = roomRef;
                 
+                // Инициализируем локальные змейки в зависимости от того, кто вы
+                if (isPlayer1) {
+                    pvpSnake1 = snake1.slice();
+                    pvpSnake2 = snake2.slice();
+                    pvpDir1 = 'up';
+                    pvpDir2 = 'up';
+                } else {
+                    pvpSnake1 = snake2.slice();
+                    pvpSnake2 = snake1.slice();
+                    pvpDir1 = 'up';
+                    pvpDir2 = 'up';
+                }
+                pvpFood = [10, 10];
+                pvpCoin = [5, 15];
+                
                 pvpRoomInfo.style.display = 'block';
                 pvpRoomInfo.innerHTML = '<span class="label">🏠 Комната:</span> ' + roomId + 
-                    '<br><span class="label">👤 Вы:</span> ' + (currentUser.displayName || currentUser.email) + 
+                    '<br><span class="label">👤 Вы:</span> ' + (currentUser.username || 'Игрок') + 
                     '<br><span class="label">👤 Соперник:</span> ' + (opponentData.username || 'Игрок') + 
                     '<br><span class="label">💰 Общая ставка:</span> ' + totalBetCoins + ' 🪙 ' + (betSkin ? '🎨 ' + getSkinData(betSkin).name : '');
                 
-                // Слушаем изменения комнаты
                 roomRef.on('value', (snap) => {
                     const data = snap.val();
                     if (data) {
@@ -1538,15 +1643,12 @@
     function updateRealPvpGame(data) {
         if (!data || pvpGameOver) return;
         
-        // Определяем свои и чужие данные
         const isPlayer1 = data.player1 === currentUser.uid;
         const mySnake = isPlayer1 ? data.snake1 : data.snake2;
         const myDir = isPlayer1 ? data.dir1 : data.dir2;
         const opponentSnake = isPlayer1 ? data.snake2 : data.snake1;
         const opponentDir = isPlayer1 ? data.dir2 : data.dir1;
-        const opponentName = isPlayer1 ? data.player2Name : data.player1Name;
         
-        // Обновляем свою змейку
         if (mySnake && Array.isArray(mySnake)) {
             if (isPlayer1) {
                 pvpSnake1 = mySnake.slice();
@@ -1557,7 +1659,6 @@
             }
         }
         
-        // Обновляем змейку соперника
         if (opponentSnake && Array.isArray(opponentSnake)) {
             if (isPlayer1) {
                 pvpSnake2 = opponentSnake.slice();
@@ -1568,11 +1669,9 @@
             }
         }
         
-        // Обновляем еду и монету
         if (data.food) pvpFood = data.food;
         if (data.coin) pvpCoin = data.coin;
         
-        // Проверка на победу
         if (data.winner) {
             pvpGameOver = true;
             pvpWinner = data.winner === currentUser.uid ? 'Вы' : 'Соперник';
@@ -1653,7 +1752,7 @@
         } else {
             alert('😢 Вы проиграли! Ставка потеряна.');
         }
-        saveUserData();
+        saveLocalUserData();
         updateLeaderboard();
         updateCoinsUI();
         renderSkinInventory();
@@ -1697,7 +1796,7 @@
             ctx.beginPath(); ctx.moveTo(0,i*CELL_SIZE); ctx.lineTo(canvas.width,i*CELL_SIZE); ctx.stroke();
         }
         if (isPvpMode && pvpOpponent) {
-            // Змейка игрока 1 (зелёная - вы или соперник)
+            // Змейка игрока 1 (зелёная)
             for (let i=0; i<pvpSnake1.length; i++) {
                 let x=pvpSnake1[i][0]*CELL_SIZE, y=pvpSnake1[i][1]*CELL_SIZE;
                 ctx.fillStyle = i===0 ? '#2ecc71' : '#1a8a4a';
@@ -1706,7 +1805,7 @@
                 ctx.lineWidth=1.2;
                 ctx.strokeRect(x+1, y+1, CELL_SIZE-2, CELL_SIZE-2);
             }
-            // Змейка игрока 2 (красная - вы или соперник)
+            // Змейка игрока 2 (красная)
             for (let i=0; i<pvpSnake2.length; i++) {
                 let x=pvpSnake2[i][0]*CELL_SIZE, y=pvpSnake2[i][1]*CELL_SIZE;
                 ctx.fillStyle = i===0 ? '#e74c3c' : '#8a1a1a';
@@ -1893,14 +1992,12 @@
     function updatePvp() {
         if (pvpGameOver) return;
         
-        // Движение игрока 1
         let head1 = [pvpSnake1[0][0], pvpSnake1[0][1]];
         if (pvpDir1==='right') head1[0]++;
         else if (pvpDir1==='left') head1[0]--;
         else if (pvpDir1==='up') head1[1]--;
         else if (pvpDir1==='down') head1[1]++;
         
-        // Движение игрока 2 (бота или реального игрока)
         if (pvpOpponent && pvpOpponent.isBot && pvpFood) {
             if (pvpFood[0] > pvpSnake2[0][0] && pvpDir2 !== 'left') pvpDir2 = 'right';
             else if (pvpFood[0] < pvpSnake2[0][0] && pvpDir2 !== 'right') pvpDir2 = 'left';
@@ -1914,7 +2011,6 @@
         else if (pvpDir2==='up') head2[1]--;
         else if (pvpDir2==='down') head2[1]++;
         
-        // Проверка столкновений
         if (head1[0] < 0 || head1[0] >= GRID_SIZE || head1[1] < 0 || head1[1] >= GRID_SIZE) {
             pvpGameOver = true;
             pvpWinner = 'Игрок 2';
@@ -1928,7 +2024,6 @@
             return;
         }
         
-        // Столкновение с собой и соперником для игрока 1
         for (let i=1; i<pvpSnake1.length; i++) {
             if (pvpSnake1[i][0]===head1[0] && pvpSnake1[i][1]===head1[1]) {
                 pvpGameOver = true;
@@ -1946,7 +2041,6 @@
             }
         }
         
-        // Столкновение с собой и соперником для игрока 2
         for (let i=1; i<pvpSnake2.length; i++) {
             if (pvpSnake2[i][0]===head2[0] && pvpSnake2[i][1]===head2[1]) {
                 pvpGameOver = true;
@@ -1964,7 +2058,6 @@
             }
         }
         
-        // Еда
         let eatFood1 = pvpFood && head1[0]===pvpFood[0] && head1[1]===pvpFood[1];
         let eatFood2 = pvpFood && head2[0]===pvpFood[0] && head2[1]===pvpFood[1];
         let eatCoin1 = pvpCoin && head1[0]===pvpCoin[0] && head1[1]===pvpCoin[1];
@@ -2008,7 +2101,6 @@
             pvpCoin = null;
         }
         
-        // Отправляем ход в Firebase для реального PvP
         if (isRealPvp && currentPvpRoom) {
             sendRealPvpMove();
         }
@@ -2191,7 +2283,7 @@
                 saveData();
                 renderSkinInventory();
                 draw();
-                saveUserData();
+                saveLocalUserData();
                 this.classList.add('secret-glow');
                 setTimeout(() => this.classList.remove('secret-glow'), 1500);
                 const notif = document.createElement('div');
@@ -2263,7 +2355,7 @@
                 saveData();
                 renderSkinInventory();
                 draw();
-                saveUserData();
+                saveLocalUserData();
                 promoResult.innerHTML = '<span style="color:#2ecc71;">🌟 Скин "' + getSkinData(skinKey).name + '" получен!</span>';
             } else {
                 addCoins(10);
@@ -2304,7 +2396,7 @@
     function toggleGodMode() {
         godMode = !godMode;
         updateGodModeUI();
-        saveUserData();
+        saveLocalUserData();
         draw();
         const notif = document.createElement('div');
         notif.textContent = godMode ? '🛡️ GOD MODE ВКЛЮЧЕН!' : '🛡️ GOD MODE ВЫКЛЮЧЕН';
@@ -2340,7 +2432,7 @@
         if (!isNaN(val) && val >= 0) {
             coins = val;
             updateCoinsUI();
-            saveUserData();
+            saveLocalUserData();
             devMessage.innerHTML = '<span style="color:#2ecc71;">✅ Монеты установлены: ' + coins + '</span>';
         } else {
             devMessage.innerHTML = '<span style="color:#e74c3c;">Введите корректное число</span>';
@@ -2352,7 +2444,7 @@
         if (!isNaN(val) && val > 0) {
             coins += val;
             updateCoinsUI();
-            saveUserData();
+            saveLocalUserData();
             devMessage.innerHTML = '<span style="color:#2ecc71;">✅ Добавлено ' + val + ' монет. Всего: ' + coins + '</span>';
         } else {
             devMessage.innerHTML = '<span style="color:#e74c3c;">Введите корректное число</span>';
@@ -2364,7 +2456,7 @@
         if (!isNaN(val) && val >= 0) {
             localStorage.setItem('snakeBestScore', val.toString());
             updateBestScoreUI();
-            saveUserData();
+            saveLocalUserData();
             updateLeaderboard();
             devMessage.innerHTML = '<span style="color:#2ecc71;">✅ Рекорд установлен: ' + val + '</span>';
         } else {
@@ -2376,7 +2468,7 @@
         const val = parseInt(devWinsInput.value);
         if (!isNaN(val) && val >= 0) {
             wins = val;
-            saveUserData();
+            saveLocalUserData();
             updateLeaderboard();
             devMessage.innerHTML = '<span style="color:#2ecc71;">✅ Победы установлены: ' + wins + '</span>';
         } else {
@@ -2389,7 +2481,7 @@
         if (!isNaN(val) && val >= 0) {
             cases = val;
             updateCaseUI();
-            saveUserData();
+            saveLocalUserData();
             devMessage.innerHTML = '<span style="color:#2ecc71;">✅ Кейсы установлены: ' + cases + '</span>';
         } else {
             devMessage.innerHTML = '<span style="color:#e74c3c;">Введите корректное число</span>';
@@ -2404,7 +2496,7 @@
             saveData();
             renderSkinInventory();
             draw();
-            saveUserData();
+            saveLocalUserData();
             devMessage.innerHTML = '<span style="color:#2ecc71;">✅ Скин "' + getSkinData(skinKey).name + '" выдан!</span>';
         } else {
             devMessage.innerHTML = '<span style="color:#f39c12;">Скин уже есть у пользователя</span>';
@@ -2425,7 +2517,7 @@
                 updateBestScoreUI();
                 renderSkinInventory();
                 draw();
-                saveUserData();
+                saveLocalUserData();
                 updateLeaderboard();
                 devMessage.innerHTML = '<span style="color:#e74c3c;">🗑️ Прогресс сброшен</span>';
             }
@@ -2507,155 +2599,11 @@
         setPause(false);
     });
 
-    // ===== ПРОМОКОДЫ FIREBASE =====
-    function getPlayerId() {
-        let id = localStorage.getItem('playerId');
-        if (!id) {
-            id = 'player_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-            localStorage.setItem('playerId', id);
-        }
-        return id;
-    }
-    
-    async function activatePromoFirebase(code) {
-        try {
-            const docRef = db.collection('promocodes').doc(code);
-            const doc = await docRef.get();
-            if (!doc.exists) {
-                promoResult.innerHTML = '<span style="color:#e74c3c;">❌ Код не найден</span>';
-                return false;
-            }
-            const data = doc.data();
-            if (data.used) {
-                promoResult.innerHTML = '<span style="color:#f39c12;">⚠️ Код уже использован</span>';
-                return false;
-            }
-            if (data.expires && data.expires.toDate() < new Date()) {
-                promoResult.innerHTML = '<span style="color:#e74c3c;">⏰ Срок действия истёк</span>';
-                return false;
-            }
-            const playerId = getPlayerId();
-            const usedBy = data.usedBy || [];
-            if (usedBy.includes(playerId)) {
-                promoResult.innerHTML = '<span style="color:#f39c12;">⚠️ Вы уже использовали этот код</span>';
-                return false;
-            }
-            if (data.reward_type === 'coins') {
-                addCoins(data.reward_amount || 100);
-                promoResult.innerHTML = '<span style="color:#2ecc71;">🎉 +' + (data.reward_amount || 100) + ' 🪙</span>';
-            } else if (data.reward_type === 'skin') {
-                const skinKey = data.reward_skin;
-                if (!ownedSkins.includes(skinKey)) {
-                    ownedSkins.push(skinKey);
-                    activeSkin = skinKey;
-                    saveData();
-                    renderSkinInventory();
-                    draw();
-                    promoResult.innerHTML = '<span style="color:#2ecc71;">🌟 Скин "' + getSkinData(skinKey).name + '" получен!</span>';
-                } else {
-                    addCoins(10);
-                    promoResult.innerHTML = '<span style="color:#f39c12;">Скин уже есть, +10 🪙</span>';
-                }
-            }
-            await docRef.update({
-                used: true,
-                usedBy: firebase.firestore.FieldValue.arrayUnion(playerId),
-                usedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            updateCoinsUI();
-            return true;
-        } catch (error) {
-            console.error('Ошибка активации:', error);
-            promoResult.innerHTML = '<span style="color:#e74c3c;">❌ Ошибка сервера</span>';
-            return false;
-        }
-    }
-    
-    async function createPromoFirebase() {
-        const code = newPromoCode.value.trim().toUpperCase();
-        if (!code) {
-            devMessage.innerHTML = '<span style="color:#e74c3c;">Введите код!</span>';
-            return;
-        }
-        try {
-            const docRef = db.collection('promocodes').doc(code);
-            const doc = await docRef.get();
-            if (doc.exists) {
-                devMessage.innerHTML = '<span style="color:#e74c3c;">Такой код уже существует!</span>';
-                return;
-            }
-            const type = promoRewardType.value;
-            let data = { used: false, created_by: 'admin', created_at: firebase.firestore.FieldValue.serverTimestamp() };
-            if (type === 'coins') {
-                data.reward_type = 'coins';
-                data.reward_amount = parseInt(promoCoinValue.value) || 100;
-            } else {
-                const skinKey = promoSkinKey.value;
-                data.reward_type = 'skin';
-                data.reward_skin = skinKey;
-            }
-            const expiryDate = new Date();
-            expiryDate.setDate(expiryDate.getDate() + 7);
-            data.expires = firebase.firestore.Timestamp.fromDate(expiryDate);
-            await docRef.set(data);
-            devMessage.innerHTML = '<span style="color:#2ecc71;">✅ Промокод "' + code + '" создан!</span>';
-            newPromoCode.value = '';
-            renderExistingPromosFirebase();
-        } catch (error) {
-            devMessage.innerHTML = '<span style="color:#e74c3c;">❌ Ошибка: ' + error.message + '</span>';
-        }
-    }
-    
-    async function renderExistingPromosFirebase() {
-        try {
-            const snapshot = await db.collection('promocodes').where('used', '==', false).orderBy('created_at', 'desc').limit(20).get();
-            if (snapshot.empty) {
-                existingPromos.innerHTML = '<span style="color:#555;">Нет активных промокодов</span>';
-                return;
-            }
-            let html = '';
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                const rewardStr = data.reward_type === 'coins' ? (data.reward_amount || 0) + ' 🪙' : 'Скин: ' + (data.reward_skin || '?');
-                html += '<div class="promo-entry"><span><span class="promo-code">' + doc.id + '</span> → <span class="promo-reward">' + rewardStr + '</span></span><button class="delete-promo" data-code="' + doc.id + '">🗑️</button></div>';
-            });
-            existingPromos.innerHTML = html;
-            document.querySelectorAll('.delete-promo').forEach(btn => {
-                btn.addEventListener('click', async function() {
-                    const code = this.getAttribute('data-code');
-                    if (confirm('Удалить промокод "' + code + '"?')) {
-                        try {
-                            await db.collection('promocodes').doc(code).delete();
-                            renderExistingPromosFirebase();
-                            devMessage.innerHTML = '<span style="color:#f39c12;">Промокод "' + code + '" удалён</span>';
-                        } catch (error) {
-                            devMessage.innerHTML = '<span style="color:#e74c3c;">Ошибка удаления: ' + error.message + '</span>';
-                        }
-                    }
-                });
-            });
-        } catch (error) {
-            console.error('Ошибка загрузки промокодов:', error);
-            existingPromos.innerHTML = '<span style="color:#e74c3c;">Ошибка загрузки</span>';
-        }
-    }
-
-    promoRewardType.addEventListener('change', () => {
-        if (promoRewardType.value === 'coins') { promoCoinAmount.style.display = 'block'; promoSkinSelect.style.display = 'none'; }
-        else { promoCoinAmount.style.display = 'none'; promoSkinSelect.style.display = 'block'; }
-    });
-
-    activatePromoBtn.addEventListener('click', () => {
-        const code = promoInput.value.trim().toUpperCase();
-        if (code) activatePromoFirebase(code);
-        promoInput.value = '';
-    });
-    createPromoBtn.addEventListener('click', createPromoFirebase);
-
     // ===== ИНИЦИАЛИЗАЦИЯ =====
     function initAll() {
         loadBans();
         loadData();
+        loadUserSession();
         updateBestScoreUI();
         updateCoinsUI();
         updateCaseUI();
@@ -2678,7 +2626,7 @@
         renderSkinInventory();
         initJoystick();
         populateSkinSelect();
-        renderExistingPromosFirebase();
+        renderExistingPromos();
         promoRewardType.dispatchEvent(new Event('change'));
         updateGodModeUI();
         updateLeaderboard();
@@ -2800,21 +2748,15 @@
 
     startOverlay.addEventListener('click', (e) => e.stopPropagation());
 
-    window.addEventListener('online', () => {
-        if (currentUser) updateOnlineStatus(true);
+    activatePromoBtn.addEventListener('click', () => {
+        const code = promoInput.value.trim().toUpperCase();
+        if (code) activatePromoLocal(code);
+        promoInput.value = '';
     });
-    window.addEventListener('offline', () => {
-        if (isRealPvp) {
-            alert('⚠️ Интернет пропал! PvP режим прерван.');
-            isRealPvp = false;
-            if (currentPvpRoom) {
-                rtdb.ref('pvp_rooms/' + currentPvpRoom).off();
-                currentPvpRoom = null;
-                pvpRoomRef = null;
-                pvpRoomListener = null;
-            }
-            restartWithMenu();
-        }
+    createPromoBtn.addEventListener('click', createPromoLocal);
+    promoRewardType.addEventListener('change', () => {
+        if (promoRewardType.value === 'coins') { promoCoinAmount.style.display = 'block'; promoSkinSelect.style.display = 'none'; }
+        else { promoCoinAmount.style.display = 'none'; promoSkinSelect.style.display = 'block'; }
     });
 
     initAll();
