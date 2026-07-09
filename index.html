@@ -3,31 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Змейка — скины, кейсы, задания</title>
+    <title>Змейка — скины, кейсы, задания, PvP</title>
     
     <!-- ===== FIREBASE SDK ===== -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     
     <script>
-        // Ваш Firebase конфиг
         const firebaseConfig = {
             apiKey: "AIzaSyDHevWAesdZuHsF0vq3ENkVRNMllASkNrA",
             authDomain: "snakepromo-c6f57.firebaseapp.com",
             projectId: "snakepromo-c6f57",
             storageBucket: "snakepromo-c6f57.firebasestorage.app",
             messagingSenderId: "953301622443",
-            appId: "1:953301622443:web:9e4e7169af16d3885ee1ee"
+            appId: "1:953301622443:web:9e4e7169af16d3885ee1ee",
+            databaseURL: "https://snakepromo-c6f57-default-rtdb.firebaseio.com"
         };
         
-        // Инициализация Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const auth = firebase.auth();
+        const rtdb = firebase.database();
         
-        // Включаем оффлайн-режим (кеширование)
         db.enablePersistence().catch(err => console.warn('Offline mode:', err));
-        
         console.log('🔥 Firebase подключён!');
     </script>
     
@@ -49,6 +49,11 @@
         .btn.gold { background: #b8860b; color: #fff; }
         .btn.green { background: #27ae60; }
         .btn.dev { background: #333; font-size: 9px; padding: 3px 6px; opacity: 0.4; position: absolute; bottom: 8px; left: 8px; z-index: 40; letter-spacing: 0.5px; }
+        .btn.god-mode { background: #f1c40f; color: #000; font-weight: bold; }
+        .btn.pvp { background: #8e44ad; color: #fff; font-weight: bold; }
+        .btn.pvp-bot { background: #2ecc71; color: #000; font-weight: bold; }
+        .btn.pvp-real { background: #e67e22; color: #fff; font-weight: bold; }
+        .btn.leaderboard { background: #f39c12; color: #000; font-weight: bold; }
         .promo-input { background: #1a1a2e; border: 1px solid #555; color: white; padding: 6px 10px; border-radius: 20px; font-family: monospace; width: 110px; text-align: center; outline: none; }
         .promo-input:focus { border-color: #f9ca24; }
         .dpad { display: flex; flex-direction: column; align-items: center; margin-top: 8px; }
@@ -58,7 +63,7 @@
         .empty { background: transparent; box-shadow: none; cursor: default; pointer-events: none; }
         .hint { text-align: center; margin-top: 6px; color: #777; font-size: 10px; background: #151520; padding: 3px 8px; border-radius: 20px; display: inline-block; width: auto; }
         .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,26,0.94); backdrop-filter: blur(4px); border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 30; transition: all 0.2s ease; }
-        .overlay-card { background: #1a1a2e; padding: 20px 16px; border-radius: 24px; text-align: center; border: 2px solid #e94560; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-width: 300px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        .overlay-card { background: #1a1a2e; padding: 20px 16px; border-radius: 24px; text-align: center; border: 2px solid #e94560; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-width: 340px; width: 90%; max-height: 80vh; overflow-y: auto; }
         .overlay-card h2 { color: #f9ca24; font-size: 22px; margin: 0 0 8px; letter-spacing: 1px; }
         .overlay-card p { color: #ddd; font-size: 14px; margin: 8px 0; }
         .hide-overlay { display: none !important; }
@@ -68,16 +73,18 @@
         .joystick-zone { position: relative; width: 120px; height: 120px; margin: 10px auto; display: none; background: rgba(255,255,255,0.03); border-radius: 50%; border: 2px dashed #444; }
         .joystick-knob { position: absolute; width: 50px; height: 50px; background: #e94560; border-radius: 50%; left: 35px; top: 35px; transition: 0.05s linear; box-shadow: 0 4px 10px rgba(0,0,0,0.6); pointer-events: none; }
         .joystick-zone.active .joystick-knob { background: #f9ca24; box-shadow: 0 0 15px gold; }
-        .skin-item { display: inline-block; width: 48px; height: 48px; border-radius: 8px; margin: 4px; border: 2px solid #555; cursor: pointer; position: relative; transition: 0.1s; background: #222; overflow: hidden; }
+        
+        .skin-item { display: inline-flex; flex-direction: column; align-items: center; width: 56px; margin: 4px; border: 2px solid #555; cursor: pointer; position: relative; transition: 0.1s; background: #222; border-radius: 8px; padding: 4px; }
+        .skin-item .skin-preview { width: 44px; height: 44px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .skin-item .skin-name { font-size: 8px; color: #aaa; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50px; }
         .skin-item.selected { border: 3px solid #f9ca24; box-shadow: 0 0 10px gold; }
         .skin-item.locked { opacity: 0.4; cursor: not-allowed; }
-        .skin-item .rarity-dot { position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; border: 1px solid #000; }
+        .skin-item .rarity-dot { position: absolute; bottom: 2px; right: 2px; width: 8px; height: 8px; border-radius: 50%; border: 1px solid #000; }
         .rarity-rare { background: #5dade2; }
         .rarity-superrare { background: #1b3a5c; }
         .rarity-legendary { background: #f1c40f; }
         .rarity-secret { background: #ff6b6b; box-shadow: 0 0 10px #ff6b6b; }
-        .skin-item .mini-snake { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 28px; animation: spinSnake 3s linear infinite; }
-        @keyframes spinSnake { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
         .case-shop { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 6px 0; }
         .speed-slider-wrapper { display: flex; flex-direction: column; align-items: center; margin: 6px 0; }
         .speed-slider-wrapper input[type="range"] { width: 100%; max-width: 200px; background: #2c3e66; height: 4px; border-radius: 4px; -webkit-appearance: none; appearance: none; outline: none; }
@@ -105,12 +112,48 @@
         .achievement .ach-status { color: #aaa; font-size: 11px; }
         .achievement .ach-reward { color: #f1c40f; font-size: 12px; }
         .case-arrow { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 24px; color: #f9ca24; text-shadow: 0 0 10px gold; z-index: 5; pointer-events: none; }
+        
+        .god-mode-indicator { position: absolute; top: 10px; right: 10px; background: rgba(241, 196, 15, 0.9); color: #000; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; z-index: 15; display: none; }
+        .auth-input { background: #1a1a2e; border: 1px solid #555; color: white; padding: 8px 12px; border-radius: 20px; font-family: monospace; width: 100%; max-width: 200px; text-align: center; outline: none; margin: 4px 0; }
+        .auth-input:focus { border-color: #f9ca24; }
+        
+        .ban-item { display: flex; justify-content: space-between; align-items: center; background: #2a1a1a; padding: 4px 8px; margin: 2px 0; border-radius: 8px; border-left: 3px solid #e94560; }
+        .ban-item .ban-id { color: #e94560; font-size: 11px; }
+        .ban-item .ban-unban { background: #27ae60; border: none; color: white; border-radius: 12px; padding: 1px 8px; font-size: 10px; cursor: pointer; }
+        
+        .room-info { background: #1a1a2e; padding: 8px; border-radius: 8px; margin: 5px 0; font-size: 12px; color: #ddd; border: 1px solid #f9ca24; }
+        .room-info .label { color: #f9ca24; }
+        
+        .bet-item { display: flex; justify-content: space-between; align-items: center; background: #1a2a1a; padding: 6px 10px; margin: 4px 0; border-radius: 8px; border-left: 3px solid #2ecc71; }
+        .bet-item .bet-label { color: #f9ca24; font-size: 11px; }
+        .bet-item .bet-value { color: #fff; font-size: 13px; font-weight: bold; }
+        .bet-item .bet-select { background: #2c3e66; color: white; border: none; border-radius: 12px; padding: 3px 8px; font-size: 11px; cursor: pointer; }
+        
+        .pvp-status-online { color: #2ecc71; }
+        .pvp-status-offline { color: #e74c3c; }
+        .pvp-status-searching { color: #f9ca24; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
+        .online-player { background: #1a2a1a; padding: 4px 10px; border-radius: 12px; margin: 2px 0; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #ddd; }
+        .online-player .name { color: #2ecc71; }
+        .online-player .status { color: #888; font-size: 10px; }
+        
+        .leaderboard-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; margin: 4px 0; border-radius: 10px; background: #1a1a2e; border-left: 3px solid #f9ca24; }
+        .leaderboard-item .rank { color: #f9ca24; font-weight: bold; font-size: 14px; width: 30px; }
+        .leaderboard-item .name { color: #ddd; font-size: 13px; flex: 1; }
+        .leaderboard-item .score { color: #e94560; font-size: 13px; font-weight: bold; }
+        .leaderboard-item .wins { color: #2ecc71; font-size: 13px; font-weight: bold; margin-left: 10px; }
+        .leaderboard-item.top1 { border-left-color: #ffd700; background: #1a1a1a; }
+        .leaderboard-item.top2 { border-left-color: #c0c0c0; background: #1a1a1a; }
+        .leaderboard-item.top3 { border-left-color: #cd7f32; background: #1a1a1a; }
+        .leaderboard-item .crown { font-size: 18px; margin-right: 5px; }
     </style>
 </head>
 <body>
 <div class="container" id="mainContainer">
     <canvas id="game" width="300" height="300"></canvas>
     <button id="devBtn" class="btn dev" title="dev">⚙️ dev</button>
+    <div id="godModeIndicator" class="god-mode-indicator">🛡️ GOD MODE</div>
 
     <div class="info">
         <div class="control-panel">
@@ -122,6 +165,8 @@
             <button id="questBtn" class="btn green">📋</button>
             <button id="settingsBtn" class="btn">⚙️</button>
             <button id="restart" class="btn red">🔄</button>
+            <button id="pvpBtn" class="btn pvp">⚔️ PvP</button>
+            <button id="leaderboardBtn" class="btn leaderboard">🏆 Лидеры</button>
         </div>
     </div>
 
@@ -134,14 +179,93 @@
     <div class="hint" id="hintText">▲ ▼ ◀ ▶ | ⏸ пауза | 🎁 магазин | 📋 задания</div>
     <div id="pauseIndicator" class="pause-marker hide-pause">⏸ ПАУЗА</div>
 
-    <!-- Стартовое меню -->
+    <!-- СТАРТОВОЕ МЕНЮ С АВТОРИЗАЦИЕЙ -->
     <div id="startOverlay" class="overlay">
         <div class="overlay-card">
             <div style="font-size:42px;">🐍</div>
-            <h2>Ты готов?</h2>
-            <p>🎮 Змейка ждёт</p>
+            <h2>Змейка</h2>
+            <div id="authSection">
+                <div id="loginForm">
+                    <p style="color:#aaa;font-size:12px;">Вход в аккаунт</p>
+                    <input type="text" id="loginUsername" class="auth-input" placeholder="Имя пользователя">
+                    <input type="password" id="loginPassword" class="auth-input" placeholder="Пароль">
+                    <div class="btn-row">
+                        <button id="loginBtn" class="btn green">Войти</button>
+                        <button id="registerBtn" class="btn gold">Регистрация</button>
+                    </div>
+                </div>
+                <div id="userInfo" style="display:none;">
+                    <p style="color:#2ecc71;">✅ Вы вошли как <b id="userNameDisplay"></b></p>
+                    <p style="color:#888;font-size:10px;">ID: <span id="userIdDisplay"></span></p>
+                    <p style="font-size:10px;">Статус: <span id="userStatusDisplay" class="pvp-status-online">🟢 Онлайн</span></p>
+                    <button id="logoutBtn" class="btn red" style="font-size:11px;">Выйти</button>
+                </div>
+            </div>
+            <hr style="border-color:#333;margin:10px 0;">
             <button id="startGameBtn" class="btn red" style="font-size:18px;padding:10px 24px;">▶ СТАРТ</button>
             <div style="margin-top:10px;font-size:10px;color:#aaa;">клавиши ↑ ↓ ← →</div>
+        </div>
+    </div>
+
+    <!-- ТАБЛИЦА ЛИДЕРОВ -->
+    <div id="leaderboardOverlay" class="overlay hide-overlay">
+        <div class="overlay-card" style="max-width:340px;">
+            <h2>🏆 Таблица лидеров</h2>
+            <div style="display:flex;justify-content:space-between;padding:5px 10px;color:#888;font-size:11px;border-bottom:1px solid #333;margin-bottom:8px;">
+                <span>Игрок</span>
+                <span>🏆 Счёт</span>
+                <span>⚔️ Победы</span>
+            </div>
+            <div id="leaderboardList" style="max-height:300px;overflow-y:auto;"></div>
+            <button id="closeLeaderboardBtn" class="btn red" style="margin-top:10px;">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- PVP ОВЕРЛЕЙ -->
+    <div id="pvpOverlay" class="overlay hide-overlay">
+        <div class="overlay-card">
+            <h2>⚔️ PvP Режим</h2>
+            
+            <div style="background:#2a1a3a;padding:10px;border-radius:12px;margin:8px 0;">
+                <p style="color:#f9ca24;font-size:13px;">💰 Сделайте ставку!</p>
+                <p style="color:#ddd;font-size:11px;">Победитель забирает всё!</p>
+            </div>
+            
+            <div id="betSection" style="margin:10px 0;">
+                <div class="bet-item">
+                    <span class="bet-label">🪙 Монеты:</span>
+                    <span class="bet-value" id="betCoinsDisplay">0</span>
+                    <input type="number" id="betCoinsInput" class="promo-input" placeholder="Кол-во" value="10" min="1" style="width:80px;">
+                </div>
+                <div class="bet-item">
+                    <span class="bet-label">🎨 Скин:</span>
+                    <span class="bet-value" id="betSkinDisplay">Нет</span>
+                    <select id="betSkinSelect" class="bet-select"></select>
+                </div>
+            </div>
+            
+            <div id="onlinePlayers" style="margin:10px 0;max-height:100px;overflow-y:auto;background:#0a0a1a;border-radius:12px;padding:5px;">
+                <p style="color:#888;font-size:10px;">🟢 Игроки онлайн:</p>
+                <div id="playersList"></div>
+            </div>
+            
+            <div style="margin:10px 0;">
+                <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+                    <button id="pvpBotBtn" class="btn pvp-bot" style="padding:10px 20px;">🤖 Против бота</button>
+                    <button id="pvpRealBtn" class="btn pvp-real" style="padding:10px 20px;">👤 Против игрока</button>
+                </div>
+            </div>
+            
+            <div id="pvpStatus" style="color:#f9ca24;font-size:14px;min-height:30px;"></div>
+            <div id="pvpResult" style="min-height:40px;font-size:12px;color:#ddd;"></div>
+            <div id="pvpRoomInfo" style="display:none;" class="room-info"></div>
+            
+            <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:10px;">
+                <button id="pvpFindBtn" class="btn gold" style="display:none;">🔍 Найти соперника</button>
+                <button id="pvpCancelBtn" class="btn red" style="display:none;">❌ Отмена</button>
+            </div>
+            
+            <button id="pvpCloseBtn" class="btn red" style="margin-top:10px;">Закрыть</button>
         </div>
     </div>
 
@@ -186,6 +310,9 @@
     <div id="settingsOverlay" class="overlay hide-overlay">
         <div class="overlay-card" style="max-width:280px;">
             <h2>⚙️ Настройки</h2>
+            <p style="color:#ddd;font-size:12px;">👤 Аккаунт: <b id="settingsUserDisplay">Не авторизован</b></p>
+            <p style="color:#ddd;font-size:11px;word-break:break-all;">ID: <span id="settingsUserId">-</span></p>
+            <hr style="border-color:#333;margin:8px 0;">
             <p style="color:#ddd;">Скорость:</p>
             <div class="speed-slider-wrapper">
                 <input type="range" id="speedSlider" min="0" max="100" value="80">
@@ -197,6 +324,9 @@
                 <button class="btn control-mode-btn" data-mode="swipe">👆 Сенсор</button>
                 <button class="btn control-mode-btn" data-mode="joystick">🕹 Джойстик</button>
             </div>
+            <hr style="border-color:#333;margin:10px 0;">
+            <p style="color:#ddd;font-size:12px;">📢 Наш Telegram:</p>
+            <a href="https://t.me/zmeikaofflain" target="_blank" style="color:#f9ca24;text-decoration:none;font-weight:bold;">https://t.me/zmeikaofflain</a>
             <button id="closeSettingsBtn" class="btn red" style="margin-top:14px;">Закрыть</button>
         </div>
     </div>
@@ -205,7 +335,53 @@
     <div id="devOverlay" class="overlay hide-overlay">
         <div class="overlay-card" style="max-width:340px;">
             <h2>🔧 Dev-панель</h2>
-            <p style="color:#aaa;">Создание промокода</p>
+            
+            <div style="background:#2c3e66;padding:10px;border-radius:12px;margin:8px 0;">
+                <p style="color:#f9ca24;font-weight:bold;margin:0;">🛡️ Читы</p>
+                <button id="godModeToggle" class="btn god-mode" style="margin:5px 0;">🔴 Бессмертие: ВЫКЛ</button>
+            </div>
+            
+            <hr style="border-color:#333;margin:8px 0;">
+            <p style="color:#aaa;font-size:12px;">💰 Управление аккаунтом</p>
+            
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
+                <input type="number" id="devCoinsInput" class="promo-input" placeholder="Монеты" value="100" style="width:80px;">
+                <button id="devSetCoins" class="btn gold">Установить</button>
+                <button id="devAddCoins" class="btn green">+</button>
+            </div>
+            
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:6px 0;">
+                <input type="number" id="devBestScoreInput" class="promo-input" placeholder="Рекорд" value="0" style="width:80px;">
+                <button id="devSetBestScore" class="btn gold">Установить</button>
+            </div>
+            
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:6px 0;">
+                <input type="number" id="devWinsInput" class="promo-input" placeholder="Победы" value="0" style="width:80px;">
+                <button id="devSetWins" class="btn gold">Установить</button>
+            </div>
+            
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:6px 0;">
+                <input type="number" id="devCasesInput" class="promo-input" placeholder="Кейсы" value="0" style="width:80px;">
+                <button id="devSetCases" class="btn gold">Установить</button>
+            </div>
+            
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:6px 0;">
+                <select id="devSkinSelect" class="btn" style="background:#2c3e66;color:white;padding:5px;border-radius:20px;width:140px;"></select>
+                <button id="devGiveSkin" class="btn gold">Выдать скин</button>
+            </div>
+            
+            <button id="devResetProgress" class="btn red" style="margin:5px;">🗑️ Сбросить прогресс</button>
+            
+            <hr style="border-color:#333;margin:8px 0;">
+            <p style="color:#aaa;font-size:12px;">🚫 Бан игроков</p>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
+                <input type="text" id="devBanInput" class="promo-input" placeholder="ID игрока" style="width:120px;">
+                <button id="devBanBtn" class="btn red">Забанить</button>
+            </div>
+            <div id="banList" style="font-size:11px;max-height:80px;overflow-y:auto;text-align:left;margin:6px 0;"></div>
+            
+            <hr style="border-color:#333;margin:8px 0;">
+            <p style="color:#aaa;font-size:12px;">🎫 Создание промокода</p>
             <div style="margin:8px 0;"><input type="text" id="newPromoCode" class="promo-input" placeholder="Код" style="width:140px;"></div>
             <div style="margin:8px 0;">
                 <select id="promoRewardType" class="btn" style="background:#2c3e66;color:white;padding:5px;border-radius:20px;">
@@ -251,6 +427,13 @@
     const hintText = document.getElementById('hintText');
     const mainContainer = document.getElementById('mainContainer');
     const speedSlider = document.getElementById('speedSlider');
+    const godModeIndicator = document.getElementById('godModeIndicator');
+
+    // Лидерборд
+    const leaderboardBtn = document.getElementById('leaderboardBtn');
+    const leaderboardOverlay = document.getElementById('leaderboardOverlay');
+    const closeLeaderboardBtn = document.getElementById('closeLeaderboardBtn');
+    const leaderboardList = document.getElementById('leaderboardList');
 
     const devBtn = document.getElementById('devBtn');
     const devOverlay = document.getElementById('devOverlay');
@@ -273,6 +456,57 @@
     const questBtn = document.getElementById('questBtn');
     const closeQuestBtn = document.getElementById('closeQuestBtn');
 
+    // PvP элементы
+    const pvpBtn = document.getElementById('pvpBtn');
+    const pvpOverlay = document.getElementById('pvpOverlay');
+    const pvpCloseBtn = document.getElementById('pvpCloseBtn');
+    const pvpFindBtn = document.getElementById('pvpFindBtn');
+    const pvpCancelBtn = document.getElementById('pvpCancelBtn');
+    const pvpStatus = document.getElementById('pvpStatus');
+    const pvpResult = document.getElementById('pvpResult');
+    const pvpRoomInfo = document.getElementById('pvpRoomInfo');
+    const pvpBotBtn = document.getElementById('pvpBotBtn');
+    const pvpRealBtn = document.getElementById('pvpRealBtn');
+    const playersList = document.getElementById('playersList');
+    
+    // Ставки
+    const betCoinsInput = document.getElementById('betCoinsInput');
+    const betCoinsDisplay = document.getElementById('betCoinsDisplay');
+    const betSkinSelect = document.getElementById('betSkinSelect');
+    const betSkinDisplay = document.getElementById('betSkinDisplay');
+
+    // Auth элементы
+    const loginForm = document.getElementById('loginForm');
+    const userInfo = document.getElementById('userInfo');
+    const userNameDisplay = document.getElementById('userNameDisplay');
+    const userIdDisplay = document.getElementById('userIdDisplay');
+    const userStatusDisplay = document.getElementById('userStatusDisplay');
+    const loginUsername = document.getElementById('loginUsername');
+    const loginPassword = document.getElementById('loginPassword');
+    const loginBtn = document.getElementById('loginBtn');
+    const registerBtn = document.getElementById('registerBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const settingsUserDisplay = document.getElementById('settingsUserDisplay');
+    const settingsUserId = document.getElementById('settingsUserId');
+
+    // Dev элементы
+    const godModeToggle = document.getElementById('godModeToggle');
+    const devCoinsInput = document.getElementById('devCoinsInput');
+    const devSetCoins = document.getElementById('devSetCoins');
+    const devAddCoins = document.getElementById('devAddCoins');
+    const devBestScoreInput = document.getElementById('devBestScoreInput');
+    const devSetBestScore = document.getElementById('devSetBestScore');
+    const devWinsInput = document.getElementById('devWinsInput');
+    const devSetWins = document.getElementById('devSetWins');
+    const devCasesInput = document.getElementById('devCasesInput');
+    const devSetCases = document.getElementById('devSetCases');
+    const devSkinSelect = document.getElementById('devSkinSelect');
+    const devGiveSkin = document.getElementById('devGiveSkin');
+    const devResetProgress = document.getElementById('devResetProgress');
+    const devBanInput = document.getElementById('devBanInput');
+    const devBanBtn = document.getElementById('devBanBtn');
+    const banList = document.getElementById('banList');
+
     const GRID_SIZE = 20;
     const CELL_SIZE = canvas.width / GRID_SIZE;
 
@@ -283,6 +517,34 @@
     let cases = 0;
     let activeSkin = 'default';
     let ownedSkins = ['default'];
+    let godMode = false;
+    let bannedPlayers = [];
+    let currentUser = null;
+    let wins = 0;
+
+    // PvP переменные
+    let isPvpMode = false;
+    let pvpSearching = false;
+    let pvpOpponent = null;
+    let currentPvpRoom = null;
+    let pvpRoomRef = null;
+    let pvpType = 'bot';
+    let pvpSnake1 = [];
+    let pvpSnake2 = [];
+    let pvpDir1 = 'up';
+    let pvpDir2 = 'up';
+    let pvpFood = null;
+    let pvpCoin = null;
+    let pvpGameOver = false;
+    let pvpWinner = null;
+    let betCoins = 10;
+    let betSkin = null;
+    let pvpTimeout = null;
+    let isRealPvp = false;
+    let pvpCountdown = 0;
+    let pvpCountdownInterval = null;
+    let pvpStartTime = 0;
+    let pvpRoomListener = null;
 
     // ===================== СКИНЫ =====================
     const allSkins = [
@@ -301,11 +563,250 @@
 
     function getSkinData(key) { return allSkins.find(s => s.key === key) || allSkins[0]; }
 
+    // ===================== СИСТЕМА БАНОВ =====================
+    function loadBans() {
+        const saved = localStorage.getItem('bannedPlayers');
+        if (saved) {
+            try { bannedPlayers = JSON.parse(saved); } catch(e) { bannedPlayers = []; }
+        }
+        renderBanList();
+    }
+
+    function saveBans() {
+        localStorage.setItem('bannedPlayers', JSON.stringify(bannedPlayers));
+        renderBanList();
+    }
+
+    function renderBanList() {
+        if (!banList) return;
+        if (bannedPlayers.length === 0) {
+            banList.innerHTML = '<span style="color:#555;">Нет забаненных игроков</span>';
+            return;
+        }
+        banList.innerHTML = bannedPlayers.map(id => 
+            `<div class="ban-item">
+                <span class="ban-id">🚫 ${id}</span>
+                <button class="ban-unban" data-id="${id}">Разбанить</button>
+            </div>`
+        ).join('');
+        document.querySelectorAll('.ban-unban').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                bannedPlayers = bannedPlayers.filter(p => p !== id);
+                saveBans();
+                devMessage.innerHTML = `<span style="color:#2ecc71;">✅ Игрок ${id} разбанен</span>`;
+            });
+        });
+    }
+
+    function banPlayer(id) {
+        if (!id) return;
+        if (bannedPlayers.includes(id)) {
+            devMessage.innerHTML = `<span style="color:#f39c12;">⚠️ Игрок уже забанен</span>`;
+            return;
+        }
+        bannedPlayers.push(id);
+        saveBans();
+        devMessage.innerHTML = `<span style="color:#e74c3c;">🚫 Игрок ${id} забанен</span>`;
+        devBanInput.value = '';
+    }
+
+    function isPlayerBanned(id) {
+        return bannedPlayers.includes(id);
+    }
+
+    // ===================== АВТОРИЗАЦИЯ =====================
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            currentUser = user;
+            userInfo.style.display = 'block';
+            loginForm.style.display = 'none';
+            userNameDisplay.textContent = user.displayName || user.email || user.uid;
+            userIdDisplay.textContent = user.uid;
+            settingsUserDisplay.textContent = user.displayName || user.email || user.uid;
+            settingsUserId.textContent = user.uid;
+            
+            if (isPlayerBanned(user.uid)) {
+                alert('🚫 Ваш аккаунт забанен!');
+                await auth.signOut();
+                return;
+            }
+            
+            await loadUserData(user.uid);
+            updateOnlineStatus(true);
+            updateLeaderboard();
+            updateBetSelects();
+        } else {
+            currentUser = null;
+            userInfo.style.display = 'none';
+            loginForm.style.display = 'block';
+            settingsUserDisplay.textContent = 'Не авторизован';
+            settingsUserId.textContent = '-';
+        }
+    });
+
+    async function loadUserData(uid) {
+        try {
+            const doc = await db.collection('users').doc(uid).get();
+            if (doc.exists) {
+                const data = doc.data();
+                coins = data.coins || 0;
+                cases = data.cases || 0;
+                ownedSkins = data.ownedSkins || ['default'];
+                activeSkin = data.activeSkin || 'default';
+                wins = data.wins || 0;
+                const bestScore = data.bestScore || 0;
+                localStorage.setItem('snakeBestScore', bestScore.toString());
+                gameSpeed = data.gameSpeed || 100;
+                controlMode = data.controlMode || 'dpad';
+                godMode = data.godMode || false;
+                updateCoinsUI();
+                updateCaseUI();
+                updateBestScoreUI();
+                renderSkinInventory();
+                setSpeed(gameSpeed);
+                setControlMode(controlMode);
+                updateGodModeUI();
+                draw();
+                fullReset();
+                initQuests();
+                initAchievements();
+                renderQuests();
+                renderAchievements();
+                updateBetSelects();
+                updateLeaderboard();
+            }
+        } catch(e) { console.error('Ошибка загрузки данных:', e); }
+    }
+
+    async function saveUserData() {
+        if (!currentUser) return;
+        try {
+            await db.collection('users').doc(currentUser.uid).set({
+                coins: coins,
+                cases: cases,
+                ownedSkins: ownedSkins,
+                activeSkin: activeSkin,
+                wins: wins,
+                bestScore: loadBestScore(),
+                gameSpeed: gameSpeed,
+                controlMode: controlMode,
+                godMode: godMode,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+            updateLeaderboard();
+        } catch(e) { console.error('Ошибка сохранения данных:', e); }
+    }
+
+    function updateOnlineStatus(isOnline) {
+        if (!currentUser) return;
+        const statusRef = rtdb.ref('.info/connected');
+        statusRef.on('value', (snap) => {
+            if (snap.val() === true && isOnline) {
+                const userRef = rtdb.ref('players/' + currentUser.uid);
+                userRef.onDisconnect().update({
+                    status: 'offline',
+                    lastSeen: Date.now()
+                });
+                userRef.update({
+                    username: currentUser.displayName || currentUser.email || currentUser.uid,
+                    status: 'online',
+                    lastSeen: Date.now()
+                });
+                if (userStatusDisplay) {
+                    userStatusDisplay.textContent = '🟢 Онлайн';
+                    userStatusDisplay.className = 'pvp-status-online';
+                }
+            }
+        });
+    }
+
+    // ===================== ТАБЛИЦА ЛИДЕРОВ =====================
+    function updateLeaderboard() {
+        rtdb.ref('leaderboard').orderByChild('bestScore').limitToLast(20).on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (!data) {
+                leaderboardList.innerHTML = '<p style="color:#888;font-size:12px;">Нет данных</p>';
+                return;
+            }
+            
+            const sorted = Object.keys(data).map(key => ({ id: key, ...data[key] }))
+                .sort((a, b) => (b.bestScore || 0) - (a.bestScore || 0));
+            
+            let html = '';
+            sorted.forEach((player, index) => {
+                const rank = index + 1;
+                let rankClass = '';
+                let crown = '';
+                if (rank === 1) { rankClass = 'top1'; crown = '👑'; }
+                else if (rank === 2) { rankClass = 'top2'; crown = '🥈'; }
+                else if (rank === 3) { rankClass = 'top3'; crown = '🥉'; }
+                
+                const isCurrentUser = player.id === currentUser?.uid;
+                html += `<div class="leaderboard-item ${rankClass}" style="${isCurrentUser ? 'border:2px solid #f9ca24;' : ''}">
+                    <span class="rank">${crown || '#' + rank}</span>
+                    <span class="name">${player.username || 'Аноним'} ${isCurrentUser ? '⭐' : ''}</span>
+                    <span class="score">${player.bestScore || 0}</span>
+                    <span class="wins">⚔️ ${player.wins || 0}</span>
+                </div>`;
+            });
+            
+            leaderboardList.innerHTML = html;
+        });
+    }
+
+    // Вход
+    loginBtn.addEventListener('click', async () => {
+        const username = loginUsername.value.trim();
+        const password = loginPassword.value.trim();
+        if (!username || password.length < 6) {
+            alert('Имя не может быть пустым, пароль минимум 6 символов!');
+            return;
+        }
+        try {
+            await auth.signInWithEmailAndPassword(username + '@snake.game', password);
+            alert('✅ Вход выполнен!');
+            loginUsername.value = '';
+            loginPassword.value = '';
+        } catch(e) {
+            alert('❌ Ошибка входа: ' + e.message);
+        }
+    });
+
+    // Регистрация
+    registerBtn.addEventListener('click', async () => {
+        const username = loginUsername.value.trim();
+        const password = loginPassword.value.trim();
+        if (!username || password.length < 6) {
+            alert('Имя не может быть пустым, пароль минимум 6 символов!');
+            return;
+        }
+        try {
+            const result = await auth.createUserWithEmailAndPassword(username + '@snake.game', password);
+            await result.user.updateProfile({ displayName: username });
+            alert('✅ Регистрация выполнена!');
+            loginUsername.value = '';
+            loginPassword.value = '';
+        } catch(e) {
+            alert('❌ Ошибка регистрации: ' + e.message);
+        }
+    });
+
+    // Выход
+    logoutBtn.addEventListener('click', async () => {
+        try {
+            await auth.signOut();
+            alert('👋 Вы вышли');
+        } catch(e) { alert('Ошибка выхода: ' + e.message); }
+    });
+
     // ===================== localStorage =====================
     function saveData() {
         const data = { bestScore: loadBestScore(), coins, cases, ownedSkins, activeSkin, gameSpeed, controlMode };
         localStorage.setItem('snakeFullData', JSON.stringify(data));
+        saveUserData();
     }
+    
     function loadData() {
         const raw = localStorage.getItem('snakeFullData');
         if (raw) {
@@ -326,6 +827,7 @@
         speedSlider.value = Math.min(100, Math.max(0, sliderValue));
         updateCaseUI();
     }
+    
     function loadBestScore() { let b = localStorage.getItem('snakeBestScore'); return b ? parseInt(b,10) : 0; }
     function updateBestScoreUI() { bestScoreSpan.innerText = loadBestScore(); }
     function checkAndUpdateRecord(currentScore) {
@@ -333,19 +835,35 @@
         if (currentScore > best) {
             localStorage.setItem('snakeBestScore', currentScore.toString());
             updateBestScoreUI();
+            saveUserData();
+            updateLeaderboard();
             return true;
         }
         return false;
     }
 
     // ===================== МОНЕТЫ И КЕЙСЫ =====================
-    function updateCoinsUI() { coinsDisplay.innerText = coins; shopCoinsSpan.innerText = coins; saveData(); }
-    function updateCaseUI() { caseCountSpan.innerText = cases; saveData(); }
+    function updateCoinsUI() { 
+        coinsDisplay.innerText = coins; 
+        shopCoinsSpan.innerText = coins; 
+        betCoinsDisplay.textContent = coins;
+        betCoinsInput.max = coins;
+        saveData();
+    }
+    function updateCaseUI() { 
+        caseCountSpan.innerText = cases; 
+        saveData();
+    }
     function addCoins(amount) { coins += amount; updateCoinsUI(); }
     function spendCoins(amount) { if (coins >= amount) { coins -= amount; updateCoinsUI(); return true; } return false; }
     function buyCase() {
-        if (spendCoins(50)) { cases++; updateCaseUI(); caseResult.innerHTML = '<span style="color:#2ecc71;">✅ Кейс куплен! ('+cases+')</span>'; }
-        else caseResult.innerHTML = '<span style="color:#e74c3c;">Недостаточно монет!</span>';
+        if (spendCoins(50)) { 
+            cases++; 
+            updateCaseUI(); 
+            caseResult.innerHTML = '<span style="color:#2ecc71;">✅ Кейс куплен! ('+cases+')</span>'; 
+        } else {
+            caseResult.innerHTML = '<span style="color:#e74c3c;">❌ Недостаточно монет!</span>';
+        }
     }
 
     // ===================== ЗАДАНИЯ =====================
@@ -383,6 +901,7 @@
     function saveQuests() {
         const data = { date: new Date().toDateString(), quests, totalCompleted: totalQuestsCompleted };
         localStorage.setItem('questsData', JSON.stringify(data));
+        saveUserData();
     }
 
     function updateQuestProgress(type, amount = 1) {
@@ -410,6 +929,7 @@
             saveQuests();
             renderQuests();
             checkAchievements();
+            saveUserData();
         }
     }
 
@@ -417,10 +937,10 @@
         const q = quests[index];
         if (!q || !q.completed) return;
         addCoins(q.reward);
-        q.completed = true;
         q.claimed = true;
         saveQuests();
         renderQuests();
+        saveUserData();
     }
 
     function renderQuests() {
@@ -464,7 +984,10 @@
             saveAchievements();
         }
     }
-    function saveAchievements() { localStorage.setItem('achievementsData', JSON.stringify(achievements)); }
+    function saveAchievements() { 
+        localStorage.setItem('achievementsData', JSON.stringify(achievements));
+        saveUserData();
+    }
     function checkAchievements() {
         let changed = false;
         achievements.forEach(a => {
@@ -480,7 +1003,7 @@
                 setTimeout(() => notif.remove(), 4000);
             }
         });
-        if (changed) { saveAchievements(); renderAchievements(); }
+        if (changed) { saveAchievements(); renderAchievements(); saveUserData(); }
     }
     function renderAchievements() {
         if (!achievementList) return;
@@ -495,102 +1018,149 @@
         }).join('');
     }
 
-    // ===================== ОТКРЫТИЕ КЕЙСА =====================
+    // ===================== ИСПРАВЛЕННАЯ ФУНКЦИЯ ОТКРЫТИЯ КЕЙСА =====================
     function openCase() {
         if (cases <= 0) {
-            caseResult.innerHTML = '<span style="color:#e74c3c;">У вас нет кейсов!</span>';
+            caseResult.innerHTML = '<span style="color:#e74c3c;">❌ У вас нет кейсов!</span>';
             return;
         }
-        const pool = allSkins.filter(s => s.rarity !== 'secret' && s.key !== 'default');
+        
+        // Проверяем, есть ли скины для выпадения
+        const availableSkins = allSkins.filter(s => s.key !== 'default');
+        if (availableSkins.length === 0) {
+            caseResult.innerHTML = '<span style="color:#e74c3c;">❌ Нет доступных скинов!</span>';
+            return;
+        }
+        
+        // Создаём пул с весами
         let weightedPool = [];
-        pool.forEach(s => {
+        availableSkins.forEach(s => {
             let weight = 0;
             if (s.rarity === 'common') weight = 10;
             else if (s.rarity === 'rare') weight = 30;
             else if (s.rarity === 'superrare') weight = 35;
             else if (s.rarity === 'legendary') weight = 25;
-            for (let i=0; i<weight; i++) weightedPool.push(s);
+            else if (s.rarity === 'secret') weight = 5;
+            else weight = 10;
+            for (let i = 0; i < weight; i++) weightedPool.push(s);
         });
-        if (weightedPool.length === 0) weightedPool = pool;
+        
+        if (weightedPool.length === 0) weightedPool = availableSkins.slice();
+        
+        // Выбираем финальный скин
         const finalSkin = weightedPool[Math.floor(Math.random() * weightedPool.length)];
         cases--;
         updateCaseUI();
 
+        // Создаём оверлей
         const overlay = document.createElement('div');
-        overlay.style.cssText = `position:absolute;top:0;left:0;width:100%;height:100%;border-radius:20px;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:60;backdrop-filter:blur(6px);`;
+        overlay.style.cssText = `position:absolute;top:0;left:0;width:100%;height:100%;border-radius:20px;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:60;backdrop-filter:blur(6px);padding:10px;`;
         mainContainer.appendChild(overlay);
 
-        const arrow = document.createElement('div');
-        arrow.className = 'case-arrow';
-        arrow.textContent = '▲';
-        overlay.appendChild(arrow);
+        // Контейнер для слотов
+        const container = document.createElement('div');
+        container.style.cssText = 'position:relative;display:inline-block;margin:10px 0;';
+        overlay.appendChild(container);
 
-        const display = document.createElement('div');
-        display.style.cssText = `width:260px;height:80px;background:#111;border:2px solid #f9ca24;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin:10px 0;position:relative;`;
+        // Стрелка
+        const arrow = document.createElement('div');
+        arrow.style.cssText = `position:absolute;top:-24px;left:50%;transform:translateX(-50%);font-size:24px;color:#f9ca24;text-shadow:0 0 15px gold;z-index:10;pointer-events:none;transition:left 0.3s ease;`;
+        arrow.textContent = '▲';
+        container.appendChild(arrow);
+
+        // Слоты
+        const slotsDiv = document.createElement('div');
+        slotsDiv.style.cssText = `display:flex;background:#0a0a1a;border:3px solid #f9ca24;border-radius:14px;overflow:hidden;box-shadow:0 0 30px rgba(249,202,36,0.2);`;
+        container.appendChild(slotsDiv);
+
         const slots = [];
         const slotCount = 7;
-        for (let i=0; i<slotCount; i++) {
+        for (let i = 0; i < slotCount; i++) {
             const slot = document.createElement('div');
-            slot.style.cssText = `width:37px;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#222;border-right:1px solid #444;flex-shrink:0;font-size:8px;color:#aaa;text-align:center;`;
+            slot.style.cssText = `width:42px;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a1a2e;border-right:${i < slotCount-1 ? '1px solid #333' : 'none'};flex-shrink:0;transition:all 0.2s ease;`;
+            
             const preview = document.createElement('div');
-            preview.style.cssText = 'width:28px;height:28px;border-radius:4px;border:1px solid #555;margin-bottom:2px;display:flex;align-items:center;justify-content:center;font-size:20px;';
+            preview.style.cssText = `width:32px;height:32px;border-radius:6px;border:2px solid #555;margin-bottom:3px;display:flex;align-items:center;justify-content:center;font-size:20px;transition:all 0.2s ease;`;
             preview.textContent = '🐍';
+            
             const label = document.createElement('div');
-            label.style.cssText = 'font-size:7px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:32px;';
+            label.style.cssText = `font-size:7px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:38px;text-align:center;`;
+            label.textContent = '---';
+            
             slot.appendChild(preview);
             slot.appendChild(label);
-            display.appendChild(slot);
+            slotsDiv.appendChild(slot);
             slots.push({ slot, preview, label });
         }
-        overlay.appendChild(display);
 
+        // Результат
         const resultText = document.createElement('div');
-        resultText.style.cssText = 'color:#f9ca24;font-size:18px;margin-top:10px;text-align:center;min-height:60px;';
+        resultText.style.cssText = 'color:#f9ca24;font-size:18px;margin-top:15px;text-align:center;min-height:60px;font-weight:bold;';
         overlay.appendChild(resultText);
 
+        // Кнопка закрытия
         const closeBtn = document.createElement('button');
         closeBtn.textContent = 'Закрыть';
-        closeBtn.style.cssText = `margin-top:15px;background:#e94560;border:none;color:white;padding:8px 20px;border-radius:30px;font-weight:bold;cursor:pointer;font-size:14px;display:none;`;
+        closeBtn.style.cssText = `margin-top:15px;background:#e94560;border:none;color:white;padding:10px 24px;border-radius:30px;font-weight:bold;cursor:pointer;font-size:14px;display:none;transition:0.2s;`;
+        closeBtn.onmouseover = () => closeBtn.style.transform = 'scale(1.05)';
+        closeBtn.onmouseout = () => closeBtn.style.transform = 'scale(1)';
         overlay.appendChild(closeBtn);
 
+        // Заполнение слотов
         function fillSlots(startIndex) {
-            for (let i=0; i<slotCount; i++) {
+            for (let i = 0; i < slotCount; i++) {
                 const skin = weightedPool[(startIndex + i) % weightedPool.length];
                 slots[i].preview.style.background = skin.bodyColor;
                 slots[i].preview.style.borderColor = skin.rarityColor || '#555';
                 slots[i].preview.textContent = '🐍';
-                slots[i].label.textContent = skin.name.substring(0,4);
+                slots[i].label.textContent = skin.name.substring(0, 6);
             }
         }
+        
         let currentIndex = 0;
         fillSlots(currentIndex);
 
-        let totalSteps = 20 + Math.floor(Math.random() * 15);
+        let totalSteps = 25 + Math.floor(Math.random() * 15);
         let stepCount = 0;
-        let delay = 50;
+        let delay = 60;
+        let timer = null;
+        
         function step() {
             currentIndex = (currentIndex + 1) % weightedPool.length;
             fillSlots(currentIndex);
             stepCount++;
-            if (stepCount >= totalSteps - 8) delay += 60;
-            else if (stepCount >= totalSteps - 15) delay += 15;
-            else if (stepCount % 3 === 0) delay += 2;
+            
+            if (stepCount >= totalSteps - 10) delay += 80;
+            else if (stepCount >= totalSteps - 20) delay += 20;
+            else if (stepCount % 3 === 0) delay += 5;
+            
             if (stepCount >= totalSteps) {
                 clearInterval(timer);
+                timer = null;
+                
+                // Находим индекс финального скина
                 let finalIndex = -1;
-                for (let i=0; i<slotCount; i++) {
+                for (let i = 0; i < slotCount; i++) {
                     const idx = (currentIndex + i) % weightedPool.length;
-                    if (weightedPool[idx] === finalSkin) { finalIndex = i; break; }
+                    if (weightedPool[idx].key === finalSkin.key) {
+                        finalIndex = i;
+                        break;
+                    }
                 }
+                
                 if (finalIndex !== -1) {
                     slots[finalIndex].slot.style.border = '2px solid #f9ca24';
                     slots[finalIndex].slot.style.boxShadow = '0 0 20px gold';
                     slots[finalIndex].preview.style.borderColor = '#f9ca24';
-                    const slotWidth = 37;
-                    const offset = finalIndex * slotWidth + slotWidth/2 - 10;
-                    arrow.style.left = `calc(50% + ${offset - 130}px)`;
-                    arrow.style.top = '-25px';
+                    
+                    const slotWidth = 42;
+                    const containerWidth = slotCount * slotWidth;
+                    const arrowOffset = finalIndex * slotWidth + slotWidth/2 - containerWidth/2 + 10;
+                    arrow.style.left = `calc(50% + ${arrowOffset}px)`;
+                    arrow.style.top = '-24px';
+                    arrow.textContent = '▲';
                 }
+                
                 const alreadyOwned = ownedSkins.includes(finalSkin.key);
                 if (!alreadyOwned) {
                     ownedSkins.push(finalSkin.key);
@@ -598,22 +1168,36 @@
                     saveData();
                     renderSkinInventory();
                     draw();
-                    resultText.innerHTML = `🎉 Выпал <b>${finalSkin.name}</b> (${finalSkin.rarity})!`;
+                    resultText.innerHTML = `🎉 <b>${finalSkin.name}</b> (${finalSkin.rarity})`;
+                    resultText.style.color = '#2ecc71';
                 } else {
                     addCoins(20);
-                    resultText.innerHTML = `🔄 Выпал <b>${finalSkin.name}</b> (уже был), +20 🪙`;
+                    resultText.innerHTML = `🔄 <b>${finalSkin.name}</b> (уже был) +20 🪙`;
+                    resultText.style.color = '#f9ca24';
                 }
+                
                 closeBtn.style.display = 'inline-block';
                 updateCoinsUI();
                 updateCaseUI();
                 renderSkinInventory();
+                saveUserData();
                 return;
             }
+            
             clearInterval(timer);
             timer = setInterval(step, delay);
         }
-        let timer = setInterval(step, delay);
-        closeBtn.addEventListener('click', function() { clearInterval(timer); overlay.remove(); caseResult.innerHTML = ''; });
+        
+        timer = setInterval(step, delay);
+        
+        closeBtn.addEventListener('click', function() {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+            overlay.remove();
+            caseResult.innerHTML = '';
+        });
     }
 
     // ===================== ИНВЕНТАРЬ СКИНОВ =====================
@@ -626,10 +1210,11 @@
             else if (s.rarity === 'superrare') rarityClass = 'rarity-superrare';
             else if (s.rarity === 'legendary') rarityClass = 'rarity-legendary';
             else if (s.rarity === 'secret') rarityClass = 'rarity-secret';
-            return `<div class="skin-item ${selected?'selected':''} ${!owned?'locked':''}" style="background:${s.bodyColor};${!owned?'filter:grayscale(0.5);':''}" title="${s.name} (${s.rarity})" data-skin="${s.key}">
-                <div class="mini-snake">${!owned ? '🔒' : '🐍'}</div>
+            return `<div class="skin-item ${selected?'selected':''} ${!owned?'locked':''}" data-skin="${s.key}">
+                <div class="skin-preview" style="background:${s.bodyColor};${!owned?'filter:grayscale(0.5);':''}">${!owned ? '🔒' : '🐍'}</div>
+                <span class="skin-name">${s.name}</span>
                 <span class="rarity-dot ${rarityClass}"></span>
-                ${selected ? '<span style="position:absolute;top:-6px;right:-6px;font-size:12px;">✅</span>' : ''}
+                ${selected ? '<span style="position:absolute;top:-4px;right:-4px;font-size:10px;">✅</span>' : ''}
             </div>`;
         }).join('');
         document.querySelectorAll('.skin-item:not(.locked)').forEach(el => {
@@ -640,12 +1225,395 @@
                     saveData();
                     renderSkinInventory();
                     draw();
+                    saveUserData();
                 }
             });
         });
     }
 
-    // ===================== ИГРОВАЯ ЛОГИКА =====================
+    // ===================== СТАВКИ =====================
+    function updateBetSelects() {
+        const options = ownedSkins.map(s => {
+            const skin = getSkinData(s);
+            return `<option value="${s}">${skin.name} (${skin.rarity})</option>`;
+        }).join('');
+        betSkinSelect.innerHTML = `<option value="">Нет</option>` + options;
+        betSkinSelect.value = '';
+        betSkinDisplay.textContent = 'Нет';
+        betCoinsDisplay.textContent = coins;
+        betCoinsInput.max = coins;
+    }
+
+    betCoinsInput.addEventListener('input', () => {
+        const val = parseInt(betCoinsInput.value) || 0;
+        if (val > coins) {
+            betCoinsInput.value = coins;
+            betCoinsDisplay.textContent = coins;
+        } else {
+            betCoinsDisplay.textContent = val;
+        }
+        betCoins = parseInt(betCoinsInput.value) || 0;
+    });
+
+    betSkinSelect.addEventListener('change', () => {
+        betSkin = betSkinSelect.value || null;
+        betSkinDisplay.textContent = betSkin ? getSkinData(betSkin).name : 'Нет';
+    });
+
+    // ===================== PVP ПРОТИВ БОТА =====================
+    function startBotGame() {
+        if (!currentUser) {
+            alert('⚠️ Сначала войдите в аккаунт!');
+            return;
+        }
+        
+        isRealPvp = false;
+        pvpType = 'bot';
+        pvpOpponent = { id: 'bot_' + Date.now(), name: 'Бот', isBot: true };
+        isPvpMode = true;
+        
+        const betAmount = parseInt(betCoinsInput.value) || 0;
+        if (betAmount > 0 && betAmount <= coins) {
+            betCoins = betAmount;
+            coins -= betAmount;
+            updateCoinsUI();
+        }
+        betSkin = betSkinSelect.value || null;
+        
+        pvpRoomInfo.style.display = 'block';
+        pvpRoomInfo.innerHTML = `
+            <span class="label">🤖 Режим:</span> Против бота<br>
+            <span class="label">👤 Вы:</span> ${currentUser.displayName || currentUser.email}<br>
+            <span class="label">💰 Ставка:</span> ${betCoins > 0 ? betCoins + ' 🪙' : 'Нет'} ${betSkin ? '🎨 ' + getSkinData(betSkin).name : ''}
+        `;
+        
+        // Инициализация PvP с головой вверх
+        pvpSnake1 = [[10,10],[10,11],[10,12]]; // голова вверху
+        pvpSnake2 = [[10,10],[10,11],[10,12]];
+        pvpDir1 = 'up';
+        pvpDir2 = 'up';
+        pvpGameOver = false;
+        pvpWinner = null;
+        pvpFood = [5,5];
+        pvpCoin = [15,15];
+        
+        pvpBotBtn.style.display = 'none';
+        pvpRealBtn.style.display = 'none';
+        pvpFindBtn.style.display = 'none';
+        pvpCancelBtn.style.display = 'none';
+        
+        // Закрываем оверлей и запускаем игру с обратным отсчётом
+        pvpOverlay.classList.add('hide-overlay');
+        setPause(false);
+        fullReset();
+        startGameLoop();
+        isPvpMode = true;
+        startPvpCountdown();
+    }
+
+    // ===================== PVP ПРОТИВ РЕАЛЬНОГО ИГРОКА =====================
+    function startRealPvpSearch() {
+        if (!currentUser) {
+            alert('⚠️ Сначала войдите в аккаунт!');
+            return;
+        }
+        
+        if (!navigator.onLine) {
+            alert('❌ Нет интернета! Для игры с реальным игроком нужен интернет.');
+            return;
+        }
+        
+        isRealPvp = true;
+        pvpType = 'real';
+        pvpSearching = true;
+        pvpStatus.textContent = '🔍 Поиск соперника...';
+        pvpResult.innerHTML = '<span style="color:#f9ca24;">Ищем игрока в Firebase...</span>';
+        pvpFindBtn.style.display = 'none';
+        pvpCancelBtn.style.display = 'inline-block';
+        pvpBotBtn.style.display = 'none';
+        pvpRealBtn.style.display = 'none';
+        
+        // Обновляем статус в Firebase
+        const searchRef = rtdb.ref('pvp_players/' + currentUser.uid);
+        searchRef.update({
+            username: currentUser.displayName || currentUser.email || currentUser.uid,
+            status: 'searching',
+            timestamp: Date.now(),
+            betCoins: parseInt(betCoinsInput.value) || 0,
+            betSkin: betSkinSelect.value || null
+        });
+        
+        // Слушаем изменения в списке игроков
+        const playersRef = rtdb.ref('pvp_players');
+        const listener = playersRef.on('value', (snapshot) => {
+            const players = snapshot.val();
+            if (!players || !pvpSearching) return;
+            
+            // Ищем соперника
+            const opponentId = Object.keys(players).find(id => 
+                id !== currentUser.uid && players[id].status === 'searching'
+            );
+            
+            if (opponentId) {
+                // Нашли соперника!
+                pvpSearching = false;
+                const opponentData = players[opponentId];
+                
+                // Создаём комнату
+                const roomId = 'pvp_room_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+                const roomRef = rtdb.ref('pvp_rooms/' + roomId);
+                
+                const myBetCoins = parseInt(betCoinsInput.value) || 0;
+                const oppBetCoins = opponentData.betCoins || 0;
+                const totalBetCoins = myBetCoins + oppBetCoins;
+                
+                const myBetSkin = betSkinSelect.value || null;
+                const oppBetSkin = opponentData.betSkin || null;
+                
+                // Забираем ставки у обоих игроков (списываем монеты)
+                if (myBetCoins > 0) {
+                    coins -= myBetCoins;
+                    updateCoinsUI();
+                }
+                // У соперника монеты списываются на его стороне
+                
+                betCoins = totalBetCoins;
+                betSkin = myBetSkin || oppBetSkin;
+                
+                roomRef.set({
+                    player1: currentUser.uid,
+                    player1Name: currentUser.displayName || currentUser.email || currentUser.uid,
+                    player2: opponentId,
+                    player2Name: opponentData.username || 'Игрок',
+                    status: 'waiting',
+                    startTime: Date.now(),
+                    betCoins: totalBetCoins,
+                    betSkin: betSkin || '',
+                    snake1: [[10,10],[10,11],[10,12]],
+                    snake2: [[10,10],[10,11],[10,12]],
+                    dir1: 'up',
+                    dir2: 'up',
+                    food: [5,5],
+                    coin: [15,15],
+                    countdown: 5,
+                    timestamp: Date.now()
+                });
+                
+                // Удаляем оба поиска
+                rtdb.ref('pvp_players/' + currentUser.uid).remove();
+                rtdb.ref('pvp_players/' + opponentId).remove();
+                playersRef.off();
+                
+                pvpStatus.textContent = '✅ Соперник найден!';
+                pvpResult.innerHTML = `<span style="color:#2ecc71;">✅ Найден игрок: ${opponentData.username || 'Игрок'}! Начинаем битву...</span>`;
+                pvpCancelBtn.style.display = 'none';
+                isPvpMode = true;
+                pvpOpponent = { 
+                    id: opponentId, 
+                    name: opponentData.username || 'Игрок', 
+                    isBot: false 
+                };
+                currentPvpRoom = roomId;
+                pvpRoomRef = roomRef;
+                pvpRoomListener = roomRef;
+                
+                pvpRoomInfo.style.display = 'block';
+                pvpRoomInfo.innerHTML = `
+                    <span class="label">🏠 Комната:</span> ${roomId}<br>
+                    <span class="label">👤 Вы:</span> ${currentUser.displayName || currentUser.email}<br>
+                    <span class="label">👤 Соперник:</span> ${opponentData.username || 'Игрок'}<br>
+                    <span class="label">💰 Общая ставка:</span> ${totalBetCoins} 🪙 ${betSkin ? '🎨 ' + getSkinData(betSkin).name : ''}
+                `;
+                
+                // Подписываемся на обновления комнаты
+                roomRef.on('value', (snap) => {
+                    const data = snap.val();
+                    if (data) {
+                        updateRealPvpGame(data);
+                    }
+                });
+                
+                // Закрываем оверлей и запускаем игру с обратным отсчётом
+                pvpOverlay.classList.add('hide-overlay');
+                setPause(false);
+                fullReset();
+                startGameLoop();
+                isPvpMode = true;
+                startPvpCountdown();
+            }
+        });
+        
+        // Таймаут поиска (30 секунд)
+        if (pvpTimeout) clearTimeout(pvpTimeout);
+        pvpTimeout = setTimeout(() => {
+            if (pvpSearching) {
+                pvpSearching = false;
+                rtdb.ref('pvp_players').off();
+                rtdb.ref('pvp_players/' + currentUser.uid).remove();
+                pvpStatus.textContent = '❌ Соперник не найден';
+                pvpResult.innerHTML = '<span style="color:#e74c3c;">❌ Соперник не найден. Попробуйте позже.</span>';
+                pvpFindBtn.style.display = 'inline-block';
+                pvpCancelBtn.style.display = 'none';
+                pvpBotBtn.style.display = 'inline-block';
+                pvpRealBtn.style.display = 'inline-block';
+                isRealPvp = false;
+            }
+        }, 30000);
+    }
+
+    function cancelPvpSearch() {
+        pvpSearching = false;
+        isRealPvp = false;
+        if (pvpTimeout) clearTimeout(pvpTimeout);
+        
+        rtdb.ref('pvp_players/' + currentUser.uid).remove();
+        rtdb.ref('pvp_players').off();
+        
+        pvpStatus.textContent = '❌ Поиск отменён';
+        pvpResult.innerHTML = '<span style="color:#f39c12;">⏹️ Поиск отменён</span>';
+        pvpFindBtn.style.display = 'inline-block';
+        pvpCancelBtn.style.display = 'none';
+        pvpBotBtn.style.display = 'inline-block';
+        pvpRealBtn.style.display = 'inline-block';
+    }
+
+    // ===================== ОБНОВЛЕНИЕ PVP С РЕАЛЬНЫМ ИГРОКОМ =====================
+    function updateRealPvpGame(data) {
+        if (!data || pvpGameOver) return;
+        
+        // Обновляем данные соперника
+        const isPlayer1 = data.player1 === currentUser.uid;
+        const opponentSnake = isPlayer1 ? data.snake2 : data.snake1;
+        const opponentDir = isPlayer1 ? data.dir2 : data.dir1;
+        const opponentName = isPlayer1 ? data.player2Name : data.player1Name;
+        
+        // Обновляем змейку соперника
+        if (opponentSnake && Array.isArray(opponentSnake)) {
+            if (isPlayer1) {
+                pvpSnake2 = opponentSnake.slice();
+                pvpDir2 = opponentDir || 'up';
+            } else {
+                pvpSnake1 = opponentSnake.slice();
+                pvpDir1 = opponentDir || 'up';
+            }
+        }
+        
+        // Обновляем еду и монету
+        if (data.food) pvpFood = data.food;
+        if (data.coin) pvpCoin = data.coin;
+        
+        // Проверка на победу
+        if (data.winner) {
+            pvpGameOver = true;
+            pvpWinner = data.winner === currentUser.uid ? 'Вы' : 'Соперник';
+            handlePvpWin(pvpWinner);
+        }
+        
+        draw();
+    }
+
+    function sendRealPvpMove() {
+        if (!currentPvpRoom || !currentUser || pvpGameOver) return;
+        
+        const updates = {
+            snake1: pvpSnake1,
+            dir1: pvpDir1,
+            snake2: pvpSnake2,
+            dir2: pvpDir2,
+            food: pvpFood,
+            coin: pvpCoin,
+            timestamp: Date.now()
+        };
+        
+        rtdb.ref('pvp_rooms/' + currentPvpRoom).update(updates);
+    }
+
+    // ===================== ОБРАТНЫЙ ОТСЧЁТ ПЕРЕД БОЕМ =====================
+    function startPvpCountdown() {
+        pvpCountdown = 5;
+        drawPvpCountdown();
+        pvpCountdownInterval = setInterval(() => {
+            pvpCountdown--;
+            drawPvpCountdown();
+            if (pvpCountdown <= 0) {
+                clearInterval(pvpCountdownInterval);
+                pvpCountdownInterval = null;
+                // Начинаем бой
+                pvpStartTime = Date.now();
+                // Для реального PvP обновляем статус комнаты
+                if (isRealPvp && currentPvpRoom) {
+                    rtdb.ref('pvp_rooms/' + currentPvpRoom).update({
+                        status: 'active',
+                        startTime: Date.now()
+                    });
+                }
+            }
+        }, 1000);
+    }
+
+    function drawPvpCountdown() {
+        // Рисуем поверх игры
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#f9ca24';
+        ctx.font = 'bold 60px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(pvpCountdown > 0 ? pvpCountdown : 'GO!', canvas.width/2, canvas.height/2 - 20);
+        ctx.font = '20px monospace';
+        ctx.fillStyle = '#ddd';
+        ctx.fillText('Приготовьтесь!', canvas.width/2, canvas.height/2 + 50);
+        // Если PvP реальный, показываем имя соперника
+        if (pvpOpponent && !pvpOpponent.isBot) {
+            ctx.font = '14px monospace';
+            ctx.fillStyle = '#ff6b6b';
+            ctx.fillText('Против: ' + pvpOpponent.name, canvas.width/2, canvas.height/2 + 90);
+        }
+    }
+
+    // ===================== ОБРАБОТКА ПОБЕДЫ В PVP =====================
+    function handlePvpWin(winner) {
+        pvpGameOver = true;
+        pvpWinner = winner;
+        
+        if (winner === 'Вы') {
+            wins++;
+            // Забираем общую ставку
+            const winCoins = betCoins * 2;
+            addCoins(winCoins);
+            if (betSkin && !ownedSkins.includes(betSkin)) {
+                ownedSkins.push(betSkin);
+                renderSkinInventory();
+                saveData();
+            }
+            alert('🎉 Вы победили! +' + winCoins + ' 🪙');
+        } else {
+            alert('😢 Вы проиграли! Ставка потеряна.');
+        }
+        
+        // Обновляем лидерборд
+        saveUserData();
+        updateLeaderboard();
+        updateCoinsUI();
+        renderSkinInventory();
+        draw();
+        
+        // Завершаем PvP режим через 3 секунды
+        setTimeout(() => {
+            isPvpMode = false;
+            pvpOpponent = null;
+            isRealPvp = false;
+            if (currentPvpRoom) {
+                rtdb.ref('pvp_rooms/' + currentPvpRoom).off();
+                currentPvpRoom = null;
+                pvpRoomRef = null;
+                pvpRoomListener = null;
+            }
+            restartWithMenu();
+        }, 3000);
+    }
+
+    // ===================== ОСНОВНАЯ ИГРОВАЯ ЛОГИКА =====================
     function randomFreeCell() {
         let free = [];
         for (let i=0; i<GRID_SIZE; i++) for (let j=0; j<GRID_SIZE; j++) {
@@ -669,6 +1637,75 @@
             ctx.beginPath(); ctx.moveTo(i*CELL_SIZE,0); ctx.lineTo(i*CELL_SIZE,canvas.height); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(0,i*CELL_SIZE); ctx.lineTo(canvas.width,i*CELL_SIZE); ctx.stroke();
         }
+        
+        if (isPvpMode && pvpOpponent) {
+            // Отрисовка PvP
+            // Змейка игрока 1 (зелёная)
+            for (let i=0; i<pvpSnake1.length; i++) {
+                let x=pvpSnake1[i][0]*CELL_SIZE, y=pvpSnake1[i][1]*CELL_SIZE;
+                ctx.fillStyle = i===0 ? '#2ecc71' : '#1a8a4a';
+                ctx.fillRect(x+1, y+1, CELL_SIZE-2, CELL_SIZE-2);
+                ctx.strokeStyle='#3cff7a';
+                ctx.lineWidth=1.2;
+                ctx.strokeRect(x+1, y+1, CELL_SIZE-2, CELL_SIZE-2);
+            }
+            
+            // Змейка игрока 2 (красная)
+            for (let i=0; i<pvpSnake2.length; i++) {
+                let x=pvpSnake2[i][0]*CELL_SIZE, y=pvpSnake2[i][1]*CELL_SIZE;
+                ctx.fillStyle = i===0 ? '#e74c3c' : '#8a1a1a';
+                ctx.fillRect(x+1, y+1, CELL_SIZE-2, CELL_SIZE-2);
+                ctx.strokeStyle='#ff6b6b';
+                ctx.lineWidth=1.2;
+                ctx.strokeRect(x+1, y+1, CELL_SIZE-2, CELL_SIZE-2);
+            }
+            
+            if (pvpFood) {
+                let fx=pvpFood[0]*CELL_SIZE, fy=pvpFood[1]*CELL_SIZE;
+                ctx.fillStyle='#f1c40f';
+                ctx.beginPath(); ctx.arc(fx+CELL_SIZE/2, fy+CELL_SIZE/2, CELL_SIZE*0.35, 0, Math.PI*2); ctx.fill();
+            }
+            if (pvpCoin) {
+                let cx=pvpCoin[0]*CELL_SIZE+CELL_SIZE/2, cy=pvpCoin[1]*CELL_SIZE+CELL_SIZE/2;
+                ctx.fillStyle='#f9ca24';
+                ctx.beginPath(); ctx.arc(cx,cy,CELL_SIZE*0.25,0,Math.PI*2); ctx.fill();
+                ctx.fillStyle='#000';
+                ctx.font='bold 6px monospace';
+                ctx.textAlign='center';
+                ctx.fillText('🪙', cx, cy+2);
+            }
+            
+            // Информация
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.fillRect(5, 5, 180, 50);
+            ctx.fillStyle = '#2ecc71';
+            ctx.font = '9px monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText('🟢 Вы: ' + pvpSnake1.length, 10, 18);
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillText('🔴 Соперник: ' + pvpSnake2.length, 10, 33);
+            ctx.fillStyle = '#f9ca24';
+            ctx.fillText('💰 ' + (betCoins > 0 ? betCoins + '🪙' : '0🪙') + (betSkin ? ' 🎨' : ''), 10, 48);
+            if (isRealPvp) {
+                ctx.fillStyle = '#f9ca24';
+                ctx.fillText('🌐', 160, 18);
+            }
+            
+            if (pvpGameOver && pvpWinner) {
+                ctx.fillStyle = 'rgba(0,0,0,0.85)';
+                ctx.fillRect(0,0,canvas.width,canvas.height);
+                ctx.fillStyle = '#f9ca24';
+                ctx.font = 'bold 18px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('🏆 ' + pvpWinner + ' ПОБЕДИЛ!', 150, 130);
+                ctx.fillStyle = '#ddd';
+                ctx.font = '11px monospace';
+                ctx.fillText('Нажми "НОВАЯ ИГРА"', 150, 165);
+            }
+            return;
+        }
+        
+        // Обычный режим
         for (let i=0; i<snake.length; i++) {
             let x=snake[i][0]*CELL_SIZE, y=snake[i][1]*CELL_SIZE;
             const isHead = (i===0);
@@ -747,6 +1784,19 @@
 
     function update() {
         if (gameOver || !isGameActive || isPaused) return;
+        
+        // Если PvP и идёт обратный отсчёт – не обновляем игру
+        if (isPvpMode && pvpCountdown > 0) {
+            drawPvpCountdown();
+            return;
+        }
+        
+        if (isPvpMode && pvpOpponent) {
+            updatePvp();
+            return;
+        }
+        
+        // Обычный режим
         dir = nextDir;
         let head = [snake[0][0], snake[0][1]];
         if (dir==='right') head[0]++;
@@ -774,6 +1824,130 @@
         for (let i=1; i<snake.length; i++) {
             if (snake[i][0]===head[0] && snake[i][1]===head[1]) { endGame(); return; }
         }
+        draw();
+    }
+
+    function updatePvp() {
+        if (pvpGameOver) return;
+        
+        // Движение игрока 1
+        let head1 = [pvpSnake1[0][0], pvpSnake1[0][1]];
+        if (pvpDir1==='right') head1[0]++;
+        else if (pvpDir1==='left') head1[0]--;
+        else if (pvpDir1==='up') head1[1]--;
+        else if (pvpDir1==='down') head1[1]++;
+        
+        // Движение бота
+        if (pvpOpponent && pvpOpponent.isBot && pvpFood) {
+            if (pvpFood[0] > pvpSnake2[0][0] && pvpDir2 !== 'left') pvpDir2 = 'right';
+            else if (pvpFood[0] < pvpSnake2[0][0] && pvpDir2 !== 'right') pvpDir2 = 'left';
+            else if (pvpFood[1] > pvpSnake2[0][1] && pvpDir2 !== 'up') pvpDir2 = 'down';
+            else if (pvpFood[1] < pvpSnake2[0][1] && pvpDir2 !== 'down') pvpDir2 = 'up';
+        }
+        
+        let head2 = [pvpSnake2[0][0], pvpSnake2[0][1]];
+        if (pvpDir2==='right') head2[0]++;
+        else if (pvpDir2==='left') head2[0]--;
+        else if (pvpDir2==='up') head2[1]--;
+        else if (pvpDir2==='down') head2[1]++;
+        
+        // Проверка столкновений
+        if (head1[0] < 0 || head1[0] >= GRID_SIZE || head1[1] < 0 || head1[1] >= GRID_SIZE) {
+            pvpGameOver = true;
+            pvpWinner = 'Соперник';
+            handlePvpWin('Соперник');
+            return;
+        }
+        if (head2[0] < 0 || head2[0] >= GRID_SIZE || head2[1] < 0 || head2[1] >= GRID_SIZE) {
+            pvpGameOver = true;
+            pvpWinner = 'Вы';
+            handlePvpWin('Вы');
+            return;
+        }
+        
+        // Проверка столкновения с собой и соперником
+        for (let i=1; i<pvpSnake1.length; i++) {
+            if (pvpSnake1[i][0]===head1[0] && pvpSnake1[i][1]===head1[1]) {
+                pvpGameOver = true;
+                pvpWinner = 'Соперник';
+                handlePvpWin('Соперник');
+                return;
+            }
+        }
+        for (let i=0; i<pvpSnake2.length; i++) {
+            if (pvpSnake2[i][0]===head1[0] && pvpSnake2[i][1]===head1[1]) {
+                pvpGameOver = true;
+                pvpWinner = 'Соперник';
+                handlePvpWin('Соперник');
+                return;
+            }
+        }
+        for (let i=1; i<pvpSnake2.length; i++) {
+            if (pvpSnake2[i][0]===head2[0] && pvpSnake2[i][1]===head2[1]) {
+                pvpGameOver = true;
+                pvpWinner = 'Вы';
+                handlePvpWin('Вы');
+                return;
+            }
+        }
+        for (let i=0; i<pvpSnake1.length; i++) {
+            if (pvpSnake1[i][0]===head2[0] && pvpSnake1[i][1]===head2[1]) {
+                pvpGameOver = true;
+                pvpWinner = 'Вы';
+                handlePvpWin('Вы');
+                return;
+            }
+        }
+        
+        // Еда
+        let eatFood1 = pvpFood && head1[0]===pvpFood[0] && head1[1]===pvpFood[1];
+        let eatFood2 = pvpFood && head2[0]===pvpFood[0] && head2[1]===pvpFood[1];
+        let eatCoin1 = pvpCoin && head1[0]===pvpCoin[0] && head1[1]===pvpCoin[1];
+        let eatCoin2 = pvpCoin && head2[0]===pvpCoin[0] && head2[1]===pvpCoin[1];
+        
+        pvpSnake1.unshift([head1[0], head1[1]]);
+        pvpSnake2.unshift([head2[0], head2[1]]);
+        
+        if (!eatFood1 && !eatCoin1) pvpSnake1.pop();
+        if (!eatFood2 && !eatCoin2) pvpSnake2.pop();
+        
+        if (eatFood1 || eatFood2) {
+            pvpFood = null;
+            let free = [];
+            for (let i=0; i<GRID_SIZE; i++) for (let j=0; j<GRID_SIZE; j++) {
+                let ok = true;
+                for (let s of pvpSnake1) if (s[0]===i && s[1]===j) { ok=false; break; }
+                for (let s of pvpSnake2) if (s[0]===i && s[1]===j) { ok=false; break; }
+                if (pvpFood && pvpFood[0]===i && pvpFood[1]===j) ok=false;
+                if (pvpCoin && pvpCoin[0]===i && pvpCoin[1]===j) ok=false;
+                if (ok) free.push([i,j]);
+            }
+            if (free.length) pvpFood = free[Math.floor(Math.random()*free.length)];
+        }
+        
+        if (eatCoin1) {
+            addCoins(1);
+            pvpCoin = null;
+            let free = [];
+            for (let i=0; i<GRID_SIZE; i++) for (let j=0; j<GRID_SIZE; j++) {
+                let ok = true;
+                for (let s of pvpSnake1) if (s[0]===i && s[1]===j) { ok=false; break; }
+                for (let s of pvpSnake2) if (s[0]===i && s[1]===j) { ok=false; break; }
+                if (pvpFood && pvpFood[0]===i && pvpFood[1]===j) ok=false;
+                if (pvpCoin && pvpCoin[0]===i && pvpCoin[1]===j) ok=false;
+                if (ok) free.push([i,j]);
+            }
+            if (free.length && Math.random()<0.5) pvpCoin = free[Math.floor(Math.random()*free.length)];
+        }
+        if (eatCoin2) {
+            pvpCoin = null;
+        }
+        
+        // Отправляем ход в Firebase для реального PvP
+        if (isRealPvp && currentPvpRoom) {
+            sendRealPvpMove();
+        }
+        
         draw();
     }
 
@@ -815,8 +1989,42 @@
         initialSpawn();
         draw();
     }
-    function launchGame() { fullReset(); startGameLoop(); startOverlay.classList.add('hide-overlay'); }
-    function restartWithMenu() { if (interval) clearInterval(interval); isGameActive=false; gameOver=false; isPaused=false; pauseIndicator.classList.add('hide-pause'); pauseGameBtn.innerHTML='⏸️'; fullReset(); startOverlay.classList.remove('hide-overlay'); }
+    function launchGame() { 
+        fullReset(); 
+        startGameLoop(); 
+        startOverlay.classList.add('hide-overlay');
+        if (!isPvpMode) {
+            pvpOpponent = null;
+        }
+    }
+    function restartWithMenu() { 
+        if (interval) clearInterval(interval); 
+        isGameActive=false; gameOver=false; isPaused=false; 
+        pauseIndicator.classList.add('hide-pause'); 
+        pauseGameBtn.innerHTML='⏸️'; 
+        fullReset(); 
+        startOverlay.classList.remove('hide-overlay');
+        isPvpMode = false;
+        pvpOpponent = null;
+        pvpGameOver = false;
+        pvpWinner = null;
+        isRealPvp = false;
+        if (currentPvpRoom) {
+            rtdb.ref('pvp_rooms/' + currentPvpRoom).off();
+            currentPvpRoom = null;
+            pvpRoomRef = null;
+            pvpRoomListener = null;
+        }
+        pvpBotBtn.style.display = 'inline-block';
+        pvpRealBtn.style.display = 'inline-block';
+        pvpFindBtn.style.display = 'none';
+        pvpCancelBtn.style.display = 'none';
+        if (pvpCountdownInterval) {
+            clearInterval(pvpCountdownInterval);
+            pvpCountdownInterval = null;
+        }
+        pvpCountdown = 0;
+    }
 
     // ===================== НАСТРОЙКИ =====================
     function applyControlMode() {
@@ -923,6 +2131,7 @@
                 saveData();
                 renderSkinInventory();
                 draw();
+                saveUserData();
                 this.classList.add('secret-glow');
                 setTimeout(() => this.classList.remove('secret-glow'), 1500);
                 const notif = document.createElement('div');
@@ -944,8 +2153,6 @@
     });
 
     // ===================== FIRESTORE ПРОМОКОДЫ =====================
-    
-    // Получение ID игрока
     function getPlayerId() {
         let id = localStorage.getItem('playerId');
         if (!id) {
@@ -955,7 +2162,6 @@
         return id;
     }
     
-    // Активация промокода через Firebase
     async function activatePromoFirebase(code) {
         try {
             const docRef = db.collection('promocodes').doc(code);
@@ -985,7 +2191,6 @@
                 return false;
             }
             
-            // Выдача награды
             if (data.reward_type === 'coins') {
                 addCoins(data.reward_amount || 100);
                 promoResult.innerHTML = `<span style="color:#2ecc71;">🎉 +${data.reward_amount || 100} 🪙</span>`;
@@ -1004,7 +2209,6 @@
                 }
             }
             
-            // Помечаем как использованный
             await docRef.update({
                 used: true,
                 usedBy: firebase.firestore.FieldValue.arrayUnion(playerId),
@@ -1021,7 +2225,6 @@
         }
     }
     
-    // Создание промокода в Firestore
     async function createPromoFirebase() {
         const code = newPromoCode.value.trim().toUpperCase();
         if (!code) {
@@ -1053,7 +2256,6 @@
                 data.reward_skin = skinKey;
             }
             
-            // Срок действия 7 дней
             const expiryDate = new Date();
             expiryDate.setDate(expiryDate.getDate() + 7);
             data.expires = firebase.firestore.Timestamp.fromDate(expiryDate);
@@ -1068,7 +2270,6 @@
         }
     }
     
-    // Показать все промокоды из Firestore
     async function renderExistingPromosFirebase() {
         try {
             const snapshot = await db.collection('promocodes')
@@ -1121,15 +2322,251 @@
         const normalSkins = allSkins.filter(s => s.rarity !== 'secret' && s.key !== 'default');
         const options = [...normalSkins, ...secretSkins].map(s => `<option value="${s.key}">${s.name} (${s.rarity})</option>`).join('');
         promoSkinKey.innerHTML = options;
+        devSkinSelect.innerHTML = allSkins.map(s => `<option value="${s.key}">${s.name} (${s.rarity})</option>`).join('');
     }
     
     promoRewardType.addEventListener('change', () => {
         if (promoRewardType.value === 'coins') { promoCoinAmount.style.display = 'block'; promoSkinSelect.style.display = 'none'; }
         else { promoCoinAmount.style.display = 'none'; promoSkinSelect.style.display = 'block'; }
     });
+
+    // ===================== DEV КОМАНДЫ =====================
+    function toggleGodMode() {
+        godMode = !godMode;
+        updateGodModeUI();
+        saveUserData();
+        draw();
+        const notif = document.createElement('div');
+        notif.textContent = godMode ? '🛡️ GOD MODE ВКЛЮЧЕН!' : '🛡️ GOD MODE ВЫКЛЮЧЕН';
+        notif.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:${godMode ? '#f1c40f' : '#e94560'};color:#000;padding:16px 24px;border-radius:16px;font-weight:bold;z-index:50;font-size:16px;text-align:center;pointer-events:none;`;
+        mainContainer.appendChild(notif);
+        setTimeout(() => notif.remove(), 2000);
+    }
+
+    function updateGodModeUI() {
+        if (godMode) {
+            godModeToggle.textContent = '🟢 Бессмертие: ВКЛ';
+            godModeToggle.style.background = '#f1c40f';
+            godModeToggle.style.color = '#000';
+            godModeIndicator.style.display = 'block';
+        } else {
+            godModeToggle.textContent = '🔴 Бессмертие: ВЫКЛ';
+            godModeToggle.style.background = '#e94560';
+            godModeToggle.style.color = '#fff';
+            godModeIndicator.style.display = 'none';
+        }
+    }
+
+    godModeToggle.addEventListener('click', toggleGodMode);
+
+    devSetCoins.addEventListener('click', () => {
+        const val = parseInt(devCoinsInput.value);
+        if (!isNaN(val) && val >= 0) {
+            coins = val;
+            updateCoinsUI();
+            saveUserData();
+            devMessage.innerHTML = `<span style="color:#2ecc71;">✅ Монеты установлены: ${coins}</span>`;
+        } else {
+            devMessage.innerHTML = '<span style="color:#e74c3c;">Введите корректное число</span>';
+        }
+    });
+
+    devAddCoins.addEventListener('click', () => {
+        const val = parseInt(devCoinsInput.value);
+        if (!isNaN(val) && val > 0) {
+            coins += val;
+            updateCoinsUI();
+            saveUserData();
+            devMessage.innerHTML = `<span style="color:#2ecc71;">✅ Добавлено ${val} монет. Всего: ${coins}</span>`;
+        } else {
+            devMessage.innerHTML = '<span style="color:#e74c3c;">Введите корректное число</span>';
+        }
+    });
+
+    devSetBestScore.addEventListener('click', () => {
+        const val = parseInt(devBestScoreInput.value);
+        if (!isNaN(val) && val >= 0) {
+            localStorage.setItem('snakeBestScore', val.toString());
+            updateBestScoreUI();
+            saveUserData();
+            updateLeaderboard();
+            devMessage.innerHTML = `<span style="color:#2ecc71;">✅ Рекорд установлен: ${val}</span>`;
+        } else {
+            devMessage.innerHTML = '<span style="color:#e74c3c;">Введите корректное число</span>';
+        }
+    });
+
+    devSetWins.addEventListener('click', () => {
+        const val = parseInt(devWinsInput.value);
+        if (!isNaN(val) && val >= 0) {
+            wins = val;
+            saveUserData();
+            updateLeaderboard();
+            devMessage.innerHTML = `<span style="color:#2ecc71;">✅ Победы установлены: ${wins}</span>`;
+        } else {
+            devMessage.innerHTML = '<span style="color:#e74c3c;">Введите корректное число</span>';
+        }
+    });
+
+    devSetCases.addEventListener('click', () => {
+        const val = parseInt(devCasesInput.value);
+        if (!isNaN(val) && val >= 0) {
+            cases = val;
+            updateCaseUI();
+            saveUserData();
+            devMessage.innerHTML = `<span style="color:#2ecc71;">✅ Кейсы установлены: ${cases}</span>`;
+        } else {
+            devMessage.innerHTML = '<span style="color:#e74c3c;">Введите корректное число</span>';
+        }
+    });
+
+    devGiveSkin.addEventListener('click', () => {
+        const skinKey = devSkinSelect.value;
+        if (!ownedSkins.includes(skinKey)) {
+            ownedSkins.push(skinKey);
+            activeSkin = skinKey;
+            saveData();
+            renderSkinInventory();
+            draw();
+            saveUserData();
+            devMessage.innerHTML = `<span style="color:#2ecc71;">✅ Скин "${getSkinData(skinKey).name}" выдан!</span>`;
+        } else {
+            devMessage.innerHTML = `<span style="color:#f39c12;">Скин уже есть у пользователя</span>`;
+        }
+    });
+
+    devResetProgress.addEventListener('click', () => {
+        if (confirm('⚠️ Сбросить весь прогресс? Это действие необратимо!')) {
+            if (confirm('Вы уверены? Все данные будут удалены!')) {
+                coins = 0;
+                cases = 0;
+                wins = 0;
+                ownedSkins = ['default'];
+                activeSkin = 'default';
+                localStorage.setItem('snakeBestScore', '0');
+                updateCoinsUI();
+                updateCaseUI();
+                updateBestScoreUI();
+                renderSkinInventory();
+                draw();
+                saveUserData();
+                updateLeaderboard();
+                devMessage.innerHTML = '<span style="color:#e74c3c;">🗑️ Прогресс сброшен</span>';
+            }
+        }
+    });
+
+    // ===== БАН ИГРОКОВ =====
+    devBanBtn.addEventListener('click', () => {
+        const id = devBanInput.value.trim();
+        if (!id) {
+            devMessage.innerHTML = '<span style="color:#e74c3c;">Введите ID игрока!</span>';
+            return;
+        }
+        banPlayer(id);
+    });
+
+    // ===== PVP =====
+    function openPvpMode() {
+        if (!currentUser) {
+            alert('⚠️ Сначала войдите в аккаунт!');
+            return;
+        }
+        setPause(true);
+        pvpOverlay.classList.remove('hide-overlay');
+        pvpStatus.textContent = 'Сделайте ставку и выберите режим';
+        pvpResult.innerHTML = '';
+        pvpRoomInfo.style.display = 'none';
+        pvpFindBtn.style.display = 'none';
+        pvpCancelBtn.style.display = 'none';
+        pvpBotBtn.style.display = 'inline-block';
+        pvpRealBtn.style.display = 'inline-block';
+        pvpSearching = false;
+        pvpOpponent = null;
+        isPvpMode = false;
+        isRealPvp = false;
+        updateBetSelects();
+        betCoinsInput.value = Math.min(10, coins);
+        betCoinsDisplay.textContent = betCoinsInput.value;
+        
+        watchOnlinePlayers();
+    }
+
+    function watchOnlinePlayers() {
+        const playersRef = rtdb.ref('pvp_players');
+        playersRef.on('value', (snapshot) => {
+            const players = snapshot.val();
+            if (!players) {
+                playersList.innerHTML = '<span style="color:#555;">Нет игроков онлайн</span>';
+                return;
+            }
+            
+            let html = '';
+            Object.keys(players).forEach(id => {
+                const p = players[id];
+                if (id !== currentUser?.uid) {
+                    html += `<div class="online-player">
+                        <span class="name">🟢 ${p.username || 'Игрок'}</span>
+                        <span class="status">${p.status === 'searching' ? '🔍 Ищет бой' : '🎮 В игре'}</span>
+                    </div>`;
+                }
+            });
+            playersList.innerHTML = html || '<span style="color:#555;">Нет других игроков онлайн</span>';
+        });
+        return playersRef;
+    }
+
+    pvpBtn.addEventListener('click', openPvpMode);
     
-    // ===================== ИНИЦИАЛИЗАЦИЯ =====================
+    pvpBotBtn.addEventListener('click', () => {
+        pvpBotBtn.style.display = 'none';
+        pvpRealBtn.style.display = 'none';
+        startBotGame();
+    });
+    
+    pvpRealBtn.addEventListener('click', () => {
+        if (!navigator.onLine) {
+            alert('❌ Нет интернета! Для игры с реальным игроком нужен интернет.');
+            return;
+        }
+        pvpBotBtn.style.display = 'none';
+        pvpRealBtn.style.display = 'none';
+        startRealPvpSearch();
+    });
+    
+    pvpCancelBtn.addEventListener('click', cancelPvpSearch);
+    
+    pvpCloseBtn.addEventListener('click', () => {
+        if (pvpSearching) {
+            cancelPvpSearch();
+        }
+        pvpOverlay.classList.add('hide-overlay');
+        setPause(false);
+        pvpBotBtn.style.display = 'inline-block';
+        pvpRealBtn.style.display = 'inline-block';
+        pvpFindBtn.style.display = 'none';
+        pvpCancelBtn.style.display = 'none';
+    });
+
+    // ===== ТАБЛИЦА ЛИДЕРОВ =====
+    leaderboardBtn.addEventListener('click', () => {
+        if (!currentUser) {
+            alert('⚠️ Сначала войдите в аккаунт!');
+            return;
+        }
+        setPause(true);
+        leaderboardOverlay.classList.remove('hide-overlay');
+        updateLeaderboard();
+    });
+
+    closeLeaderboardBtn.addEventListener('click', () => {
+        leaderboardOverlay.classList.add('hide-overlay');
+        setPause(false);
+    });
+
+    // ===== ИНИЦИАЛИЗАЦИЯ =====
     function initAll() {
+        loadBans();
         loadData();
         updateBestScoreUI();
         updateCoinsUI();
@@ -1145,6 +2582,8 @@
         questOverlay.classList.add('hide-overlay');
         settingsOverlay.classList.add('hide-overlay');
         devOverlay.classList.add('hide-overlay');
+        pvpOverlay.classList.add('hide-overlay');
+        leaderboardOverlay.classList.add('hide-overlay');
         applyControlMode();
         setSpeed(gameSpeed);
         setControlMode(controlMode);
@@ -1153,6 +2592,8 @@
         populateSkinSelect();
         renderExistingPromosFirebase();
         promoRewardType.dispatchEvent(new Event('change'));
+        updateGodModeUI();
+        updateLeaderboard();
 
         speedSlider.addEventListener('input', function() { const value = parseInt(this.value); const speed = 300 - (value/100)*250; setSpeed(Math.round(speed)); });
         buyCaseBtn.addEventListener('click', buyCase);
@@ -1168,7 +2609,19 @@
     }
 
     // ===================== ОБРАБОТЧИКИ =====================
-    startBtn.addEventListener('click', (e) => { e.preventDefault(); launchGame(); });
+    startBtn.addEventListener('click', (e) => { 
+        e.preventDefault(); 
+        if (currentUser) {
+            if (isPlayerBanned(currentUser.uid)) {
+                alert('🚫 Ваш аккаунт забанен!');
+                return;
+            }
+            launchGame(); 
+        } else {
+            alert('⚠️ Сначала войдите в аккаунт!');
+        }
+    });
+    
     pauseGameBtn.addEventListener('click', () => { if (startOverlay.classList.contains('hide-overlay') && isGameActive && !gameOver) togglePause(); });
     document.getElementById('restart').addEventListener('click', restartWithMenu);
     document.getElementById('shopBtn').addEventListener('click', () => {
@@ -1193,15 +2646,41 @@
 
     devBtn.addEventListener('click', () => {
         const password = prompt('Введите пароль разработчика:');
-        if (password === '31052013макс') { setPause(true); devOverlay.classList.remove('hide-overlay'); renderExistingPromosFirebase(); devMessage.innerHTML = ''; }
-        else if (password !== null) alert('Неверный пароль!');
+        if (password === '31052013макс') { 
+            setPause(true); 
+            devOverlay.classList.remove('hide-overlay'); 
+            renderExistingPromosFirebase(); 
+            renderBanList();
+            devMessage.innerHTML = ''; 
+            updateGodModeUI();
+        } else if (password !== null) alert('Неверный пароль!');
     });
     closeDevBtn.addEventListener('click', () => { devOverlay.classList.add('hide-overlay'); setPause(false); });
 
     document.addEventListener('keydown', (e) => {
-        if (!startOverlay.classList.contains('hide-overlay')) { if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); launchGame(); } return; }
-        if (e.code === 'Space') { e.preventDefault(); if (isGameActive && !gameOver) togglePause(); else if (gameOver) restartWithMenu(); return; }
+        if (!startOverlay.classList.contains('hide-overlay')) { 
+            if (e.code === 'Space' || e.code === 'Enter') { 
+                e.preventDefault(); 
+                if (currentUser) launchGame(); 
+            } 
+            return; 
+        }
+        if (e.code === 'Space') { 
+            e.preventDefault(); 
+            if (isGameActive && !gameOver) togglePause(); 
+            else if (gameOver) restartWithMenu(); 
+            return; 
+        }
         if (!isGameActive || gameOver || isPaused) return;
+        
+        if (isPvpMode) {
+            if (e.key === 'ArrowUp' && pvpDir1 !== 'down') { pvpDir1 = 'up'; e.preventDefault(); }
+            else if (e.key === 'ArrowDown' && pvpDir1 !== 'up') { pvpDir1 = 'down'; e.preventDefault(); }
+            else if (e.key === 'ArrowLeft' && pvpDir1 !== 'right') { pvpDir1 = 'left'; e.preventDefault(); }
+            else if (e.key === 'ArrowRight' && pvpDir1 !== 'left') { pvpDir1 = 'right'; e.preventDefault(); }
+            return;
+        }
+        
         if (e.key === 'ArrowUp' && dir !== 'down') { nextDir = 'up'; e.preventDefault(); }
         else if (e.key === 'ArrowDown' && dir !== 'up') { nextDir = 'down'; e.preventDefault(); }
         else if (e.key === 'ArrowLeft' && dir !== 'right') { nextDir = 'left'; e.preventDefault(); }
@@ -1215,6 +2694,15 @@
             if (!startOverlay.classList.contains('hide-overlay')) return;
             if (!isGameActive || gameOver || isPaused) return;
             const ndir = btn.getAttribute('data-dir');
+            
+            if (isPvpMode) {
+                if (ndir === 'up' && pvpDir1 !== 'down') { pvpDir1 = 'up'; }
+                else if (ndir === 'down' && pvpDir1 !== 'up') { pvpDir1 = 'down'; }
+                else if (ndir === 'left' && pvpDir1 !== 'right') { pvpDir1 = 'left'; }
+                else if (ndir === 'right' && pvpDir1 !== 'left') { pvpDir1 = 'right'; }
+                return;
+            }
+            
             if (ndir === 'up' && dir !== 'down') nextDir = 'up';
             else if (ndir === 'down' && dir !== 'up') nextDir = 'down';
             else if (ndir === 'left' && dir !== 'right') nextDir = 'left';
@@ -1226,18 +2714,34 @@
 
     startOverlay.addEventListener('click', (e) => e.stopPropagation());
 
-    // ===== ПЕРЕОПРЕДЕЛЯЕМ АКТИВАЦИЮ ПРОМОКОДА НА FIRESTORE =====
     activatePromoBtn.addEventListener('click', () => { 
         const code = promoInput.value.trim().toUpperCase(); 
         if (code) activatePromoFirebase(code); 
         promoInput.value = ''; 
     });
     
-    // ===== ПЕРЕОПРЕДЕЛЯЕМ СОЗДАНИЕ ПРОМОКОДА =====
     createPromoBtn.addEventListener('click', createPromoFirebase);
+
+    window.addEventListener('online', () => {
+        if (currentUser) updateOnlineStatus(true);
+    });
+    
+    window.addEventListener('offline', () => {
+        if (isRealPvp) {
+            alert('⚠️ Интернет пропал! PvP режим прерван.');
+            isRealPvp = false;
+            if (currentPvpRoom) {
+                rtdb.ref('pvp_rooms/' + currentPvpRoom).off();
+                currentPvpRoom = null;
+                pvpRoomRef = null;
+                pvpRoomListener = null;
+            }
+            restartWithMenu();
+        }
+    });
 
     initAll();
 })();
 </script>
 </body>
-                                                                              </html>
+                                                       </html>
