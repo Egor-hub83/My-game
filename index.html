@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Змейка — скины, кейсы, задания, PvP</title>
     
-    <!-- ===== FIREBASE SDK ===== -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -26,7 +25,6 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
         const rtdb = firebase.database();
-        
         db.enablePersistence().catch(err => console.warn('Offline mode:', err));
         console.log('🔥 Firebase подключён!');
     </script>
@@ -48,7 +46,8 @@
         .btn.red { background: #e94560; }
         .btn.gold { background: #b8860b; color: #fff; }
         .btn.green { background: #27ae60; }
-        .btn.dev { background: #333; font-size: 9px; padding: 3px 6px; opacity: 0.4; position: absolute; bottom: 8px; left: 8px; z-index: 40; letter-spacing: 0.5px; }
+        .btn.dev { background: transparent; font-size: 8px; padding: 2px 4px; opacity: 0.15; position: absolute; bottom: 4px; left: 4px; z-index: 40; letter-spacing: 0.5px; border: none; color: #666; transition: opacity 0.3s; }
+        .btn.dev:hover { opacity: 0.6; background: #333; }
         .btn.god-mode { background: #f1c40f; color: #000; font-weight: bold; }
         .btn.pvp { background: #8e44ad; color: #fff; font-weight: bold; }
         .btn.pvp-bot { background: #2ecc71; color: #000; font-weight: bold; }
@@ -147,6 +146,7 @@
         .leaderboard-item.top2 { border-left-color: #c0c0c0; background: #1a1a1a; }
         .leaderboard-item.top3 { border-left-color: #cd7f32; background: #1a1a1a; }
         .leaderboard-item .crown { font-size: 18px; margin-right: 5px; }
+        .leaderboard-item.me { border: 2px solid #f9ca24 !important; background: #1a2a1a !important; }
     </style>
 </head>
 <body>
@@ -429,7 +429,6 @@
     const speedSlider = document.getElementById('speedSlider');
     const godModeIndicator = document.getElementById('godModeIndicator');
 
-    // Лидерборд
     const leaderboardBtn = document.getElementById('leaderboardBtn');
     const leaderboardOverlay = document.getElementById('leaderboardOverlay');
     const closeLeaderboardBtn = document.getElementById('closeLeaderboardBtn');
@@ -456,7 +455,6 @@
     const questBtn = document.getElementById('questBtn');
     const closeQuestBtn = document.getElementById('closeQuestBtn');
 
-    // PvP элементы
     const pvpBtn = document.getElementById('pvpBtn');
     const pvpOverlay = document.getElementById('pvpOverlay');
     const pvpCloseBtn = document.getElementById('pvpCloseBtn');
@@ -469,13 +467,11 @@
     const pvpRealBtn = document.getElementById('pvpRealBtn');
     const playersList = document.getElementById('playersList');
     
-    // Ставки
     const betCoinsInput = document.getElementById('betCoinsInput');
     const betCoinsDisplay = document.getElementById('betCoinsDisplay');
     const betSkinSelect = document.getElementById('betSkinSelect');
     const betSkinDisplay = document.getElementById('betSkinDisplay');
 
-    // Auth элементы
     const loginForm = document.getElementById('loginForm');
     const userInfo = document.getElementById('userInfo');
     const userNameDisplay = document.getElementById('userNameDisplay');
@@ -489,7 +485,6 @@
     const settingsUserDisplay = document.getElementById('settingsUserDisplay');
     const settingsUserId = document.getElementById('settingsUserId');
 
-    // Dev элементы
     const godModeToggle = document.getElementById('godModeToggle');
     const devCoinsInput = document.getElementById('devCoinsInput');
     const devSetCoins = document.getElementById('devSetCoins');
@@ -522,7 +517,6 @@
     let currentUser = null;
     let wins = 0;
 
-    // PvP переменные
     let isPvpMode = false;
     let pvpSearching = false;
     let pvpOpponent = null;
@@ -543,10 +537,8 @@
     let isRealPvp = false;
     let pvpCountdown = 0;
     let pvpCountdownInterval = null;
-    let pvpStartTime = 0;
     let pvpRoomListener = null;
 
-    // ===================== СКИНЫ =====================
     const allSkins = [
         { key: 'default', name: 'Классика', bodyColor: '#2ecc71', headColor: '#3cff7a', rarity: 'common', rarityColor: '#888' },
         { key: 'blue', name: 'Синий', bodyColor: '#3498db', headColor: '#5dade2', rarity: 'rare', rarityColor: '#5dade2' },
@@ -563,7 +555,6 @@
 
     function getSkinData(key) { return allSkins.find(s => s.key === key) || allSkins[0]; }
 
-    // ===================== СИСТЕМА БАНОВ =====================
     function loadBans() {
         const saved = localStorage.getItem('bannedPlayers');
         if (saved) {
@@ -615,36 +606,85 @@
         return bannedPlayers.includes(id);
     }
 
-    // ===================== АВТОРИЗАЦИЯ =====================
-    auth.onAuthStateChanged(async (user) => {
-        if (user) {
-            currentUser = user;
-            userInfo.style.display = 'block';
-            loginForm.style.display = 'none';
-            userNameDisplay.textContent = user.displayName || user.email || user.uid;
-            userIdDisplay.textContent = user.uid;
-            settingsUserDisplay.textContent = user.displayName || user.email || user.uid;
-            settingsUserId.textContent = user.uid;
-            
-            if (isPlayerBanned(user.uid)) {
-                alert('🚫 Ваш аккаунт забанен!');
-                await auth.signOut();
-                return;
-            }
-            
-            await loadUserData(user.uid);
-            updateOnlineStatus(true);
-            updateLeaderboard();
-            updateBetSelects();
-        } else {
-            currentUser = null;
-            userInfo.style.display = 'none';
-            loginForm.style.display = 'block';
-            settingsUserDisplay.textContent = 'Не авторизован';
-            settingsUserId.textContent = '-';
+    // ===================== АВТОРИЗАЦИЯ С СОХРАНЕНИЕМ СЕССИИ =====================
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+        .then(() => {
+            auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    currentUser = user;
+                    userInfo.style.display = 'block';
+                    loginForm.style.display = 'none';
+                    userNameDisplay.textContent = user.displayName || user.email || user.uid;
+                    userIdDisplay.textContent = user.uid;
+                    settingsUserDisplay.textContent = user.displayName || user.email || user.uid;
+                    settingsUserId.textContent = user.uid;
+                    
+                    if (isPlayerBanned(user.uid)) {
+                        alert('🚫 Ваш аккаунт забанен!');
+                        await auth.signOut();
+                        return;
+                    }
+                    
+                    await loadUserData(user.uid);
+                    updateOnlineStatus(true);
+                    updateLeaderboard();
+                    updateBetSelects();
+                } else {
+                    currentUser = null;
+                    userInfo.style.display = 'none';
+                    loginForm.style.display = 'block';
+                    settingsUserDisplay.textContent = 'Не авторизован';
+                    settingsUserId.textContent = '-';
+                    fullReset();
+                    draw();
+                }
+            });
+        })
+        .catch(err => console.error('Ошибка настройки persistence:', err));
+
+    loginBtn.addEventListener('click', async () => {
+        const username = loginUsername.value.trim();
+        const password = loginPassword.value.trim();
+        if (!username || password.length < 6) {
+            alert('Имя не может быть пустым, пароль минимум 6 символов!');
+            return;
+        }
+        try {
+            await auth.signInWithEmailAndPassword(username + '@snake.game', password);
+            alert('✅ Вход выполнен!');
+            loginUsername.value = '';
+            loginPassword.value = '';
+        } catch(e) {
+            alert('❌ Ошибка входа: ' + e.message);
         }
     });
 
+    registerBtn.addEventListener('click', async () => {
+        const username = loginUsername.value.trim();
+        const password = loginPassword.value.trim();
+        if (!username || password.length < 6) {
+            alert('Имя не может быть пустым, пароль минимум 6 символов!');
+            return;
+        }
+        try {
+            const result = await auth.createUserWithEmailAndPassword(username + '@snake.game', password);
+            await result.user.updateProfile({ displayName: username });
+            alert('✅ Регистрация выполнена!');
+            loginUsername.value = '';
+            loginPassword.value = '';
+        } catch(e) {
+            alert('❌ Ошибка регистрации: ' + e.message);
+        }
+    });
+
+    logoutBtn.addEventListener('click', async () => {
+        try {
+            await auth.signOut();
+            alert('👋 Вы вышли');
+        } catch(e) { alert('Ошибка выхода: ' + e.message); }
+    });
+
+    // ===================== ЗАГРУЗКА ДАННЫХ =====================
     async function loadUserData(uid) {
         try {
             const doc = await db.collection('users').doc(uid).get();
@@ -679,9 +719,12 @@
         } catch(e) { console.error('Ошибка загрузки данных:', e); }
     }
 
+    // ===================== СОХРАНЕНИЕ ДАННЫХ (В Firestore И Realtime Database) =====================
     async function saveUserData() {
         if (!currentUser) return;
+        
         try {
+            // 1. Сохраняем в Firestore (все данные аккаунта)
             await db.collection('users').doc(currentUser.uid).set({
                 coins: coins,
                 cases: cases,
@@ -694,8 +737,59 @@
                 godMode: godMode,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
+            
+            // 2. Сохраняем в Realtime Database (для таблицы лидеров)
+            await rtdb.ref('leaderboard/' + currentUser.uid).set({
+                username: currentUser.displayName || currentUser.email || currentUser.uid,
+                bestScore: loadBestScore(),
+                wins: wins,
+                updatedAt: Date.now()
+            });
+            
+            // 3. Обновляем таблицу лидеров
             updateLeaderboard();
-        } catch(e) { console.error('Ошибка сохранения данных:', e); }
+        } catch(e) { 
+            console.error('Ошибка сохранения данных:', e); 
+        }
+    }
+
+    // ===================== ТАБЛИЦА ЛИДЕРОВ =====================
+    function updateLeaderboard() {
+        rtdb.ref('leaderboard').orderByChild('bestScore').limitToLast(20).on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (!data) {
+                leaderboardList.innerHTML = '<p style="color:#888;font-size:12px;">Нет данных</p>';
+                return;
+            }
+            
+            const sorted = Object.keys(data).map(key => ({ id: key, ...data[key] }))
+                .sort((a, b) => (b.bestScore || 0) - (a.bestScore || 0));
+            
+            let html = '';
+            sorted.forEach((player, index) => {
+                const rank = index + 1;
+                let rankClass = '';
+                let crown = '';
+                if (rank === 1) { rankClass = 'top1'; crown = '👑'; }
+                else if (rank === 2) { rankClass = 'top2'; crown = '🥈'; }
+                else if (rank === 3) { rankClass = 'top3'; crown = '🥉'; }
+                
+                const isCurrentUser = player.id === currentUser?.uid;
+                const meClass = isCurrentUser ? 'me' : '';
+                const userName = player.username || 'Аноним';
+                const userScore = player.bestScore || 0;
+                const userWins = player.wins || 0;
+                
+                html += `<div class="leaderboard-item ${rankClass} ${meClass}">
+                    <span class="rank">${crown || '#' + rank}</span>
+                    <span class="name">${userName} ${isCurrentUser ? '⭐' : ''}</span>
+                    <span class="score">${userScore}</span>
+                    <span class="wins">⚔️ ${userWins}</span>
+                </div>`;
+            });
+            
+            leaderboardList.innerHTML = html;
+        });
     }
 
     function updateOnlineStatus(isOnline) {
@@ -721,86 +815,7 @@
         });
     }
 
-    // ===================== ТАБЛИЦА ЛИДЕРОВ =====================
-    function updateLeaderboard() {
-        rtdb.ref('leaderboard').orderByChild('bestScore').limitToLast(20).on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (!data) {
-                leaderboardList.innerHTML = '<p style="color:#888;font-size:12px;">Нет данных</p>';
-                return;
-            }
-            
-            const sorted = Object.keys(data).map(key => ({ id: key, ...data[key] }))
-                .sort((a, b) => (b.bestScore || 0) - (a.bestScore || 0));
-            
-            let html = '';
-            sorted.forEach((player, index) => {
-                const rank = index + 1;
-                let rankClass = '';
-                let crown = '';
-                if (rank === 1) { rankClass = 'top1'; crown = '👑'; }
-                else if (rank === 2) { rankClass = 'top2'; crown = '🥈'; }
-                else if (rank === 3) { rankClass = 'top3'; crown = '🥉'; }
-                
-                const isCurrentUser = player.id === currentUser?.uid;
-                html += `<div class="leaderboard-item ${rankClass}" style="${isCurrentUser ? 'border:2px solid #f9ca24;' : ''}">
-                    <span class="rank">${crown || '#' + rank}</span>
-                    <span class="name">${player.username || 'Аноним'} ${isCurrentUser ? '⭐' : ''}</span>
-                    <span class="score">${player.bestScore || 0}</span>
-                    <span class="wins">⚔️ ${player.wins || 0}</span>
-                </div>`;
-            });
-            
-            leaderboardList.innerHTML = html;
-        });
-    }
-
-    // Вход
-    loginBtn.addEventListener('click', async () => {
-        const username = loginUsername.value.trim();
-        const password = loginPassword.value.trim();
-        if (!username || password.length < 6) {
-            alert('Имя не может быть пустым, пароль минимум 6 символов!');
-            return;
-        }
-        try {
-            await auth.signInWithEmailAndPassword(username + '@snake.game', password);
-            alert('✅ Вход выполнен!');
-            loginUsername.value = '';
-            loginPassword.value = '';
-        } catch(e) {
-            alert('❌ Ошибка входа: ' + e.message);
-        }
-    });
-
-    // Регистрация
-    registerBtn.addEventListener('click', async () => {
-        const username = loginUsername.value.trim();
-        const password = loginPassword.value.trim();
-        if (!username || password.length < 6) {
-            alert('Имя не может быть пустым, пароль минимум 6 символов!');
-            return;
-        }
-        try {
-            const result = await auth.createUserWithEmailAndPassword(username + '@snake.game', password);
-            await result.user.updateProfile({ displayName: username });
-            alert('✅ Регистрация выполнена!');
-            loginUsername.value = '';
-            loginPassword.value = '';
-        } catch(e) {
-            alert('❌ Ошибка регистрации: ' + e.message);
-        }
-    });
-
-    // Выход
-    logoutBtn.addEventListener('click', async () => {
-        try {
-            await auth.signOut();
-            alert('👋 Вы вышли');
-        } catch(e) { alert('Ошибка выхода: ' + e.message); }
-    });
-
-    // ===================== localStorage =====================
+    // ===================== СОХРАНЕНИЕ В LOCALSTORAGE =====================
     function saveData() {
         const data = { bestScore: loadBestScore(), coins, cases, ownedSkins, activeSkin, gameSpeed, controlMode };
         localStorage.setItem('snakeFullData', JSON.stringify(data));
@@ -970,7 +985,6 @@
         });
     }
 
-    // ===================== ДОСТИЖЕНИЯ =====================
     function initAchievements() {
         const saved = localStorage.getItem('achievementsData');
         if (saved) {
@@ -1018,21 +1032,19 @@
         }).join('');
     }
 
-    // ===================== ИСПРАВЛЕННАЯ ФУНКЦИЯ ОТКРЫТИЯ КЕЙСА =====================
+    // ===================== ОТКРЫТИЕ КЕЙСА =====================
     function openCase() {
         if (cases <= 0) {
             caseResult.innerHTML = '<span style="color:#e74c3c;">❌ У вас нет кейсов!</span>';
             return;
         }
         
-        // Проверяем, есть ли скины для выпадения
         const availableSkins = allSkins.filter(s => s.key !== 'default');
         if (availableSkins.length === 0) {
             caseResult.innerHTML = '<span style="color:#e74c3c;">❌ Нет доступных скинов!</span>';
             return;
         }
         
-        // Создаём пул с весами
         let weightedPool = [];
         availableSkins.forEach(s => {
             let weight = 0;
@@ -1047,28 +1059,23 @@
         
         if (weightedPool.length === 0) weightedPool = availableSkins.slice();
         
-        // Выбираем финальный скин
         const finalSkin = weightedPool[Math.floor(Math.random() * weightedPool.length)];
         cases--;
         updateCaseUI();
 
-        // Создаём оверлей
         const overlay = document.createElement('div');
         overlay.style.cssText = `position:absolute;top:0;left:0;width:100%;height:100%;border-radius:20px;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:60;backdrop-filter:blur(6px);padding:10px;`;
         mainContainer.appendChild(overlay);
 
-        // Контейнер для слотов
         const container = document.createElement('div');
         container.style.cssText = 'position:relative;display:inline-block;margin:10px 0;';
         overlay.appendChild(container);
 
-        // Стрелка
         const arrow = document.createElement('div');
         arrow.style.cssText = `position:absolute;top:-24px;left:50%;transform:translateX(-50%);font-size:24px;color:#f9ca24;text-shadow:0 0 15px gold;z-index:10;pointer-events:none;transition:left 0.3s ease;`;
         arrow.textContent = '▲';
         container.appendChild(arrow);
 
-        // Слоты
         const slotsDiv = document.createElement('div');
         slotsDiv.style.cssText = `display:flex;background:#0a0a1a;border:3px solid #f9ca24;border-radius:14px;overflow:hidden;box-shadow:0 0 30px rgba(249,202,36,0.2);`;
         container.appendChild(slotsDiv);
@@ -1093,20 +1100,15 @@
             slots.push({ slot, preview, label });
         }
 
-        // Результат
         const resultText = document.createElement('div');
         resultText.style.cssText = 'color:#f9ca24;font-size:18px;margin-top:15px;text-align:center;min-height:60px;font-weight:bold;';
         overlay.appendChild(resultText);
 
-        // Кнопка закрытия
         const closeBtn = document.createElement('button');
         closeBtn.textContent = 'Закрыть';
         closeBtn.style.cssText = `margin-top:15px;background:#e94560;border:none;color:white;padding:10px 24px;border-radius:30px;font-weight:bold;cursor:pointer;font-size:14px;display:none;transition:0.2s;`;
-        closeBtn.onmouseover = () => closeBtn.style.transform = 'scale(1.05)';
-        closeBtn.onmouseout = () => closeBtn.style.transform = 'scale(1)';
         overlay.appendChild(closeBtn);
 
-        // Заполнение слотов
         function fillSlots(startIndex) {
             for (let i = 0; i < slotCount; i++) {
                 const skin = weightedPool[(startIndex + i) % weightedPool.length];
@@ -1138,7 +1140,6 @@
                 clearInterval(timer);
                 timer = null;
                 
-                // Находим индекс финального скина
                 let finalIndex = -1;
                 for (let i = 0; i < slotCount; i++) {
                     const idx = (currentIndex + i) % weightedPool.length;
@@ -1260,7 +1261,7 @@
         betSkinDisplay.textContent = betSkin ? getSkinData(betSkin).name : 'Нет';
     });
 
-    // ===================== PVP ПРОТИВ БОТА =====================
+    // ===================== PVP =====================
     function startBotGame() {
         if (!currentUser) {
             alert('⚠️ Сначала войдите в аккаунт!');
@@ -1287,8 +1288,7 @@
             <span class="label">💰 Ставка:</span> ${betCoins > 0 ? betCoins + ' 🪙' : 'Нет'} ${betSkin ? '🎨 ' + getSkinData(betSkin).name : ''}
         `;
         
-        // Инициализация PvP с головой вверх
-        pvpSnake1 = [[10,10],[10,11],[10,12]]; // голова вверху
+        pvpSnake1 = [[10,10],[10,11],[10,12]];
         pvpSnake2 = [[10,10],[10,11],[10,12]];
         pvpDir1 = 'up';
         pvpDir2 = 'up';
@@ -1302,7 +1302,6 @@
         pvpFindBtn.style.display = 'none';
         pvpCancelBtn.style.display = 'none';
         
-        // Закрываем оверлей и запускаем игру с обратным отсчётом
         pvpOverlay.classList.add('hide-overlay');
         setPause(false);
         fullReset();
@@ -1311,7 +1310,30 @@
         startPvpCountdown();
     }
 
-    // ===================== PVP ПРОТИВ РЕАЛЬНОГО ИГРОКА =====================
+    function watchOnlinePlayers() {
+        const playersRef = rtdb.ref('pvp_players');
+        playersRef.on('value', (snapshot) => {
+            const players = snapshot.val();
+            if (!players) {
+                playersList.innerHTML = '<span style="color:#555;">Нет игроков онлайн</span>';
+                return;
+            }
+            
+            let html = '';
+            Object.keys(players).forEach(id => {
+                const p = players[id];
+                if (id !== currentUser?.uid) {
+                    html += `<div class="online-player">
+                        <span class="name">🟢 ${p.username || 'Игрок'}</span>
+                        <span class="status">${p.status === 'searching' ? '🔍 Ищет бой' : '🎮 В игре'}</span>
+                    </div>`;
+                }
+            });
+            playersList.innerHTML = html || '<span style="color:#555;">Нет других игроков онлайн</span>';
+        });
+        return playersRef;
+    }
+
     function startRealPvpSearch() {
         if (!currentUser) {
             alert('⚠️ Сначала войдите в аккаунт!');
@@ -1333,7 +1355,6 @@
         pvpBotBtn.style.display = 'none';
         pvpRealBtn.style.display = 'none';
         
-        // Обновляем статус в Firebase
         const searchRef = rtdb.ref('pvp_players/' + currentUser.uid);
         searchRef.update({
             username: currentUser.displayName || currentUser.email || currentUser.uid,
@@ -1343,23 +1364,19 @@
             betSkin: betSkinSelect.value || null
         });
         
-        // Слушаем изменения в списке игроков
         const playersRef = rtdb.ref('pvp_players');
         const listener = playersRef.on('value', (snapshot) => {
             const players = snapshot.val();
             if (!players || !pvpSearching) return;
             
-            // Ищем соперника
             const opponentId = Object.keys(players).find(id => 
                 id !== currentUser.uid && players[id].status === 'searching'
             );
             
             if (opponentId) {
-                // Нашли соперника!
                 pvpSearching = false;
                 const opponentData = players[opponentId];
                 
-                // Создаём комнату
                 const roomId = 'pvp_room_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
                 const roomRef = rtdb.ref('pvp_rooms/' + roomId);
                 
@@ -1370,12 +1387,10 @@
                 const myBetSkin = betSkinSelect.value || null;
                 const oppBetSkin = opponentData.betSkin || null;
                 
-                // Забираем ставки у обоих игроков (списываем монеты)
                 if (myBetCoins > 0) {
                     coins -= myBetCoins;
                     updateCoinsUI();
                 }
-                // У соперника монеты списываются на его стороне
                 
                 betCoins = totalBetCoins;
                 betSkin = myBetSkin || oppBetSkin;
@@ -1399,7 +1414,6 @@
                     timestamp: Date.now()
                 });
                 
-                // Удаляем оба поиска
                 rtdb.ref('pvp_players/' + currentUser.uid).remove();
                 rtdb.ref('pvp_players/' + opponentId).remove();
                 playersRef.off();
@@ -1425,7 +1439,6 @@
                     <span class="label">💰 Общая ставка:</span> ${totalBetCoins} 🪙 ${betSkin ? '🎨 ' + getSkinData(betSkin).name : ''}
                 `;
                 
-                // Подписываемся на обновления комнаты
                 roomRef.on('value', (snap) => {
                     const data = snap.val();
                     if (data) {
@@ -1433,7 +1446,6 @@
                     }
                 });
                 
-                // Закрываем оверлей и запускаем игру с обратным отсчётом
                 pvpOverlay.classList.add('hide-overlay');
                 setPause(false);
                 fullReset();
@@ -1443,7 +1455,6 @@
             }
         });
         
-        // Таймаут поиска (30 секунд)
         if (pvpTimeout) clearTimeout(pvpTimeout);
         pvpTimeout = setTimeout(() => {
             if (pvpSearching) {
@@ -1465,10 +1476,8 @@
         pvpSearching = false;
         isRealPvp = false;
         if (pvpTimeout) clearTimeout(pvpTimeout);
-        
         rtdb.ref('pvp_players/' + currentUser.uid).remove();
         rtdb.ref('pvp_players').off();
-        
         pvpStatus.textContent = '❌ Поиск отменён';
         pvpResult.innerHTML = '<span style="color:#f39c12;">⏹️ Поиск отменён</span>';
         pvpFindBtn.style.display = 'inline-block';
@@ -1477,17 +1486,13 @@
         pvpRealBtn.style.display = 'inline-block';
     }
 
-    // ===================== ОБНОВЛЕНИЕ PVP С РЕАЛЬНЫМ ИГРОКОМ =====================
     function updateRealPvpGame(data) {
         if (!data || pvpGameOver) return;
         
-        // Обновляем данные соперника
         const isPlayer1 = data.player1 === currentUser.uid;
         const opponentSnake = isPlayer1 ? data.snake2 : data.snake1;
         const opponentDir = isPlayer1 ? data.dir2 : data.dir1;
-        const opponentName = isPlayer1 ? data.player2Name : data.player1Name;
         
-        // Обновляем змейку соперника
         if (opponentSnake && Array.isArray(opponentSnake)) {
             if (isPlayer1) {
                 pvpSnake2 = opponentSnake.slice();
@@ -1498,11 +1503,9 @@
             }
         }
         
-        // Обновляем еду и монету
         if (data.food) pvpFood = data.food;
         if (data.coin) pvpCoin = data.coin;
         
-        // Проверка на победу
         if (data.winner) {
             pvpGameOver = true;
             pvpWinner = data.winner === currentUser.uid ? 'Вы' : 'Соперник';
@@ -1528,7 +1531,6 @@
         rtdb.ref('pvp_rooms/' + currentPvpRoom).update(updates);
     }
 
-    // ===================== ОБРАТНЫЙ ОТСЧЁТ ПЕРЕД БОЕМ =====================
     function startPvpCountdown() {
         pvpCountdown = 5;
         drawPvpCountdown();
@@ -1538,9 +1540,7 @@
             if (pvpCountdown <= 0) {
                 clearInterval(pvpCountdownInterval);
                 pvpCountdownInterval = null;
-                // Начинаем бой
                 pvpStartTime = Date.now();
-                // Для реального PvP обновляем статус комнаты
                 if (isRealPvp && currentPvpRoom) {
                     rtdb.ref('pvp_rooms/' + currentPvpRoom).update({
                         status: 'active',
@@ -1552,7 +1552,6 @@
     }
 
     function drawPvpCountdown() {
-        // Рисуем поверх игры
         ctx.fillStyle = 'rgba(0,0,0,0.7)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = '#f9ca24';
@@ -1563,7 +1562,6 @@
         ctx.font = '20px monospace';
         ctx.fillStyle = '#ddd';
         ctx.fillText('Приготовьтесь!', canvas.width/2, canvas.height/2 + 50);
-        // Если PvP реальный, показываем имя соперника
         if (pvpOpponent && !pvpOpponent.isBot) {
             ctx.font = '14px monospace';
             ctx.fillStyle = '#ff6b6b';
@@ -1571,14 +1569,12 @@
         }
     }
 
-    // ===================== ОБРАБОТКА ПОБЕДЫ В PVP =====================
     function handlePvpWin(winner) {
         pvpGameOver = true;
         pvpWinner = winner;
         
         if (winner === 'Вы') {
             wins++;
-            // Забираем общую ставку
             const winCoins = betCoins * 2;
             addCoins(winCoins);
             if (betSkin && !ownedSkins.includes(betSkin)) {
@@ -1591,14 +1587,12 @@
             alert('😢 Вы проиграли! Ставка потеряна.');
         }
         
-        // Обновляем лидерборд
         saveUserData();
         updateLeaderboard();
         updateCoinsUI();
         renderSkinInventory();
         draw();
         
-        // Завершаем PvP режим через 3 секунды
         setTimeout(() => {
             isPvpMode = false;
             pvpOpponent = null;
@@ -1613,7 +1607,7 @@
         }, 3000);
     }
 
-    // ===================== ОСНОВНАЯ ИГРОВАЯ ЛОГИКА =====================
+    // ===================== ИГРОВАЯ ЛОГИКА =====================
     function randomFreeCell() {
         let free = [];
         for (let i=0; i<GRID_SIZE; i++) for (let j=0; j<GRID_SIZE; j++) {
@@ -1639,8 +1633,6 @@
         }
         
         if (isPvpMode && pvpOpponent) {
-            // Отрисовка PvP
-            // Змейка игрока 1 (зелёная)
             for (let i=0; i<pvpSnake1.length; i++) {
                 let x=pvpSnake1[i][0]*CELL_SIZE, y=pvpSnake1[i][1]*CELL_SIZE;
                 ctx.fillStyle = i===0 ? '#2ecc71' : '#1a8a4a';
@@ -1650,7 +1642,6 @@
                 ctx.strokeRect(x+1, y+1, CELL_SIZE-2, CELL_SIZE-2);
             }
             
-            // Змейка игрока 2 (красная)
             for (let i=0; i<pvpSnake2.length; i++) {
                 let x=pvpSnake2[i][0]*CELL_SIZE, y=pvpSnake2[i][1]*CELL_SIZE;
                 ctx.fillStyle = i===0 ? '#e74c3c' : '#8a1a1a';
@@ -1675,7 +1666,6 @@
                 ctx.fillText('🪙', cx, cy+2);
             }
             
-            // Информация
             ctx.fillStyle = 'rgba(0,0,0,0.7)';
             ctx.fillRect(5, 5, 180, 50);
             ctx.fillStyle = '#2ecc71';
@@ -1705,19 +1695,23 @@
             return;
         }
         
-        // Обычный режим
         for (let i=0; i<snake.length; i++) {
             let x=snake[i][0]*CELL_SIZE, y=snake[i][1]*CELL_SIZE;
             const isHead = (i===0);
             let color = isHead ? skin.headColor : skin.bodyColor;
             if (skin.key==='rainbow') { const hue=(i/snake.length*360+Date.now()/20)%360; color=`hsl(${hue},80%,60%)`; }
             ctx.fillStyle=color;
-            ctx.shadowColor = skin.rarity==='secret' ? '#f9ca24' : 'transparent';
-            ctx.shadowBlur = skin.rarity==='secret' ? 8 : 0;
+            if (godMode) {
+                ctx.shadowColor = '#f1c40f';
+                ctx.shadowBlur = 15;
+            } else {
+                ctx.shadowColor = skin.rarity==='secret' ? '#f9ca24' : 'transparent';
+                ctx.shadowBlur = skin.rarity==='secret' ? 8 : 0;
+            }
             ctx.fillRect(x+1, y+1, CELL_SIZE-2, CELL_SIZE-2);
             ctx.shadowBlur=0;
-            ctx.strokeStyle=skin.rarityColor||'#555';
-            ctx.lineWidth=1.2;
+            ctx.strokeStyle = godMode ? '#f1c40f' : (skin.rarityColor||'#555');
+            ctx.lineWidth = godMode ? 2.5 : 1.2;
             ctx.strokeRect(x+1, y+1, CELL_SIZE-2, CELL_SIZE-2);
             if (isHead) {
                 ctx.fillStyle='#ffffff';
@@ -1785,7 +1779,6 @@
     function update() {
         if (gameOver || !isGameActive || isPaused) return;
         
-        // Если PvP и идёт обратный отсчёт – не обновляем игру
         if (isPvpMode && pvpCountdown > 0) {
             drawPvpCountdown();
             return;
@@ -1796,7 +1789,6 @@
             return;
         }
         
-        // Обычный режим
         dir = nextDir;
         let head = [snake[0][0], snake[0][1]];
         if (dir==='right') head[0]++;
@@ -1820,9 +1812,24 @@
             coin = null;
             updateQuestProgress('collect');
         }
-        if (head[0] < 0 || head[0] >= GRID_SIZE || head[1] < 0 || head[1] >= GRID_SIZE) { endGame(); return; }
+        
+        let hitWall = head[0] < 0 || head[0] >= GRID_SIZE || head[1] < 0 || head[1] >= GRID_SIZE;
+        let hitSelf = false;
         for (let i=1; i<snake.length; i++) {
-            if (snake[i][0]===head[0] && snake[i][1]===head[1]) { endGame(); return; }
+            if (snake[i][0]===head[0] && snake[i][1]===head[1]) { hitSelf = true; break; }
+        }
+        
+        if ((hitWall || hitSelf) && !godMode) {
+            endGame();
+            return;
+        } else if ((hitWall || hitSelf) && godMode) {
+            if (hitWall) {
+                if (head[0] < 0) head[0] = GRID_SIZE - 1;
+                else if (head[0] >= GRID_SIZE) head[0] = 0;
+                else if (head[1] < 0) head[1] = GRID_SIZE - 1;
+                else if (head[1] >= GRID_SIZE) head[1] = 0;
+                snake[0] = [head[0], head[1]];
+            }
         }
         draw();
     }
@@ -1830,14 +1837,12 @@
     function updatePvp() {
         if (pvpGameOver) return;
         
-        // Движение игрока 1
         let head1 = [pvpSnake1[0][0], pvpSnake1[0][1]];
         if (pvpDir1==='right') head1[0]++;
         else if (pvpDir1==='left') head1[0]--;
         else if (pvpDir1==='up') head1[1]--;
         else if (pvpDir1==='down') head1[1]++;
         
-        // Движение бота
         if (pvpOpponent && pvpOpponent.isBot && pvpFood) {
             if (pvpFood[0] > pvpSnake2[0][0] && pvpDir2 !== 'left') pvpDir2 = 'right';
             else if (pvpFood[0] < pvpSnake2[0][0] && pvpDir2 !== 'right') pvpDir2 = 'left';
@@ -1851,7 +1856,6 @@
         else if (pvpDir2==='up') head2[1]--;
         else if (pvpDir2==='down') head2[1]++;
         
-        // Проверка столкновений
         if (head1[0] < 0 || head1[0] >= GRID_SIZE || head1[1] < 0 || head1[1] >= GRID_SIZE) {
             pvpGameOver = true;
             pvpWinner = 'Соперник';
@@ -1865,7 +1869,6 @@
             return;
         }
         
-        // Проверка столкновения с собой и соперником
         for (let i=1; i<pvpSnake1.length; i++) {
             if (pvpSnake1[i][0]===head1[0] && pvpSnake1[i][1]===head1[1]) {
                 pvpGameOver = true;
@@ -1899,7 +1902,6 @@
             }
         }
         
-        // Еда
         let eatFood1 = pvpFood && head1[0]===pvpFood[0] && head1[1]===pvpFood[1];
         let eatFood2 = pvpFood && head2[0]===pvpFood[0] && head2[1]===pvpFood[1];
         let eatCoin1 = pvpCoin && head1[0]===pvpCoin[0] && head1[1]===pvpCoin[1];
@@ -1943,7 +1945,6 @@
             pvpCoin = null;
         }
         
-        // Отправляем ход в Firebase для реального PvP
         if (isRealPvp && currentPvpRoom) {
             sendRealPvpMove();
         }
@@ -1954,9 +1955,11 @@
     function endGame() {
         gameOver = true;
         stopGameLoop();
-        checkAndUpdateRecord(score);
-        updateQuestProgress('score', score);
-        updateQuestProgress('play');
+        if (!godMode) {
+            checkAndUpdateRecord(score);
+            updateQuestProgress('score', score);
+            updateQuestProgress('play');
+        }
         draw();
     }
 
@@ -2492,30 +2495,6 @@
         watchOnlinePlayers();
     }
 
-    function watchOnlinePlayers() {
-        const playersRef = rtdb.ref('pvp_players');
-        playersRef.on('value', (snapshot) => {
-            const players = snapshot.val();
-            if (!players) {
-                playersList.innerHTML = '<span style="color:#555;">Нет игроков онлайн</span>';
-                return;
-            }
-            
-            let html = '';
-            Object.keys(players).forEach(id => {
-                const p = players[id];
-                if (id !== currentUser?.uid) {
-                    html += `<div class="online-player">
-                        <span class="name">🟢 ${p.username || 'Игрок'}</span>
-                        <span class="status">${p.status === 'searching' ? '🔍 Ищет бой' : '🎮 В игре'}</span>
-                    </div>`;
-                }
-            });
-            playersList.innerHTML = html || '<span style="color:#555;">Нет других игроков онлайн</span>';
-        });
-        return playersRef;
-    }
-
     pvpBtn.addEventListener('click', openPvpMode);
     
     pvpBotBtn.addEventListener('click', () => {
@@ -2744,4 +2723,4 @@
 })();
 </script>
 </body>
-                                                       </html>
+                </html>
