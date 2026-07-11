@@ -29,6 +29,7 @@
         .btn.pvp-bot { background: #2ecc71; color: #000; font-weight: bold; }
         .btn.pvp-real { background: #e67e22; color: #fff; font-weight: bold; }
         .btn.leaderboard { background: #f39c12; color: #000; font-weight: bold; }
+        .btn.transfer { background: #1abc9c; color: #000; font-weight: bold; }
         .promo-input { background: #1a1a2e; border: 1px solid #555; color: white; padding: 6px 10px; border-radius: 20px; font-family: monospace; width: 110px; text-align: center; outline: none; }
         .promo-input:focus { border-color: #f9ca24; }
         .dpad { display: flex; flex-direction: column; align-items: center; margin-top: 8px; }
@@ -137,11 +138,25 @@
         .player-list-item { display: flex; align-items: center; gap: 8px; padding: 4px 8px; margin: 2px 0; border-radius: 8px; background: #0a0a1a; font-size: 11px; color: #ddd; border-left: 3px solid #2ecc71; }
         .player-list-item .pid { color: #f9ca24; font-size: 9px; cursor: pointer; }
         .player-list-item .pid:hover { text-decoration: underline; }
-        .player-list-item .pavatar { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .player-list-item .pavatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
         .player-list-item .ban-status { margin-left: auto; font-size: 10px; }
         
         .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2ecc71; color: #000; padding: 8px 16px; border-radius: 20px; font-size: 12px; z-index: 100; font-weight: bold; animation: fadeInOut 2s ease; }
         @keyframes fadeInOut { 0% { opacity: 0; transform: translateX(-50%) translateY(20px); } 10% { opacity: 1; transform: translateX(-50%) translateY(0); } 90% { opacity: 1; transform: translateX(-50%) translateY(0); } 100% { opacity: 0; transform: translateX(-50%) translateY(20px); } }
+        
+        .quest-tabs { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: 8px 0; }
+        .quest-tab { background: #2c3e66; border: none; color: #aaa; padding: 4px 14px; border-radius: 20px; font-size: 11px; cursor: pointer; font-family: monospace; }
+        .quest-tab.active { background: #f9ca24; color: #000; font-weight: bold; }
+        .quest-tab .badge { background: #e94560; color: #fff; border-radius: 50%; padding: 0 6px; font-size: 9px; margin-left: 4px; }
+        .quest-timer { color: #f9ca24; font-size: 11px; margin: 4px 0; }
+        
+        .transfer-section { background: #1a2a2a; padding: 10px; border-radius: 12px; margin: 8px 0; border: 1px solid #1abc9c; }
+        .transfer-section .label { color: #1abc9c; font-weight: bold; }
+        .transfer-section input { background: #0a0a1a; border: 1px solid #1abc9c; color: #fff; padding: 4px 8px; border-radius: 12px; font-family: monospace; width: 80px; text-align: center; }
+        .transfer-section .btn-small { font-size: 11px; padding: 4px 12px; background: #1abc9c; border: none; color: #000; border-radius: 16px; cursor: pointer; font-weight: bold; }
+        .transfer-section .btn-small:active { transform: scale(0.95); }
+        
+        .avatar-upload-btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -197,7 +212,7 @@
                             <span class="default-avatar" id="avatarEmoji">🐍</span>
                         </div>
                         <div class="avatar-btns">
-                            <label class="avatar-upload-btn">📷 Загрузить аватарку
+                            <label class="avatar-upload-btn" id="avatarUploadBtn">📷 Загрузить аватарку
                                 <input type="file" id="avatarInput" class="avatar-input" accept="image/*">
                             </label>
                             <button id="changeNickBtn" class="btn" style="font-size:10px;padding:3px 10px;">✏️ Сменить ник</button>
@@ -257,7 +272,7 @@
             
             <div style="margin:10px 0;">
                 <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-                    <button id="pvpBotBtn" class="btn pvp-bot" style="padding:10px 20px;">🤖 Против бота</button>
+                    <button id="pvpBotBtn" class="btn pvp-bot" style="padding:10px 20px;">🤖 Против бота ❌ без монет</button>
                     <button id="pvpRealBtn" class="btn pvp-real" style="padding:10px 20px;">👤 Против игрока</button>
                 </div>
             </div>
@@ -304,6 +319,12 @@
     <div id="questOverlay" class="overlay hide-overlay">
         <div class="overlay-card" style="max-width:340px;">
             <h2>📋 Задания</h2>
+            <div class="quest-tabs">
+                <button class="quest-tab active" data-tab="daily">📅 Ежедневные <span class="badge" id="dailyBadge">5</span></button>
+                <button class="quest-tab" data-tab="weekly">📆 Еженедельные <span class="badge" id="weeklyBadge">10</span></button>
+                <button class="quest-tab" data-tab="permanent">🏆 Постоянные <span class="badge" id="permanentBadge">30</span></button>
+            </div>
+            <div id="questTimer" class="quest-timer"></div>
             <div id="questList" style="text-align:left; max-height:300px; overflow-y:auto;"></div>
             <hr style="border-color:#333;margin:10px 0;">
             <h3 style="color:#f9ca24;font-size:16px;">🏆 Достижения</h3>
@@ -345,6 +366,17 @@
             <div style="background:#2c3e66;padding:10px;border-radius:12px;margin:8px 0;">
                 <p style="color:#f9ca24;font-weight:bold;margin:0;">🛡️ Читы</p>
                 <button id="godModeToggle" class="btn god-mode" style="margin:5px 0;">🔴 Бессмертие: ВЫКЛ</button>
+            </div>
+            
+            <!-- ПЕРЕДАЧА МОНЕТ -->
+            <div class="transfer-section">
+                <p style="color:#1abc9c;font-weight:bold;margin:0 0 6px 0;">💰 Передача монет</p>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:center;">
+                    <input type="text" id="transferUserId" class="promo-input" placeholder="ID получателя" style="width:120px;">
+                    <input type="number" id="transferAmount" class="promo-input" placeholder="Кол-во" value="10" min="1" style="width:80px;">
+                    <button id="transferCoinsBtn" class="btn transfer" style="padding:4px 16px;">📤 Передать</button>
+                </div>
+                <div id="transferResult" style="font-size:11px;min-height:18px;color:#ddd;margin-top:4px;"></div>
             </div>
             
             <hr style="border-color:#333;margin:8px 0;">
@@ -441,6 +473,7 @@
     const avatarPreview = document.getElementById('avatarPreview');
     const avatarEmoji = document.getElementById('avatarEmoji');
     const avatarInput = document.getElementById('avatarInput');
+    const avatarUploadBtn = document.getElementById('avatarUploadBtn');
     const changeNickBtn = document.getElementById('changeNickBtn');
 
     const leaderboardBtn = document.getElementById('leaderboardBtn');
@@ -516,6 +549,11 @@
     const devBanInput = document.getElementById('devBanInput');
     const devBanBtn = document.getElementById('devBanBtn');
     const banList = document.getElementById('banList');
+
+    const transferUserId = document.getElementById('transferUserId');
+    const transferAmount = document.getElementById('transferAmount');
+    const transferCoinsBtn = document.getElementById('transferCoinsBtn');
+    const transferResult = document.getElementById('transferResult');
 
     const GRID_SIZE = 20;
     const CELL_SIZE = canvas.width / GRID_SIZE;
@@ -673,29 +711,96 @@
         return isBanned;
     }
 
-    // ===================== АВАТАРКИ =====================
+    // ===================== АВАТАРКИ (С ИСПРАВЛЕННЫМ БАГОМ) =====================
     function updateAvatarPreview() {
-        if (avatarData) {
-            avatarPreview.innerHTML = '<img src="' + avatarData + '" style="width:100%;height:100%;object-fit:cover;">';
+        if (avatarData && avatarData.startsWith('data:image')) {
+            avatarPreview.innerHTML = '<img src="' + avatarData + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" loading="lazy">';
         } else {
             avatarPreview.innerHTML = '<span class="default-avatar" id="avatarEmoji">🐍</span>';
         }
     }
 
-    avatarInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
+    function compressImage(file, maxWidth = 100, maxHeight = 100, quality = 0.7) {
+        return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = function(event) {
-                avatarData = event.target.result;
-                updateAvatarPreview();
-                saveLocalUserData();
-                updateAllPlayersList();
-                showToast('✅ Аватарка загружена!');
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height = Math.round(height * (maxWidth / width));
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width = Math.round(width * (maxHeight / height));
+                            height = maxHeight;
+                        }
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    const compressed = canvas.toDataURL('image/jpeg', quality);
+                    resolve(compressed);
+                };
+                img.onerror = function() {
+                    reject(new Error('Ошибка загрузки изображения'));
+                };
+                img.src = event.target.result;
+            };
+            reader.onerror = function() {
+                reject(new Error('Ошибка чтения файла'));
             };
             reader.readAsDataURL(file);
+        });
+    }
+
+    avatarInput.addEventListener('change', async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (file.size > 2 * 1024 * 1024) {
+            showToast('❌ Файл слишком большой! Максимум 2 МБ', '#e74c3c');
+            avatarInput.value = '';
+            return;
         }
-        avatarInput.value = '';
+        
+        if (!file.type.startsWith('image/')) {
+            showToast('❌ Пожалуйста, выберите изображение!', '#e74c3c');
+            avatarInput.value = '';
+            return;
+        }
+        
+        avatarUploadBtn.textContent = '⏳ Загрузка...';
+        avatarUploadBtn.style.opacity = '0.6';
+        avatarUploadBtn.style.pointerEvents = 'none';
+        
+        try {
+            const compressed = await compressImage(file, 100, 100, 0.7);
+            avatarData = compressed;
+            updateAvatarPreview();
+            saveLocalUserData();
+            updateAllPlayersList();
+            updateLeaderboard();
+            showToast('✅ Аватарка загружена и сжата!', '#2ecc71');
+        } catch (error) {
+            console.error('Ошибка загрузки аватарки:', error);
+            showToast('❌ Ошибка загрузки: ' + error.message, '#e74c3c');
+        } finally {
+            avatarUploadBtn.textContent = '📷 Загрузить аватарку';
+            avatarUploadBtn.style.opacity = '1';
+            avatarUploadBtn.style.pointerEvents = 'auto';
+            avatarInput.value = '';
+        }
     });
 
     changeNickBtn.addEventListener('click', function() {
@@ -721,36 +826,62 @@
         }
     });
 
-    // ===================== АВТОРИЗАЦИЯ =====================
+    // ===================== АВТОРИЗАЦИЯ С ЗАПОМИНАНИЕМ =====================
+    function saveSession(user) {
+        localStorage.setItem('snakeUser', JSON.stringify(user));
+    }
+
     function loadUserSession() {
         const savedUser = localStorage.getItem('snakeUser');
         if (savedUser) {
             try {
                 const user = JSON.parse(savedUser);
+                const users = JSON.parse(localStorage.getItem('snakeUsers') || '[]');
+                const found = users.find(u => u.id === user.id && u.username === user.username);
+                
+                if (!found) {
+                    localStorage.removeItem('snakeUser');
+                    return false;
+                }
+                
                 if (isPlayerBanned(user.id)) {
                     localStorage.removeItem('snakeUser');
-                    return;
+                    return false;
                 }
+                
                 currentUser = {
                     uid: user.id,
                     username: user.username
                 };
+                
                 userInfo.style.display = 'block';
                 loginForm.style.display = 'none';
                 userNameDisplay.textContent = user.username;
                 userIdDisplay.textContent = user.id;
                 settingsUserDisplay.textContent = user.username;
                 settingsUserId.textContent = user.id;
+                
                 loadLocalUserData(user.id);
                 updateOnlineStatus(true);
                 updateLeaderboard();
                 updateBetSelects();
                 updateAllPlayersList();
-            } catch(e) { console.error('Ошибка загрузки сессии:', e); }
+                updateCoinsUI();
+                updateCaseUI();
+                renderSkinInventory();
+                
+                showToast('👋 Добро пожаловать, ' + user.username + '!', '#2ecc71');
+                return true;
+            } catch(e) { 
+                console.error('Ошибка загрузки сессии:', e);
+                localStorage.removeItem('snakeUser');
+                return false;
+            }
         }
+        return false;
     }
 
-    // ===================== РЕГИСТРАЦИЯ (ИСПРАВЛЕННАЯ) =====================
+    // ===================== РЕГИСТРАЦИЯ =====================
     function registerLocal() {
         const username = loginUsername.value.trim();
         const password = loginPassword.value.trim();
@@ -760,19 +891,16 @@
             return;
         }
         
-        // Получаем список пользователей
         let users = [];
         try {
             users = JSON.parse(localStorage.getItem('snakeUsers') || '[]');
         } catch(e) { users = []; }
         
-        // Проверяем, не занято ли имя
         if (users.some(u => u.username === username)) {
             alert('❌ Это имя уже занято!');
             return;
         }
         
-        // Создаём пользователя
         const user = {
             id: generateNumericId(),
             username: username,
@@ -782,7 +910,7 @@
         
         users.push(user);
         localStorage.setItem('snakeUsers', JSON.stringify(users));
-        localStorage.setItem('snakeUser', JSON.stringify(user));
+        saveSession(user);
         
         currentUser = {
             uid: user.id,
@@ -832,7 +960,7 @@
             return;
         }
         
-        localStorage.setItem('snakeUser', JSON.stringify(user));
+        saveSession(user);
         currentUser = {
             uid: user.id,
             username: user.username
@@ -860,9 +988,9 @@
         userInfo.style.display = 'none';
         loginForm.style.display = 'block';
         showToast('👋 Вы вышли', '#e74c3c');
+        startOverlay.classList.remove('hide-overlay');
     }
 
-    // ===================== ПОДКЛЮЧАЕМ КНОПКИ =====================
     loginBtn.addEventListener('click', function(e) {
         e.preventDefault();
         loginLocal();
@@ -944,12 +1072,16 @@
         const users = JSON.parse(localStorage.getItem('snakeUsers') || '[]');
         const leaderboardData = users.map(user => {
             const userData = JSON.parse(localStorage.getItem('userData_' + user.id) || '{}');
+            let avatarHtml = '🐍';
+            if (userData.avatar && userData.avatar.startsWith('data:image')) {
+                avatarHtml = '<img src="' + userData.avatar + '" class="avatar-small" loading="lazy">';
+            }
             return {
                 id: user.id,
                 username: user.username,
                 bestScore: userData.bestScore || 0,
                 wins: userData.wins || 0,
-                avatar: userData.avatar || null
+                avatarHtml: avatarHtml
             };
         }).sort((a, b) => (b.bestScore || 0) - (a.bestScore || 0));
         
@@ -968,10 +1100,9 @@
             
             const isCurrentUser = player.id === currentUser?.uid;
             const meClass = isCurrentUser ? 'me' : '';
-            const avatarHtml = player.avatar ? '<img src="' + player.avatar + '" class="avatar-small">' : '🐍';
             html += '<div class="leaderboard-item ' + rankClass + ' ' + meClass + '">' +
                 '<span class="rank">' + (crown || '#' + rank) + '</span>' +
-                '<span class="name">' + avatarHtml + ' ' + (player.username || 'Аноним') + (isCurrentUser ? ' ⭐' : '') + '</span>' +
+                '<span class="name">' + player.avatarHtml + ' ' + (player.username || 'Аноним') + (isCurrentUser ? ' ⭐' : '') + '</span>' +
                 '<span class="score">' + (player.bestScore || 0) + '</span>' +
                 '<span class="wins">⚔️ ' + (player.wins || 0) + '</span>' +
             '</div>';
@@ -990,7 +1121,10 @@
         let html = '';
         users.forEach(user => {
             const userData = JSON.parse(localStorage.getItem('userData_' + user.id) || '{}');
-            const avatarHtml = userData.avatar ? '<img src="' + userData.avatar + '" class="pavatar">' : '🐍';
+            let avatarHtml = '🐍';
+            if (userData.avatar && userData.avatar.startsWith('data:image')) {
+                avatarHtml = '<img src="' + userData.avatar + '" class="pavatar" loading="lazy">';
+            }
             const isBanned = bannedPlayers.includes(user.id);
             const banStatus = isBanned ? '🚫 Забанен' : '✅ Активен';
             const statusColor = isBanned ? '#e74c3c' : '#2ecc71';
@@ -1012,6 +1146,60 @@
             userStatusDisplay.textContent = isOnline ? '🟢 Онлайн' : '🔴 Оффлайн';
             userStatusDisplay.className = isOnline ? 'pvp-status-online' : 'pvp-status-offline';
         }
+    }
+
+    // ===================== ПЕРЕДАЧА МОНЕТ =====================
+    function transferCoins() {
+        if (!currentUser) {
+            transferResult.innerHTML = '<span style="color:#e74c3c;">❌ Сначала войдите в аккаунт!</span>';
+            return;
+        }
+        
+        const targetId = transferUserId.value.trim();
+        const amount = parseInt(transferAmount.value);
+        
+        if (!targetId) {
+            transferResult.innerHTML = '<span style="color:#e74c3c;">❌ Введите ID получателя!</span>';
+            return;
+        }
+        
+        if (targetId === currentUser.uid) {
+            transferResult.innerHTML = '<span style="color:#f39c12;">⚠️ Нельзя передать монеты самому себе!</span>';
+            return;
+        }
+        
+        if (!amount || amount <= 0) {
+            transferResult.innerHTML = '<span style="color:#e74c3c;">❌ Введите корректное количество монет!</span>';
+            return;
+        }
+        
+        if (amount > coins) {
+            transferResult.innerHTML = '<span style="color:#e74c3c;">❌ Недостаточно монет! У вас: ' + coins + '</span>';
+            return;
+        }
+        
+        const users = JSON.parse(localStorage.getItem('snakeUsers') || '[]');
+        const targetUser = users.find(u => u.id === targetId);
+        
+        if (!targetUser) {
+            transferResult.innerHTML = '<span style="color:#e74c3c;">❌ Игрок с ID ' + targetId + ' не найден!</span>';
+            return;
+        }
+        
+        coins -= amount;
+        updateCoinsUI();
+        saveLocalUserData();
+        
+        const targetData = JSON.parse(localStorage.getItem('userData_' + targetId) || '{}');
+        targetData.coins = (targetData.coins || 0) + amount;
+        localStorage.setItem('userData_' + targetId, JSON.stringify(targetData));
+        
+        transferResult.innerHTML = '<span style="color:#2ecc71;">✅ Передано ' + amount + ' монет игроку ' + targetUser.username + ' (ID: ' + targetId + ')</span>';
+        transferUserId.value = '';
+        transferAmount.value = '10';
+        updateLeaderboard();
+        updateAllPlayersList();
+        showToast('✅ Передано ' + amount + ' монет игроку ' + targetUser.username, '#1abc9c');
     }
 
     // ===================== ОСТАЛЬНЫЕ ФУНКЦИИ =====================
@@ -1079,63 +1267,192 @@
         }
     }
 
-    // ===================== ЗАДАНИЯ =====================
-    let quests = [], achievements = [], totalQuestsCompleted = 0;
+    // ===================== ЗАДАНИЯ (ОБНОВЛЕННЫЕ) =====================
+    let quests = {
+        daily: [],
+        weekly: [],
+        permanent: []
+    };
+    let totalQuestsCompleted = 0;
+    let questTab = 'daily';
+    let lastDailyReset = 0;
+    let lastWeeklyReset = 0;
 
-    function initQuests() {
+    function generateDailyQuests() {
         const today = new Date().toDateString();
-        const saved = localStorage.getItem('questsData');
+        const saved = localStorage.getItem('questsDaily');
         if (saved) {
             try {
                 const data = JSON.parse(saved);
                 if (data.date === today) {
-                    quests = data.quests;
-                    totalQuestsCompleted = data.totalCompleted || 0;
+                    quests.daily = data.quests;
                     return;
                 }
             } catch(e) {}
         }
-        const questTemplates = [
-            { id: 'eat10', name: 'Съесть 10 яблок', target: 10, reward: 5, progress: 0, completed: false },
-            { id: 'eat25', name: 'Съесть 25 яблок', target: 25, reward: 10, progress: 0, completed: false },
-            { id: 'score30', name: 'Набрать 30 очков', target: 30, reward: 8, progress: 0, completed: false },
-            { id: 'score50', name: 'Набрать 50 очков', target: 50, reward: 15, progress: 0, completed: false },
-            { id: 'collect5', name: 'Собрать 5 монет', target: 5, reward: 10, progress: 0, completed: false },
-            { id: 'play3', name: 'Сыграть 3 игры', target: 3, reward: 12, progress: 0, completed: false },
-            { id: 'play5', name: 'Сыграть 5 игр', target: 5, reward: 20, progress: 0, completed: false }
+        
+        const templates = [
+            { id: 'd1', name: 'Съесть 5 яблок', target: 5, reward: 10 },
+            { id: 'd2', name: 'Съесть 10 яблок', target: 10, reward: 20 },
+            { id: 'd3', name: 'Набрать 15 очков', target: 15, reward: 15 },
+            { id: 'd4', name: 'Собрать 3 монеты', target: 3, reward: 15 },
+            { id: 'd5', name: 'Сыграть 1 игру', target: 1, reward: 10 }
         ];
-        quests = questTemplates.slice(0,5).map(q => ({ ...q, progress: 0, completed: false }));
-        totalQuestsCompleted = 0;
-        saveQuests();
+        quests.daily = templates.map(q => ({ ...q, progress: 0, completed: false, claimed: false }));
+        localStorage.setItem('questsDaily', JSON.stringify({ date: today, quests: quests.daily }));
+        updateDailyBadge();
+    }
+
+    function generateWeeklyQuests() {
+        const week = getWeekNumber();
+        const saved = localStorage.getItem('questsWeekly');
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                if (data.week === week) {
+                    quests.weekly = data.quests;
+                    return;
+                }
+            } catch(e) {}
+        }
+        
+        const templates = [
+            { id: 'w1', name: 'Съесть 30 яблок', target: 30, reward: 30 },
+            { id: 'w2', name: 'Съесть 50 яблок', target: 50, reward: 50 },
+            { id: 'w3', name: 'Набрать 50 очков', target: 50, reward: 40 },
+            { id: 'w4', name: 'Набрать 100 очков', target: 100, reward: 60 },
+            { id: 'w5', name: 'Собрать 15 монет', target: 15, reward: 35 },
+            { id: 'w6', name: 'Собрать 30 монет', target: 30, reward: 50 },
+            { id: 'w7', name: 'Сыграть 5 игр', target: 5, reward: 30 },
+            { id: 'w8', name: 'Сыграть 10 игр', target: 10, reward: 45 },
+            { id: 'w9', name: 'Победить в PvP 3 раза', target: 3, reward: 40 },
+            { id: 'w10', name: 'Собрать 100 монет всего', target: 100, reward: 60 }
+        ];
+        quests.weekly = templates.map(q => ({ ...q, progress: 0, completed: false, claimed: false }));
+        localStorage.setItem('questsWeekly', JSON.stringify({ week, quests: quests.weekly }));
+        updateWeeklyBadge();
+    }
+
+    function generatePermanentQuests() {
+        const saved = localStorage.getItem('questsPermanent');
+        if (saved) {
+            try {
+                quests.permanent = JSON.parse(saved);
+                return;
+            } catch(e) {}
+        }
+        
+        const templates = [];
+        for (let i = 1; i <= 30; i++) {
+            let name, target, reward;
+            if (i <= 10) {
+                name = 'Съесть ' + (i * 5) + ' яблок';
+                target = i * 5;
+                reward = i * 5;
+            } else if (i <= 20) {
+                name = 'Набрать ' + ((i - 10) * 20) + ' очков';
+                target = (i - 10) * 20;
+                reward = (i - 10) * 8;
+            } else {
+                name = 'Собрать ' + ((i - 20) * 10) + ' монет';
+                target = (i - 20) * 10;
+                reward = (i - 20) * 6;
+            }
+            templates.push({
+                id: 'p' + i,
+                name: name,
+                target: target,
+                reward: reward,
+                progress: 0,
+                completed: false,
+                claimed: false
+            });
+        }
+        quests.permanent = templates;
+        localStorage.setItem('questsPermanent', JSON.stringify(quests.permanent));
+        updatePermanentBadge();
+    }
+
+    function getWeekNumber() {
+        const d = new Date();
+        const yearStart = new Date(d.getFullYear(), 0, 1);
+        const days = Math.floor((d - yearStart) / (24 * 60 * 60 * 1000));
+        return Math.ceil((days + 1) / 7);
+    }
+
+    function updateDailyBadge() {
+        const count = quests.daily.filter(q => !q.completed).length;
+        document.getElementById('dailyBadge').textContent = count;
+    }
+
+    function updateWeeklyBadge() {
+        const count = quests.weekly.filter(q => !q.completed).length;
+        document.getElementById('weeklyBadge').textContent = count;
+    }
+
+    function updatePermanentBadge() {
+        const count = quests.permanent.filter(q => !q.completed).length;
+        document.getElementById('permanentBadge').textContent = count;
+    }
+
+    function initQuests() {
+        generateDailyQuests();
+        generateWeeklyQuests();
+        generatePermanentQuests();
+        updateQuestTimer();
+    }
+
+    function updateQuestTimer() {
+        const timer = document.getElementById('questTimer');
+        if (!timer) return;
+        const now = Date.now();
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+        const msToReset = tomorrow - now;
+        if (msToReset > 0) {
+            const hours = Math.floor(msToReset / (1000 * 60 * 60));
+            const minutes = Math.floor((msToReset % (1000 * 60 * 60)) / (1000 * 60));
+            timer.textContent = '⏳ До обновления: ' + hours + 'ч ' + minutes + 'м';
+        } else {
+            timer.textContent = '🔄 Обновление...';
+            generateDailyQuests();
+        }
     }
 
     function saveQuests() {
-        const data = { date: new Date().toDateString(), quests, totalCompleted: totalQuestsCompleted };
-        localStorage.setItem('questsData', JSON.stringify(data));
         saveLocalUserData();
     }
 
     function updateQuestProgress(type, amount = 1) {
         let changed = false;
-        quests.forEach(q => {
-            if (q.completed) return;
-            if (type === 'eat' && q.id.startsWith('eat')) {
+        
+        const allQuests = [...quests.daily, ...quests.weekly, ...quests.permanent];
+        allQuests.forEach(q => {
+            if (q.completed || q.claimed) return;
+            if (type === 'eat' && q.id.startsWith('d') && q.id !== 'd3' && q.id !== 'd4' && q.id !== 'd5') {
                 q.progress = Math.min(q.target, q.progress + amount);
-                if (q.progress >= q.target) { q.completed = true; totalQuestsCompleted++; changed = true; }
+            } else if (type === 'score' && (q.id === 'd3' || q.id.startsWith('w'))) {
+                q.progress = Math.min(q.target, q.progress + amount);
+            } else if (type === 'collect' && (q.id === 'd4' || q.id.startsWith('w'))) {
+                q.progress = Math.min(q.target, q.progress + amount);
+            } else if (type === 'play' && (q.id === 'd5' || q.id.startsWith('w'))) {
+                q.progress = Math.min(q.target, q.progress + 1);
+            } else if (type === 'pvp_win' && q.id.startsWith('w')) {
+                q.progress = Math.min(q.target, q.progress + 1);
+            } else if (type === 'permanent' && q.id.startsWith('p')) {
+                if (q.name.includes('яблок') && type === 'eat') q.progress = Math.min(q.target, q.progress + amount);
+                else if (q.name.includes('очков') && type === 'score') q.progress = Math.min(q.target, q.progress + amount);
+                else if (q.name.includes('монет') && type === 'collect') q.progress = Math.min(q.target, q.progress + amount);
             }
-            if (type === 'score' && q.id.startsWith('score')) {
-                q.progress = Math.min(q.target, q.progress + amount);
-                if (q.progress >= q.target) { q.completed = true; totalQuestsCompleted++; changed = true; }
-            }
-            if (type === 'collect' && q.id.startsWith('collect')) {
-                q.progress = Math.min(q.target, q.progress + amount);
-                if (q.progress >= q.target) { q.completed = true; totalQuestsCompleted++; changed = true; }
-            }
-            if (type === 'play' && q.id.startsWith('play')) {
-                q.progress = Math.min(q.target, q.progress + amount);
-                if (q.progress >= q.target) { q.completed = true; totalQuestsCompleted++; changed = true; }
+            
+            if (q.progress >= q.target && !q.completed) {
+                q.completed = true;
+                totalQuestsCompleted++;
+                changed = true;
             }
         });
+        
         if (changed) {
             saveQuests();
             renderQuests();
@@ -1144,9 +1461,12 @@
         }
     }
 
-    function claimQuestReward(index) {
-        const q = quests[index];
-        if (!q || !q.completed) return;
+    function claimQuestReward(type, index) {
+        const questsList = quests[type];
+        if (!questsList) return;
+        const q = questsList[index];
+        if (!q || !q.completed || q.claimed) return;
+        
         addCoins(q.reward);
         q.claimed = true;
         saveQuests();
@@ -1156,21 +1476,30 @@
 
     function renderQuests() {
         if (!questList) return;
-        questList.innerHTML = quests.map((q, i) => {
+        
+        const questsList = quests[questTab] || [];
+        if (questsList.length === 0) {
+            questList.innerHTML = '<p style="color:#888;font-size:12px;">Нет заданий</p>';
+            return;
+        }
+        
+        questList.innerHTML = questsList.map((q, i) => {
             const progress = Math.min(q.progress, q.target);
             const done = q.completed;
             const claimed = q.claimed || false;
-            const btnText = claimed ? '✅' : (done ? 'Забрать' : 'Выполняется');
+            const btnText = claimed ? '✅' : (done ? 'Забрать' : '...');
             const disabled = !done || claimed;
             return '<div class="quest-item">' +
                 '<div class="quest-info"><div class="quest-name">' + q.name + '</div><div class="quest-progress">' + progress + '/' + q.target + '</div></div>' +
                 '<div style="display:flex;align-items:center;gap:6px;"><span class="quest-reward">+' + q.reward + ' 🪙</span>' +
-                '<button class="quest-btn ' + (claimed ? 'claimed' : '') + '" data-index="' + i + '" ' + (disabled ? 'disabled' : '') + '>' + btnText + '</button></div></div>';
+                '<button class="quest-btn ' + (claimed ? 'claimed' : '') + '" data-type="' + questTab + '" data-index="' + i + '" ' + (disabled ? 'disabled' : '') + '>' + btnText + '</button></div></div>';
         }).join('');
+        
         document.querySelectorAll('.quest-btn:not([disabled])').forEach(btn => {
             btn.addEventListener('click', function() {
+                const type = this.getAttribute('data-type');
                 const idx = parseInt(this.getAttribute('data-index'));
-                claimQuestReward(idx);
+                claimQuestReward(type, idx);
             });
         });
     }
@@ -1188,10 +1517,12 @@
             saveAchievements();
         }
     }
+    
     function saveAchievements() { 
         localStorage.setItem('achievementsData', JSON.stringify(achievements));
         saveLocalUserData();
     }
+    
     function checkAchievements() {
         let changed = false;
         achievements.forEach(a => {
@@ -1209,6 +1540,7 @@
         });
         if (changed) { saveAchievements(); renderAchievements(); saveLocalUserData(); }
     }
+    
     function renderAchievements() {
         if (!achievementList) return;
         achievementList.innerHTML = achievements.map(a => {
@@ -1433,15 +1765,10 @@
         isPvpMode = true;
         pvpPlayerNumber = 1;
         
-        const betAmount = parseInt(betCoinsInput.value) || 0;
-        if (betAmount > 0 && betAmount <= coins) {
-            betCoins = betAmount;
-            coins -= betAmount;
-            updateCoinsUI();
-        }
-        betSkin = betSkinSelect.value || null;
+        betCoins = 0;
+        betSkin = null;
         pvpRoomInfo.style.display = 'block';
-        pvpRoomInfo.innerHTML = '<span class="label">🤖 Режим:</span> Против бота<br><span class="label">👤 Вы:</span> ' + (currentUser.username || 'Игрок') + '<br><span class="label">💰 Ставка:</span> ' + (betCoins > 0 ? betCoins + ' 🪙' : 'Нет') + (betSkin ? ' 🎨 ' + getSkinData(betSkin).name : '');
+        pvpRoomInfo.innerHTML = '<span class="label">🤖 Режим:</span> Против бота ❌ без монет<br><span class="label">👤 Вы:</span> ' + (currentUser.username || 'Игрок') + '<br><span style="color:#f39c12;">⚠️ Победа не даёт монет!</span>';
         
         pvpSnake1 = [[4, 10], [4, 11], [4, 12]];
         pvpSnake2 = [[15, 10], [15, 11], [15, 12]];
@@ -1758,16 +2085,24 @@
         pvpWinner = winner;
         if (winner === 'Вы') {
             wins++;
-            const winCoins = betCoins * 2;
-            addCoins(winCoins);
-            if (betSkin && !ownedSkins.includes(betSkin)) {
-                ownedSkins.push(betSkin);
-                renderSkinInventory();
-                saveData();
+            if (pvpType === 'real') {
+                const winCoins = betCoins * 2;
+                addCoins(winCoins);
+                if (betSkin && !ownedSkins.includes(betSkin)) {
+                    ownedSkins.push(betSkin);
+                    renderSkinInventory();
+                    saveData();
+                }
+                alert('🎉 Вы победили! +' + winCoins + ' 🪙');
+            } else {
+                alert('🎉 Вы победили бота! (монеты не выдаются)');
             }
-            alert('🎉 Вы победили! +' + winCoins + ' 🪙');
         } else {
-            alert('😢 Вы проиграли! Ставка потеряна.');
+            if (pvpType === 'real') {
+                alert('😢 Вы проиграли! Ставка потеряна.');
+            } else {
+                alert('😢 Вы проиграли боту.');
+            }
         }
         saveLocalUserData();
         updateLeaderboard();
@@ -2548,6 +2883,8 @@
         banPlayer(id);
     });
 
+    transferCoinsBtn.addEventListener('click', transferCoins);
+
     // ===== PVP =====
     function openPvpMode() {
         if (!currentUser) {
@@ -2618,7 +2955,15 @@
     function initAll() {
         loadBans();
         loadData();
-        loadUserSession();
+        
+        const hasSession = loadUserSession();
+        if (!hasSession) {
+            startOverlay.classList.remove('hide-overlay');
+        } else {
+            startOverlay.classList.add('hide-overlay');
+            launchGame();
+        }
+        
         updateBestScoreUI();
         updateCoinsUI();
         updateCaseUI();
@@ -2628,7 +2973,6 @@
         renderAchievements();
         fullReset();
         draw();
-        startOverlay.classList.remove('hide-overlay');
         shopOverlay.classList.add('hide-overlay');
         questOverlay.classList.add('hide-overlay');
         settingsOverlay.classList.add('hide-overlay');
@@ -2772,6 +3116,15 @@
     promoRewardType.addEventListener('change', () => {
         if (promoRewardType.value === 'coins') { promoCoinAmount.style.display = 'block'; promoSkinSelect.style.display = 'none'; }
         else { promoCoinAmount.style.display = 'none'; promoSkinSelect.style.display = 'block'; }
+    });
+
+    document.querySelectorAll('.quest-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.quest-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            questTab = this.getAttribute('data-tab');
+            renderQuests();
+        });
     });
 
     initAll();
