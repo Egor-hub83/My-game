@@ -1591,8 +1591,9 @@
                     player2: isPlayer1 ? opponentDoc.id : pvpMyUid,
                     p1name: isPlayer1 ? (currentUser.username || 'Игрок') : (opponentDoc.data.username || 'Игрок'),
                     p2name: isPlayer1 ? (opponentDoc.data.username || 'Игрок') : (currentUser.username || 'Игрок'),
-                    p1snake: isPlayer1 ? mySnake : oppSnake,
-                    p2snake: isPlayer1 ? oppSnake : mySnake,
+                    const mySnake = isP1Player1 ? ['4,10','4,11','4,12'] : ['15,10','15,11','15,12'];
+                    const oppSnake = isP1Player1 ? ['15,10','15,11','15,12'] : ['4,10','4,11','4,12'];
+
                     p1dir: 'up', p2dir: 'up',
                     food: [10, 10],
                     coin: null,
